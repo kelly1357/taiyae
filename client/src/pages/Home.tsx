@@ -10,6 +10,7 @@ interface RegionStats {
     title: string;
     authorName?: string;
     updatedAt: string;
+    isOnline?: boolean;
   };
 }
 
@@ -53,6 +54,7 @@ const Home: React.FC = () => {
               authorName?: string;
               updatedAt: string;
               replyCount: number;
+              isOnline?: boolean;
             }> = await response.json();
 
             if (!Array.isArray(threads) || threads.length === 0) {
@@ -72,6 +74,7 @@ const Home: React.FC = () => {
                   title: latestThread.title,
                   authorName: latestThread.authorName,
                   updatedAt: latestThread.updatedAt,
+                  isOnline: latestThread.isOnline,
                 },
               },
             ] as const;
@@ -222,8 +225,11 @@ const Home: React.FC = () => {
                                 >
                                   {stats.latestThread.title}
                                 </Link>
-                                <div className="text-sm text-gray-700">
+                                <div className="text-sm text-gray-700 flex items-center gap-1">
                                   by {stats.latestThread.authorName || 'Unknown'}
+                                  {!!stats.latestThread.isOnline && (
+                                    <span className="w-2 h-2 bg-green-500 rounded-full border border-white shadow-sm" title="Online Now"></span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-500">
                                   Updated {new Date(stats.latestThread.updatedAt).toLocaleString()}

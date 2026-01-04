@@ -13,6 +13,26 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ user, activeCharacter, userCharacters, onLogout, onCharacterSelect }) => {
+  React.useEffect(() => {
+    if (!activeCharacter) return;
+
+    const updateActivity = () => {
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ characterId: activeCharacter.id })
+      }).catch(err => console.error('Failed to update activity', err));
+    };
+
+    // Update immediately
+    updateActivity();
+
+    // Then every 60 seconds
+    const interval = setInterval(updateActivity, 60000);
+
+    return () => clearInterval(interval);
+  }, [activeCharacter?.id]);
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col">
       <Header 

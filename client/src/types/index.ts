@@ -47,6 +47,7 @@ export interface Character {
   physical?: number;
   knowledge?: number;
   totalSkill?: number;
+  isOnline?: boolean;
 }
 
 export interface ForumSubarea {

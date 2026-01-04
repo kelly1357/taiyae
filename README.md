@@ -26,6 +26,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 - Create new terminal with `ctrl + shift + `  `` `` 
 - type `npm start` and hit enter
 - Static Web Application: https://blue-desert-0f2890b1e.6.azurestaticapps.net/
+- In case of errors, rebuild the api with: New terminal, `cd api && npm run build`
 
 ## To Do
 
@@ -60,7 +61,7 @@ Low Priority:
 
 [] Discord integration
 
-[] "Online Now" status indicator
+[X] "Online Now" status indicator
 
 [] Notifications
 

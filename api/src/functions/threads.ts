@@ -24,6 +24,10 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                     p.Body as content,
                     c.CharacterName as authorName,
                     c.CharacterID as authorId,
+                    CASE 
+                        WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        ELSE 0 
+                    END as isOnline,
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                     0 as views -- Placeholder
                 FROM Thread t

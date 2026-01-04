@@ -16,14 +16,20 @@ interface PostAuthor {
   age?: string;
   healthStatus?: string;
   skillPoints?: number;
+  isOnline?: boolean;
 }
 
 const CharacterPostInfo: React.FC<{ author: PostAuthor }> = ({ author }) => {
   return (
     <div className="w-full md:w-64 bg-gray-50 p-4 flex flex-col items-center text-center border-r border-gray-200">
-      <Link to={`/character/${author.id}`} className="text-lg font-bold text-blue-700 hover:text-blue-600 mb-2">
-        {author.name}
-      </Link>
+      <div className="flex items-center gap-2 mb-2">
+        <Link to={`/character/${author.id}`} className="text-lg font-bold text-blue-700 hover:text-blue-600">
+          {author.name}
+        </Link>
+        {author.isOnline && (
+          <span className="w-3 h-3 bg-green-500 rounded-full border border-white shadow-sm" title="Online Now"></span>
+        )}
+      </div>
       <div className="mb-3 relative">
         <img 
           src={author.imageUrl} 
@@ -190,7 +196,8 @@ const ThreadView: React.FC = () => {
     sex: thread.sex || 'Unknown',
     age: thread.age ? `${thread.age} months` : 'Unknown',
     healthStatus: thread.healthStatus || 'Unknown',
-    skillPoints: thread.skillPoints || 0
+    skillPoints: thread.skillPoints || 0,
+    isOnline: thread.isOnline
   };
 
   return (
@@ -267,24 +274,24 @@ const ThreadView: React.FC = () => {
               sex: reply.sex || 'Unknown',
               age: reply.age ? `${reply.age} months` : 'Unknown',
               healthStatus: reply.healthStatus || 'Unknown',
-              skillPoints: reply.skillPoints || 0
+              skillPoints: reply.skillPoints || 0,
+              isOnline: reply.isOnline
           };
-
-          return (
-            <div key={reply.id} className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col md:flex-row border border-gray-300">
-              <CharacterPostInfo author={replyAuthor} />
-              <div className="flex-grow p-6 relative">
-                <div className="text-xs text-gray-500 mb-4 border-b border-gray-200 pb-2 flex justify-between items-center">
-                  <span>Posted {new Date(reply.createdAt).toLocaleString()}</span>
-                  {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
-                      <button 
-                          onClick={() => handleEditClick(reply.id, reply.content)}
-                          className="text-gray-500 hover:text-gray-800 text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded border border-gray-300"
-                      >
-                          Edit
-                      </button>
-                  )}
-                </div>
+  
+            return (
+              <div key={reply.id} className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col md:flex-row border border-gray-300 mt-4">
+                <CharacterPostInfo author={replyAuthor} />
+                <div className="flex-grow p-6 relative">
+                  <div className="absolute top-2 right-2">
+                    {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
+                        <button 
+                            onClick={() => handleEditClick(reply.id, reply.content)}
+                            className="text-gray-500 hover:text-gray-800 text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded border border-gray-300"
+                        >
+                            Edit
+                        </button>
+                    )}
+                  </div>
 
                 {reply.modifiedAt && reply.createdAt !== reply.modifiedAt && (
                    <div className="text-xs text-gray-500 mb-2 italic">

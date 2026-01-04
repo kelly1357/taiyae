@@ -36,7 +36,11 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.Experience as experience,
                     c.Physical as physical,
                     c.Knowledge as knowledge,
-                    c.Total as totalSkill
+                    c.Total as totalSkill,
+                    CASE 
+                        WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        ELSE 0 
+                    END as isOnline
                 FROM Character c
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 LEFT JOIN Pack p ON c.PackID = p.PackID
