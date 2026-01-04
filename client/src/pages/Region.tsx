@@ -54,7 +54,7 @@ const Region: React.FC = () => {
   if (!region) return <div>Region not found</div>;
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen">
       {region.imageUrl && (
         <div 
           className="fixed inset-0 z-0"
@@ -65,46 +65,46 @@ const Region: React.FC = () => {
             backgroundRepeat: 'no-repeat',
           }}
         >
-          <div className="absolute inset-0 bg-gray-900/80" />
+          <div className="absolute inset-0 bg-gray-900/50" />
         </div>
       )}
 
-      <div className="relative z-10">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{region.name}</h1>
-            <p className="text-gray-400">{region.description}</p>
+            <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-md">{region.name}</h1>
+            <p className="text-gray-200 drop-shadow-md">{region.description}</p>
           </div>
           <div className="w-64">
             <RegionSelector />
           </div>
         </div>
 
-        <div className="bg-gray-700/90 rounded-lg overflow-hidden shadow-lg backdrop-blur-sm">
-          <div className="bg-gray-900/90 px-6 py-3 flex justify-between items-center">
-            <h2 className="font-bold text-gray-200">Threads</h2>
+        <section className="border border-gray-300 bg-white shadow-lg">
+          <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Threads</h2>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold"
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded text-xs font-bold uppercase tracking-wide shadow"
             >
               New Thread
             </button>
           </div>
           
-          <div className="divide-y divide-gray-600">
+          <div className="divide-y divide-gray-200">
             {threads.length > 0 ? (
               threads.map(thread => {
                 return (
-                  <div key={thread.id} className="p-4 hover:bg-gray-600/50 transition-colors flex items-center justify-between">
+                  <div key={thread.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
                     <div>
-                      <Link to={`/thread/${thread.id}`} className="text-lg font-semibold text-blue-300 hover:text-blue-200 block">
+                      <Link to={`/thread/${thread.id}`} className="text-lg font-semibold text-blue-700 hover:text-blue-600 block">
                         {thread.title}
                       </Link>
-                      <div className="text-sm text-gray-400 mt-1">
-                        Started by <span className="text-gray-300">{thread.authorName || 'Unknown'}</span> · {new Date(thread.createdAt).toLocaleDateString()}
+                      <div className="text-sm text-gray-600 mt-1">
+                        Started by <span className="text-gray-800 font-medium">{thread.authorName || 'Unknown'}</span> · {new Date(thread.createdAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="text-right text-sm text-gray-400">
+                    <div className="text-right text-sm text-gray-500">
                       <p>{thread.replyCount} Replies</p>
                       <p>{thread.views} Views</p>
                     </div>
@@ -112,12 +112,12 @@ const Region: React.FC = () => {
                 );
               })
             ) : (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-gray-500">
                 No threads in this region yet. Be the first to post!
               </div>
             )}
           </div>
-        </div>
+        </section>
       </div>
 
       <NewThreadModal 

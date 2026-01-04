@@ -111,14 +111,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-900">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-300">
+        <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">
           {isRegistering ? 'Create Account' : 'Sign In'}
         </h2>
 
         {error && (
-          <div className="bg-red-500 text-white p-3 rounded mb-4 text-sm">
+          <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4 text-sm">
             {error}
           </div>
         )}
@@ -126,39 +126,39 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <form onSubmit={handleEmailAuth} className="space-y-4">
           {isRegistering && (
             <div>
-              <label className="block text-sm font-medium mb-1">Username</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
           )}
           
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1 text-gray-700">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+              className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-sm font-medium mb-1 text-gray-700">Password</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2"
+              className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
             {isRegistering && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Must be at least 8 characters with uppercase, lowercase, number, and special char.
               </p>
             )}
@@ -166,7 +166,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-medium"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-medium shadow"
           >
             {isRegistering ? 'Sign Up' : 'Sign In'}
           </button>
@@ -175,10 +175,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-600"></div>
+              <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-800 text-gray-400">Or continue with</span>
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
             </div>
           </div>
 
@@ -188,7 +188,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <GoogleLogin
                         onSuccess={handleGoogleSuccess}
                         onError={() => setError('Google Login Failed')}
-                        theme="filled_black"
+                        theme="outline"
                         shape="pill"
                     />
                 </GoogleOAuthProvider>
@@ -199,7 +199,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         <div className="mt-6 text-center text-sm">
           <button
             onClick={() => setIsRegistering(!isRegistering)}
-            className="text-blue-400 hover:text-blue-300"
+            className="text-blue-600 hover:text-blue-800 font-medium"
           >
             {isRegistering ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
           </button>

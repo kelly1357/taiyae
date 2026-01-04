@@ -107,108 +107,135 @@ const RegionDirectory: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Region Directory</h1>
-        <button 
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition-colors"
-        >
-          Add New Region
-        </button>
+    <div className="relative min-h-screen">
+      {/* Background Image */}
+      <div
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: "url('https://taiyaefiles.blob.core.windows.net/web/home.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
+        <div className="absolute inset-0 bg-gray-900/50" />
       </div>
 
-      {isEditing && (
-        <div className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8 border border-gray-700">
-          <h2 className="text-xl font-bold mb-4 text-white">{currentRegion.id ? 'Edit Region' : 'New Region'}</h2>
-          <form onSubmit={handleSave} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Region Name</label>
-              <input 
-                type="text" 
-                value={currentRegion.name || ''} 
-                onChange={e => setCurrentRegion({...currentRegion, name: e.target.value})}
-                className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Description</label>
-              <textarea 
-                value={currentRegion.description || ''} 
-                onChange={e => setCurrentRegion({...currentRegion, description: e.target.value})}
-                className="w-full bg-gray-900 border border-gray-600 rounded px-3 py-2 text-white h-32 focus:border-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Region Image</label>
-              <div className="flex items-center space-x-4">
-                {currentRegion.imageUrl && (
-                  <img src={currentRegion.imageUrl} alt="Preview" className="w-32 h-20 object-cover rounded border border-gray-600" />
-                )}
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
-                />
-                {uploading && <span className="text-sm text-yellow-400 animate-pulse">Uploading...</span>}
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700">
-              <button 
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded border border-gray-600 text-gray-300 hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit"
-                disabled={isLoading || uploading}
-                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 transition-colors"
-              >
-                {isLoading ? 'Saving...' : 'Save Region'}
-              </button>
-            </div>
-          </form>
+      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-white drop-shadow-md">Region Directory</h1>
+          <button 
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition-colors shadow-lg"
+          >
+            Add New Region
+          </button>
         </div>
-      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {regions.map(region => (
-          <div key={region.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg border border-gray-700 hover:border-gray-600 transition-colors">
-            {region.imageUrl ? (
-              <img src={region.imageUrl} alt={region.name} className="w-full h-48 object-cover" />
-            ) : (
-              <div className="w-full h-48 bg-gray-700 flex items-center justify-center text-gray-500">
-                No Image
-              </div>
-            )}
+        {isEditing && (
+          <section className="border border-gray-300 bg-white mb-8 shadow-lg">
+            <div className="bg-[#2f3a2f] px-4 py-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">
+                {currentRegion.id ? 'Edit Region' : 'New Region'}
+              </h2>
+            </div>
             <div className="p-6">
-              <h3 className="text-xl font-bold text-white mb-2">{region.name}</h3>
-              <p className="text-gray-400 text-sm mb-4 line-clamp-3">{region.description}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500">{region.subareas?.length || 0} Subareas</span>
-                <div className="flex space-x-3">
-                  <Link to={`/region/${region.id}`} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+              <form onSubmit={handleSave} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Region Name</label>
+                  <input 
+                    type="text" 
+                    value={currentRegion.name || ''} 
+                    onChange={e => setCurrentRegion({...currentRegion, name: e.target.value})}
+                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Description</label>
+                  <textarea 
+                    value={currentRegion.description || ''} 
+                    onChange={e => setCurrentRegion({...currentRegion, description: e.target.value})}
+                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Region Image</label>
+                  <div className="flex items-center space-x-4">
+                    {currentRegion.imageUrl && (
+                      <img src={currentRegion.imageUrl} alt="Preview" className="w-32 h-20 object-cover rounded border border-gray-300" />
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+                    />
+                    {uploading && <span className="text-sm text-yellow-600 animate-pulse">Uploading...</span>}
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <button 
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={isLoading || uploading}
+                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 transition-colors"
+                  >
+                    {isLoading ? 'Saving...' : 'Save Region'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {regions.map(region => (
+            <section key={region.id} className="border border-gray-300 bg-white shadow-lg flex flex-col">
+              <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200 truncate">
+                  {region.name}
+                </h3>
+                <span className="text-[10px] text-gray-300 uppercase tracking-wider">
+                  {region.subareas?.length || 0} Subareas
+                </span>
+              </div>
+              
+              {region.imageUrl ? (
+                <img src={region.imageUrl} alt={region.name} className="w-full h-48 object-cover border-b border-gray-300" />
+              ) : (
+                <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400 border-b border-gray-300">
+                  No Image
+                </div>
+              )}
+              
+              <div className="p-6 flex-grow flex flex-col justify-between">
+                <p className="text-gray-800 text-sm mb-4 line-clamp-3 leading-relaxed">{region.description}</p>
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <Link to={`/region/${region.id}`} className="text-blue-700 hover:text-blue-600 text-sm font-bold uppercase tracking-wide">
                     View
                   </Link>
                   <button 
                     onClick={() => handleEdit(region)}
-                    className="text-green-400 hover:text-green-300 text-sm font-medium"
+                    className="text-green-700 hover:text-green-600 text-sm font-bold uppercase tracking-wide"
                   >
                     Edit
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
-        ))}
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );

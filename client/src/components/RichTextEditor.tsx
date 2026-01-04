@@ -32,100 +32,100 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
   };
 
   return (
-    <div className="flex flex-wrap gap-1 p-2 bg-gray-900 border-b border-gray-600 rounded-t">
+    <div className="flex flex-wrap gap-1 p-2 bg-gray-100 border-b border-gray-300 rounded-t">
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('bold') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('bold') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         <strong>B</strong>
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('italic') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('italic') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         <em>I</em>
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('underline') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('underline') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         <u>U</u>
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('strike') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('strike') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         <s>S</s>
       </button>
       
-      <div className="w-px bg-gray-600 mx-1" />
+      <div className="w-px bg-gray-300 mx-1" />
       
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         H2
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         H3
       </button>
       
-      <div className="w-px bg-gray-600 mx-1" />
+      <div className="w-px bg-gray-300 mx-1" />
       
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('bulletList') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('bulletList') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         • List
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('orderedList') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('orderedList') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         1. List
       </button>
       
-      <div className="w-px bg-gray-600 mx-1" />
+      <div className="w-px bg-gray-300 mx-1" />
       
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('blockquote') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('blockquote') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         Quote
       </button>
       <button
         type="button"
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('codeBlock') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('codeBlock') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         Code
       </button>
       
-      <div className="w-px bg-gray-600 mx-1" />
+      <div className="w-px bg-gray-300 mx-1" />
       
       <button
         type="button"
         onClick={addLink}
-        className={`px-2 py-1 rounded text-sm ${editor.isActive('link') ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+        className={`px-2 py-1 rounded text-sm border ${editor.isActive('link') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
         Link
       </button>
       <button
         type="button"
         onClick={addImage}
-        className="px-2 py-1 rounded text-sm bg-gray-700 text-gray-300 hover:bg-gray-600"
+        className="px-2 py-1 rounded text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-200"
       >
         Image
       </button>
@@ -161,11 +161,11 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
   }, [value, editor]);
 
   return (
-    <div className="rich-text-editor border border-gray-600 rounded overflow-hidden">
+    <div className="rich-text-editor border border-gray-300 rounded overflow-hidden">
       <MenuBar editor={editor} />
       <EditorContent 
         editor={editor} 
-        className="bg-gray-700 text-white min-h-[150px] p-4 prose prose-invert max-w-none"
+        className="bg-white text-gray-900 min-h-[150px] p-4 prose prose-slate max-w-none"
       />
       <style>{`
         .rich-text-editor .ProseMirror {
@@ -180,23 +180,23 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
           pointer-events: none;
         }
         .rich-text-editor .ProseMirror blockquote {
-          border-left: 3px solid #4B5563;
+          border-left: 3px solid #D1D5DB;
           padding-left: 1rem;
           margin-left: 0;
-          color: #9CA3AF;
+          color: #4B5563;
         }
         .rich-text-editor .ProseMirror pre {
-          background: #1F2937;
+          background: #F3F4F6;
           padding: 0.75rem 1rem;
           border-radius: 0.375rem;
         }
         .rich-text-editor .ProseMirror code {
-          background: #1F2937;
+          background: #F3F4F6;
           padding: 0.2rem 0.4rem;
           border-radius: 0.25rem;
         }
         .rich-text-editor .ProseMirror a {
-          color: #60A5FA;
+          color: #2563EB;
           text-decoration: underline;
         }
         .rich-text-editor .ProseMirror img {

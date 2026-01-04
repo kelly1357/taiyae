@@ -14,7 +14,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ user, activeCharacter, userCharacters, onLogout, onCharacterSelect }) => {
   return (
-    <div className="min-h-screen bg-gray-800 text-gray-100 font-sans flex flex-col">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col">
       <Header 
         user={user} 
         activeCharacter={activeCharacter} 
@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({ user, activeCharacter, userCharacters, 
         onLogout={onLogout} 
         onCharacterSelect={onCharacterSelect}
       />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
         <Outlet context={{ user, activeCharacter }} />
       </main>
       <Footer />

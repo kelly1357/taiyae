@@ -140,37 +140,37 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">My Characters</h1>
+        <h1 className="text-3xl font-bold text-gray-900">My Characters</h1>
         <button 
           onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
+          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow"
         >
           Create New Character
         </button>
       </div>
 
       {isEditing ? (
-        <div className="bg-gray-900 p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-bold mb-4">{currentCharacter.id ? 'Edit Character' : 'New Character'}</h2>
+        <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-300">
+          <h2 className="text-xl font-bold mb-4 text-gray-900">{currentCharacter.id ? 'Edit Character' : 'New Character'}</h2>
           <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
               <input 
                 type="text" 
                 value={currentCharacter.name || ''} 
                 onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
-                className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Sex</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Sex</label>
                 <select 
                   value={currentCharacter.sex || 'Male'} 
                   onChange={e => setCurrentCharacter({...currentCharacter, sex: e.target.value as any})}
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                  className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -178,23 +178,23 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Age (Months)</label>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Age (Months)</label>
                 <input 
                   type="number" 
                   value={currentCharacter.monthsAge || ''} 
                   onChange={e => setCurrentCharacter({...currentCharacter, monthsAge: parseInt(e.target.value)})}
-                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                  className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g. 36"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Health Status</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Health Status</label>
               <select 
                 value={currentCharacter.healthStatusId || 1} 
                 onChange={e => setCurrentCharacter({...currentCharacter, healthStatusId: parseInt(e.target.value)})}
-                className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {healthStatuses.map(status => (
                   <option key={status.id} value={status.id}>{status.name}</option>
@@ -203,27 +203,27 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Avatar Image</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Avatar Image</label>
               <div className="flex items-center space-x-4">
                 {currentCharacter.imageUrl && (
-                  <img src={currentCharacter.imageUrl} alt="Preview" className="w-16 h-16 rounded-full object-cover" />
+                  <img src={currentCharacter.imageUrl} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-gray-300" />
                 )}
                 <input 
                   type="file" 
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500"
+                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
-                {uploading && <span className="text-sm text-yellow-400">Uploading...</span>}
+                {uploading && <span className="text-sm text-yellow-600">Uploading...</span>}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Bio</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
               <textarea 
                 value={currentCharacter.bio || ''} 
                 onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
-                className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white h-32"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -231,14 +231,14 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               <button 
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="px-4 py-2 rounded border border-gray-600 hover:bg-gray-700"
+                className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button 
                 type="submit"
                 disabled={isLoading || uploading}
-                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+                className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 shadow"
               >
                 {isLoading ? 'Saving...' : 'Save Character'}
               </button>
@@ -247,8 +247,8 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-gray-900 rounded-lg overflow-hidden shadow-lg border border-gray-700">
-            <thead className="bg-gray-800 text-gray-300">
+          <table className="min-w-full bg-white rounded-lg overflow-hidden shadow-lg border border-gray-300">
+            <thead className="bg-gray-100 text-gray-600 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Avatar</th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
@@ -260,43 +260,43 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Skill Score</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-700">
+            <tbody className="divide-y divide-gray-200">
               {characters.map(char => (
-                <tr key={char.id} className="hover:bg-gray-800 transition-colors">
+                <tr key={char.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col items-center space-y-2">
                       <img 
                         src={char.imageUrl} 
                         alt={char.name} 
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+                        className="w-12 h-12 rounded-full object-cover border border-gray-300"
                       />
                       <button 
                         onClick={() => handleEdit(char)}
-                        className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
                       >
                         Edit
                       </button>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{char.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.packName || 'Loner'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.age}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.height || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.build || 'N/A'}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.healthStatus || 'Unknown'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{char.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.packName || 'Loner'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.age}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.height || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.build || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.healthStatus || 'Unknown'}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="border border-gray-600 rounded overflow-hidden text-xs text-center w-64 mx-auto">
-                      <div className="grid grid-cols-4 bg-gray-700 text-gray-300 font-semibold">
-                        <div className="p-1 border-r border-gray-600">Exp</div>
-                        <div className="p-1 border-r border-gray-600">Phys</div>
-                        <div className="p-1 border-r border-gray-600">Know</div>
+                    <div className="border border-gray-300 rounded overflow-hidden text-xs text-center w-64 mx-auto shadow-sm">
+                      <div className="grid grid-cols-4 bg-gray-100 text-gray-600 font-semibold">
+                        <div className="p-1 border-r border-gray-300">Exp</div>
+                        <div className="p-1 border-r border-gray-300">Phys</div>
+                        <div className="p-1 border-r border-gray-300">Know</div>
                         <div className="p-1">Total</div>
                       </div>
-                      <div className="grid grid-cols-4 bg-gray-800 text-white">
-                        <div className="p-1 border-r border-gray-600">{char.experience || 0}</div>
-                        <div className="p-1 border-r border-gray-600">{char.physical || 0}</div>
-                        <div className="p-1 border-r border-gray-600">{char.knowledge || 0}</div>
-                        <div className="p-1 font-bold text-blue-400">{char.totalSkill || 0}</div>
+                      <div className="grid grid-cols-4 bg-white text-gray-900">
+                        <div className="p-1 border-r border-gray-300">{char.experience || 0}</div>
+                        <div className="p-1 border-r border-gray-300">{char.physical || 0}</div>
+                        <div className="p-1 border-r border-gray-300">{char.knowledge || 0}</div>
+                        <div className="p-1 font-bold text-blue-600">{char.totalSkill || 0}</div>
                       </div>
                     </div>
                   </td>

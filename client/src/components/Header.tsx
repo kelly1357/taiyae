@@ -28,40 +28,40 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   }, []);
 
   return (
-    <header className="bg-gray-900 text-white border-b border-gray-700 relative z-20">
+    <header className="bg-[#2f3a2f] text-white border-b border-gray-600 relative z-20 shadow-md">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="logo">
-          <Link to="/" className="text-2xl font-bold tracking-wider">HORIZON</Link>
+          <Link to="/" className="text-2xl font-bold tracking-wider text-white drop-shadow-sm">HORIZON</Link>
         </div>
         <nav className="flex items-center space-x-6">
-          <Link to="/" className="hover:text-gray-300">Home</Link>
-          <Link to="/wiki" className="hover:text-gray-300">Wiki</Link>
-          <Link to="/regions" className="hover:text-gray-300">Regions</Link>
-          <Link to="/characters" className="hover:text-gray-300">Characters</Link>
+          <Link to="/" className="hover:text-gray-200 transition-colors">Home</Link>
+          <Link to="/wiki" className="hover:text-gray-200 transition-colors">Wiki</Link>
+          <Link to="/regions" className="hover:text-gray-200 transition-colors">Regions</Link>
+          <Link to="/characters" className="hover:text-gray-200 transition-colors">Characters</Link>
           {user ? (
             <div className="flex items-center space-x-4">
-              <span>Welcome, {user.username}!</span>
+              <span className="text-gray-200">Welcome, {user.username}!</span>
               
               {activeCharacter ? (
                 <div className="relative" ref={dropdownRef}>
                   <button 
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded hover:bg-gray-700 transition-colors border border-gray-600"
+                    className="flex items-center space-x-2 bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition-colors border border-white/20"
                   >
                     <img 
                       src={activeCharacter.imageUrl} 
                       alt={activeCharacter.name} 
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-8 h-8 rounded-full object-cover border border-white/30"
                     />
                     <span className="text-sm font-semibold">{activeCharacter.name}</span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700 z-50">
-                      <div className="px-4 py-2 border-b border-gray-700 text-xs text-gray-400 uppercase font-semibold">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-xl py-1 border border-gray-200 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100 text-xs text-gray-500 uppercase font-semibold bg-gray-50">
                         Switch Profile
                       </div>
                       {userCharacters.map(char => (
@@ -71,34 +71,34 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                             onCharacterSelect?.(char.id);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-700 transition-colors ${
-                            activeCharacter.id === char.id ? 'bg-gray-700' : ''
+                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-50 transition-colors ${
+                            activeCharacter.id === char.id ? 'bg-blue-50' : ''
                           }`}
                         >
                           <img 
                             src={char.imageUrl} 
                             alt={char.name} 
-                            className="w-8 h-8 rounded-full object-cover"
+                            className="w-8 h-8 rounded-full object-cover border border-gray-200"
                           />
-                          <span className="text-sm text-white">{char.name}</span>
+                          <span className="text-sm text-gray-800">{char.name}</span>
                           {activeCharacter.id === char.id && (
-                            <svg className="w-4 h-4 text-green-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-blue-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
                         </button>
                       ))}
-                      <div className="border-t border-gray-700 mt-1 pt-1">
+                      <div className="border-t border-gray-100 mt-1 pt-1">
                         <Link 
                           to="/my-characters" 
-                          className="block px-4 py-2 text-sm text-blue-400 hover:bg-gray-700 hover:text-blue-300"
+                          className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 hover:text-blue-800"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Characters
                         </Link>
                         <Link 
                           to="/account" 
-                          className="block px-4 py-2 text-sm text-blue-400 hover:bg-gray-700 hover:text-blue-300"
+                          className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 hover:text-blue-800"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Account
@@ -108,17 +108,17 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   )}
                 </div>
               ) : (
-                <Link to="/my-characters" className="text-sm text-blue-400 hover:text-blue-300">
+                <Link to="/my-characters" className="text-sm text-blue-300 hover:text-blue-200 font-semibold">
                   Create Character
                 </Link>
               )}
               
-              <button onClick={onLogout} className="text-sm text-red-400 hover:text-red-300">Logout</button>
+              <button onClick={onLogout} className="text-sm text-red-300 hover:text-red-200 font-semibold">Logout</button>
             </div>
           ) : (
             <div className="space-x-4">
-              <Link to="/login" className="hover:text-gray-300">Sign In</Link>
-              <Link to="/register" className="hover:text-gray-300">Join</Link>
+              <Link to="/login" className="hover:text-gray-200 transition-colors">Sign In</Link>
+              <Link to="/register" className="hover:text-gray-200 transition-colors">Join</Link>
             </div>
           )}
         </nav>
