@@ -49,7 +49,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
   const handleCreate = () => {
     setCurrentCharacter({
-      userId: user.id,
+      userId: String(user.id),
       sex: 'Male',
       healthStatusId: 1, // Default to first status (usually Healthy)
       skillPoints: 0,

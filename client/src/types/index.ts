@@ -1,9 +1,10 @@
 export interface User {
-  id: string;
+  id: number | string;
   username: string;
   email: string;
-  characters: string[]; // List of Character IDs
-  activeCharacterId?: string; // Currently selected character for posting
+  authProvider?: string;
+  characters?: string[]; // List of Character IDs
+  activeCharacterId?: string | number; // Currently selected character for posting
 }
 
 export interface Achievement {
