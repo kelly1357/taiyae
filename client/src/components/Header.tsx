@@ -60,8 +60,8 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-xl py-1 border border-gray-200 z-50">
-                      <div className="px-4 py-2 border-b border-gray-100 text-xs text-gray-500 uppercase font-semibold bg-gray-50">
+                    <div className="absolute right-0 mt-2 w-64 bg-white text-gray-900 rounded-md shadow-xl py-1 border border-gray-200 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100 text-xs text-gray-700 uppercase font-bold bg-gray-50">
                         Switch Profile
                       </div>
                       {userCharacters.map(char => (
@@ -71,8 +71,8 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                             onCharacterSelect?.(char.id);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-50 transition-colors ${
-                            activeCharacter.id === char.id ? 'bg-blue-50' : ''
+                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-100 transition-colors ${
+                            activeCharacter.id === char.id ? 'bg-gray-50' : ''
                           }`}
                         >
                           <img 
@@ -80,9 +80,9 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                             alt={char.name} 
                             className="w-8 h-8 rounded-full object-cover border border-gray-200"
                           />
-                          <span className="text-sm text-gray-800">{char.name}</span>
+                          <span className="text-sm font-medium text-gray-900">{char.name}</span>
                           {activeCharacter.id === char.id && (
-                            <svg className="w-4 h-4 text-blue-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-green-700 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
@@ -91,14 +91,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <Link 
                           to="/my-characters" 
-                          className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 hover:text-blue-800"
+                          className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Characters
                         </Link>
                         <Link 
                           to="/account" 
-                          className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-50 hover:text-blue-800"
+                          className="block px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Account
@@ -108,7 +108,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   )}
                 </div>
               ) : (
-                <Link to="/my-characters" className="text-sm text-blue-300 hover:text-blue-200 font-semibold">
+                <Link to="/my-characters" className="text-sm text-green-300 hover:text-green-200 font-semibold">
                   Create Character
                 </Link>
               )}
