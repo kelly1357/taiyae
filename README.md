@@ -21,3 +21,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### Infrastructure
 - **Azure Static Web Apps**: Hosting and CI/CD
+
+### Testing
+- Create new terminal with `ctrl + shift + `
+- type `npm start` and hit enter

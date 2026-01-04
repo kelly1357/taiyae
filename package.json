@@ -3,7 +3,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "npx concurrently \"cd api && npm start\" \"cd client && npm run dev\"",
+    "start": "npx concurrently \"cd api && func start\" \"sleep 3 && cd client && npm run dev\" \"sleep 3 && open -a 'Google Chrome' http://localhost:5173\"",
     "install:all": "cd api && npm install && cd ../client && npm install"
   },
   "dependencies": {
