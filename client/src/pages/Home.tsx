@@ -53,6 +53,16 @@ const Home: React.FC = () => {
           <div className="grid gap-6">
             {regions.map((region) => (
               <div key={region.id} className="bg-gray-700/90 rounded-lg overflow-hidden shadow-lg flex flex-col md:flex-row backdrop-blur-sm">
+                {region.imageUrl && (
+                  <div className="w-full md:w-48 h-48 md:h-auto flex-shrink-0 relative group">
+                    <img 
+                      src={region.imageUrl} 
+                      alt={region.name} 
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300" />
+                  </div>
+                )}
                 <div className="p-6 flex-grow">
                 <Link to={`/region/${region.id}`} className="text-xl font-bold text-blue-300 hover:text-blue-200 mb-2 block">
                   {region.name}

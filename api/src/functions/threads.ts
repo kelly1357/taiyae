@@ -139,10 +139,6 @@ export async function createReply(request: HttpRequest, context: InvocationConte
 
         const pool = await getPool();
         
-        // Get max PostID
-        const maxPostResult = await pool.request().query("SELECT ISNULL(MAX(PostID), 0) + 1 as nextId FROM Post");
-        const nextPostId = maxPostResult.recordset[0].nextId;
-
         // We need regionId for the Post table. We can get it from the Thread table.
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
@@ -155,14 +151,13 @@ export async function createReply(request: HttpRequest, context: InvocationConte
         }
 
         await pool.request()
-            .input('id', sql.Int, nextPostId)
             .input('threadId', sql.Int, parseInt(threadId))
             .input('authorId', sql.Int, parseInt(authorId || 1)) // Default to 1 if not provided
             .input('regionId', sql.Int, regionId)
             .input('body', sql.NVarChar, content)
             .query(`
-                INSERT INTO Post (PostID, ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
-                VALUES (@id, @threadId, @authorId, @regionId, 'Reply', @body, GETDATE(), GETDATE())
+                INSERT INTO Post (ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
+                VALUES (@threadId, @authorId, @regionId, 'Reply', @body, GETDATE(), GETDATE())
             `);
             
         // Update Thread Modified date
@@ -186,4 +181,51 @@ app.http('createReply', {
     authLevel: 'anonymous',
     handler: createReply,
     route: 'threads/{threadId}/replies'
+});
+
+export async function updatePost(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const postId = request.params.postId;
+    
+    if (!postId) {
+        return { status: 400, body: "postId is required" };
+    }
+
+    try {
+        const body = await request.json() as any;
+        const { content, modifiedByCharacterId } = body;
+
+        if (!content || !modifiedByCharacterId) {
+            return { status: 400, body: "Content and modifiedByCharacterId are required" };
+        }
+
+        const pool = await getPool();
+        
+        await pool.request()
+            .input('postId', sql.Int, parseInt(postId))
+            .input('body', sql.NVarChar, content)
+            .input('modifiedByCharacterId', sql.Int, parseInt(modifiedByCharacterId))
+            .query(`
+                UPDATE Post 
+                SET Body = @body, 
+                    Modified = GETDATE(),
+                    ModifiedByCharacterId = @modifiedByCharacterId
+                WHERE PostID = @postId
+            `);
+
+        return {
+            status: 200,
+            jsonBody: { message: "Post updated" }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('updatePost', {
+    methods: ['PUT'],
+    authLevel: 'anonymous',
+    handler: updatePost,
+    route: 'posts/{postId}'
 });

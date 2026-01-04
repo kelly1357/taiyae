@@ -138,7 +138,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Characters</h1>
         <button 
@@ -246,29 +246,64 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
           </form>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {characters.map(char => (
-            <div key={char.id} className="bg-gray-900 rounded-lg overflow-hidden shadow-lg border border-gray-700">
-              <div className="h-32 bg-gray-800 relative">
-                <img 
-                  src={char.imageUrl} 
-                  alt={char.name} 
-                  className="absolute bottom-0 left-4 transform translate-y-1/2 w-20 h-20 rounded-full border-4 border-gray-900 object-cover"
-                />
-              </div>
-              <div className="pt-12 pb-6 px-6">
-                <h3 className="text-xl font-bold">{char.name}</h3>
-                <p className="text-gray-400 text-sm mb-4">{char.sex} • {char.age}</p>
-                <p className="text-gray-300 text-sm line-clamp-3 mb-4">{char.bio || 'No bio available.'}</p>
-                <button 
-                  onClick={() => handleEdit(char)}
-                  className="w-full bg-gray-800 hover:bg-gray-700 text-white py-2 rounded border border-gray-600"
-                >
-                  Edit Character
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-gray-900 rounded-lg overflow-hidden shadow-lg border border-gray-700">
+            <thead className="bg-gray-800 text-gray-300">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Avatar</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Pack</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Age</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Height</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Build</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Health</th>
+                <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider">Skill Score</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700">
+              {characters.map(char => (
+                <tr key={char.id} className="hover:bg-gray-800 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col items-center space-y-2">
+                      <img 
+                        src={char.imageUrl} 
+                        alt={char.name} 
+                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+                      />
+                      <button 
+                        onClick={() => handleEdit(char)}
+                        className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{char.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.packName || 'Loner'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.age}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.height || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.build || 'N/A'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.healthStatus || 'Unknown'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="border border-gray-600 rounded overflow-hidden text-xs text-center w-64 mx-auto">
+                      <div className="grid grid-cols-4 bg-gray-700 text-gray-300 font-semibold">
+                        <div className="p-1 border-r border-gray-600">Exp</div>
+                        <div className="p-1 border-r border-gray-600">Phys</div>
+                        <div className="p-1 border-r border-gray-600">Know</div>
+                        <div className="p-1">Total</div>
+                      </div>
+                      <div className="grid grid-cols-4 bg-gray-800 text-white">
+                        <div className="p-1 border-r border-gray-600">{char.experience || 0}</div>
+                        <div className="p-1 border-r border-gray-600">{char.physical || 0}</div>
+                        <div className="p-1 border-r border-gray-600">{char.knowledge || 0}</div>
+                        <div className="p-1 font-bold text-blue-400">{char.totalSkill || 0}</div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createReply = exports.createThread = exports.getThreads = void 0;
+exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
 const functions_1 = require("@azure/functions");
 const db_1 = require("../db");
 const sql = require("mssql");
@@ -137,9 +137,6 @@ function createReply(request, context) {
                 return { status: 400, body: "Content is required" };
             }
             const pool = yield (0, db_1.getPool)();
-            // Get max PostID
-            const maxPostResult = yield pool.request().query("SELECT ISNULL(MAX(PostID), 0) + 1 as nextId FROM Post");
-            const nextPostId = maxPostResult.recordset[0].nextId;
             // We need regionId for the Post table. We can get it from the Thread table.
             const threadResult = yield pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
@@ -149,14 +146,13 @@ function createReply(request, context) {
                 return { status: 404, body: "Thread not found" };
             }
             yield pool.request()
-                .input('id', sql.Int, nextPostId)
                 .input('threadId', sql.Int, parseInt(threadId))
                 .input('authorId', sql.Int, parseInt(authorId || 1)) // Default to 1 if not provided
                 .input('regionId', sql.Int, regionId)
                 .input('body', sql.NVarChar, content)
                 .query(`
-                INSERT INTO Post (PostID, ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
-                VALUES (@id, @threadId, @authorId, @regionId, 'Reply', @body, GETDATE(), GETDATE())
+                INSERT INTO Post (ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
+                VALUES (@threadId, @authorId, @regionId, 'Reply', @body, GETDATE(), GETDATE())
             `);
             // Update Thread Modified date
             yield pool.request()
@@ -179,5 +175,47 @@ functions_1.app.http('createReply', {
     authLevel: 'anonymous',
     handler: createReply,
     route: 'threads/{threadId}/replies'
+});
+function updatePost(request, context) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const postId = request.params.postId;
+        if (!postId) {
+            return { status: 400, body: "postId is required" };
+        }
+        try {
+            const body = yield request.json();
+            const { content, modifiedByCharacterId } = body;
+            if (!content || !modifiedByCharacterId) {
+                return { status: 400, body: "Content and modifiedByCharacterId are required" };
+            }
+            const pool = yield (0, db_1.getPool)();
+            yield pool.request()
+                .input('postId', sql.Int, parseInt(postId))
+                .input('body', sql.NVarChar, content)
+                .input('modifiedByCharacterId', sql.Int, parseInt(modifiedByCharacterId))
+                .query(`
+                UPDATE Post 
+                SET Body = @body, 
+                    Modified = GETDATE(),
+                    ModifiedByCharacterId = @modifiedByCharacterId
+                WHERE PostID = @postId
+            `);
+            return {
+                status: 200,
+                jsonBody: { message: "Post updated" }
+            };
+        }
+        catch (error) {
+            context.error(error);
+            return { status: 500, body: "Internal Server Error" };
+        }
+    });
+}
+exports.updatePost = updatePost;
+functions_1.app.http('updatePost', {
+    methods: ['PUT'],
+    authLevel: 'anonymous',
+    handler: updatePost,
+    route: 'posts/{postId}'
 });
 //# sourceMappingURL=threads.js.map

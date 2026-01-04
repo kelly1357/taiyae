@@ -21,7 +21,7 @@ function getRegions(request, context) {
                 r.RegionID       AS id,
                 r.RegionName     AS name,
                 r.Description    AS description,
-                CAST(NULL AS NVARCHAR(MAX)) AS imageUrl, -- Region table has no image column
+                r.ImageURL       AS imageUrl,
                 s.id             AS subId,
                 s.name           AS subName
             FROM Region r

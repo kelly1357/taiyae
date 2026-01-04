@@ -188,6 +188,111 @@ export async function googleLogin(request: HttpRequest, context: InvocationConte
     }
 }
 
+export async function updateUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const id = request.params.id;
+        const body: any = await request.json();
+        const { username, currentPassword, newPassword } = body;
+
+        if (!id) {
+            return { status: 400, jsonBody: { body: "User ID is required" } };
+        }
+
+        // Verify token
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+             return { status: 401, jsonBody: { body: "Unauthorized" } };
+        }
+        const tokenStr = authHeader.split(' ')[1];
+        try {
+            const decoded: any = jwt.verify(tokenStr, JWT_SECRET);
+            if (String(decoded.id) !== String(id)) {
+                return { status: 403, jsonBody: { body: "Forbidden" } };
+            }
+        } catch (e) {
+            return { status: 401, jsonBody: { body: "Invalid token" } };
+        }
+
+        const pool = await getPool();
+        
+        // Get current user
+        const userResult = await pool.request()
+            .input('UserID', sql.Int, id)
+            .query('SELECT * FROM [User] WHERE UserID = @UserID');
+            
+        const user = userResult.recordset[0];
+        
+        if (!user) {
+            return { status: 404, jsonBody: { body: "User not found" } };
+        }
+
+        const updates = [];
+        const requestObj = pool.request().input('UserID', sql.Int, id);
+
+        // Update Username
+        if (username && username !== user.Username) {
+            // Check if username is taken
+            const check = await pool.request()
+                .input('Username', sql.NVarChar, username)
+                .input('CurrentUserID', sql.Int, id)
+                .query('SELECT UserID FROM [User] WHERE Username = @Username AND UserID != @CurrentUserID');
+            
+            if (check.recordset.length > 0) {
+                return { status: 409, jsonBody: { body: "Username already taken" } };
+            }
+
+            requestObj.input('Username', sql.NVarChar, username);
+            updates.push("Username = @Username");
+        }
+
+        // Update Password
+        if (newPassword) {
+            if (user.Auth_Provider !== 'email') {
+                return { status: 400, jsonBody: { body: "Cannot change password for external auth provider" } };
+            }
+
+            if (!currentPassword) {
+                return { status: 400, jsonBody: { body: "Current password is required" } };
+            }
+
+            const isValid = await bcrypt.compare(currentPassword, user.PasswordHash);
+            if (!isValid) {
+                return { status: 401, jsonBody: { body: "Invalid current password" } };
+            }
+
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            requestObj.input('PasswordHash', sql.VarChar, hashedPassword);
+            updates.push("PasswordHash = @PasswordHash");
+        }
+
+        if (updates.length === 0) {
+            return { status: 200, jsonBody: { body: "No changes made" } };
+        }
+
+        const query = `
+            UPDATE [User] 
+            SET ${updates.join(', ')}
+            OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider
+            WHERE UserID = @UserID
+        `;
+
+        const result = await requestObj.query(query);
+        const updatedUser = result.recordset[0];
+
+        // Generate new token as username might have changed
+        const newToken = generateToken(updatedUser);
+
+        return {
+            status: 200,
+            jsonBody: { user: updatedUser, token: newToken }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, jsonBody: { body: "Internal Server Error: " + (error instanceof Error ? error.message : String(error)) } };
+    }
+}
+
 app.http('register', {
     methods: ['POST'],
     authLevel: 'anonymous',
@@ -204,4 +309,11 @@ app.http('auth-google', {
     methods: ['POST'],
     authLevel: 'anonymous',
     handler: googleLogin
+});
+
+app.http('updateUser', {
+    methods: ['PUT'],
+    authLevel: 'anonymous',
+    route: 'users/{id}',
+    handler: updateUser
 });

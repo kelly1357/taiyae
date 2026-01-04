@@ -42,11 +42,13 @@ High Priority:
 
 [x] Character creation and editing
 
-[] Region creation and editing
+[X] Region creation and editing
 
-[] Thread and posts core interaction
+[X] Thread and posts core interaction
 
-[] Character list with sorting, grouping, and search
+[X] Character list with 
+
+[] Add sorting, grouping, and search to characters list
 
 Low Priority:
 

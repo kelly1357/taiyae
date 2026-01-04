@@ -16,15 +16,9 @@ export async function getHealthStatuses(request: HttpRequest, context: Invocatio
 export async function getCharacters(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const userId = request.query.get('userId');
     
-    if (!userId) {
-        return { status: 400, body: "Please provide a userId" };
-    }
-
     try {
         const pool = await getPool();
-        const result = await pool.request()
-            .input('userId', sql.Int, parseInt(userId)) // Assuming UserID is Int based on typical schema, though interface says string. Let's check.
-            .query(`
+        let query = `
                 SELECT 
                     c.CharacterID as id, 
                     c.UserID as userId, 
@@ -33,13 +27,37 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.MonthsAge as monthsAge, 
                     c.AvatarImage as imageUrl, 
                     c.PackID as packId,
+                    p.PackName as packName,
                     hs.StatusValue as healthStatus,
                     c.HealthStatus_Id as healthStatusId,
-                    c.CI_General_HTML as bio
+                    c.CI_General_HTML as bio,
+                    h.HeightValue as height,
+                    b.BuildValue as build,
+                    c.Experience as experience,
+                    c.Physical as physical,
+                    c.Knowledge as knowledge,
+                    c.Total as totalSkill
                 FROM Character c
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
-                WHERE c.UserID = @userId
-            `);
+                LEFT JOIN Pack p ON c.PackID = p.PackID
+                LEFT JOIN Height h ON c.HeightID = h.HeightID
+                LEFT JOIN Build b ON c.BuildID = b.BuildID
+            `;
+        
+        const requestObj = pool.request();
+
+        if (userId) {
+            requestObj.input('userId', sql.Int, parseInt(userId));
+            query += ` WHERE c.UserID = @userId`;
+        } else {
+            query += ` WHERE c.Is_Active = 1`;
+        }
+
+        query += ` ORDER BY c.CharacterName`;
+
+        const result = await requestObj.query(query);
+        
+        // Map monthsAge to age string if needed, or handle in client
         
         // Map monthsAge to age string if needed, or handle in client
         const characters = result.recordset.map(c => ({
@@ -78,7 +96,11 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
                     c.PackID as packId,
                     hs.StatusValue as healthStatus,
                     c.HealthStatus_Id as healthStatusId,
-                    c.CI_General_HTML as bio
+                    c.CI_General_HTML as bio,
+                    c.Experience as experience,
+                    c.Physical as physical,
+                    c.Knowledge as knowledge,
+                    c.Total as totalSkill
                 FROM Character c
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 WHERE c.CharacterID = @id

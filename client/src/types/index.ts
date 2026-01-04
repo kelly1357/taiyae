@@ -36,10 +36,17 @@ export interface Character {
   skillPoints: number;
   achievements: Achievement[];
   packId?: string;
+  packName?: string;
   rank?: string;
   bio?: string;
   monthsAge?: number;
   healthStatusId?: number;
+  height?: string;
+  build?: string;
+  experience?: number;
+  physical?: number;
+  knowledge?: number;
+  totalSkill?: number;
 }
 
 export interface ForumSubarea {

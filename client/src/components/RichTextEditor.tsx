@@ -154,6 +154,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     },
   });
 
+  React.useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
+
   return (
     <div className="rich-text-editor border border-gray-600 rounded overflow-hidden">
       <MenuBar editor={editor} />

@@ -29,14 +29,17 @@ function getThread(request, context) {
                 .input('threadId', sql.Int, parseInt(threadId))
                 .query(`
                 SELECT 
-                    p.PostID, p.Subject, p.Body, p.Created,
+                    p.PostID, p.Subject, p.Body, p.Created, p.Modified,
                     c.CharacterID as authorId, c.CharacterName as authorName, c.AvatarImage as authorImage,
                     pk.PackName as packName, pk.Colors,
-                    c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus
+                    c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus,
+                    (c.Experience + c.Physical + c.Knowledge) as skillPoints,
+                    mc.CharacterName as modifiedByName
                 FROM Post p
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
                 LEFT JOIN Pack pk ON c.PackID = pk.PackID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
+                LEFT JOIN Character mc ON p.ModifiedByCharacterId = mc.CharacterID
                 WHERE p.ThreadID = @threadId
                 ORDER BY p.Created ASC
             `);
@@ -57,10 +60,14 @@ function getThread(request, context) {
                 sex: p.sex,
                 age: p.age,
                 healthStatus: p.healthStatus,
-                createdAt: p.Created
+                skillPoints: p.skillPoints,
+                createdAt: p.Created,
+                modifiedAt: p.Modified,
+                modifiedByName: p.modifiedByName
             }));
             const thread = {
                 id: threadId,
+                postId: op.PostID,
                 title: op.Subject,
                 content: op.Body,
                 authorId: op.authorId,
@@ -72,7 +79,10 @@ function getThread(request, context) {
                 sex: op.sex,
                 age: op.age,
                 healthStatus: op.healthStatus,
+                skillPoints: op.skillPoints,
                 createdAt: op.Created,
+                modifiedAt: op.Modified,
+                modifiedByName: op.modifiedByName,
                 replies: replies
             };
             return {
