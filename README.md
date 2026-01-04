@@ -38,18 +38,28 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 High Priority:
 
-- User registration / approval flow, OAuth implementation
-- Character creation and editing
-- Region creation and editing
-- Thread and posts core interaction
-- Character list with sorting, grouping, and search
+[x] User registration / approval flow, OAuth implementation
+
+[x] Character creation and editing
+
+[] Region creation and editing
+
+[] Thread and posts core interaction
+
+[] Character list with sorting, grouping, and search
 
 Low Priority:
 
-- Moderator actions (approving new users, updating user data)
-- Achievements management
-- Hierarchy management
-- Discord integration
-- "Online Now" status indicator
-- Notifications
-- User DMing`
+[] Moderator actions (approving new users, updating user data)
+
+[] Achievements management
+
+[] Hierarchy management
+
+[] Discord integration
+
+[] "Online Now" status indicator
+
+[] Notifications
+
+[] User DMing

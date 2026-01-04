@@ -5,9 +5,10 @@ import type { User, Character } from '../types';
 interface HeaderProps {
   user?: User;
   activeCharacter?: Character;
+  onLogout?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, activeCharacter }) => {
+const Header: React.FC<HeaderProps> = ({ user, activeCharacter, onLogout }) => {
   return (
     <header className="bg-gray-900 text-white border-b border-gray-700 relative z-20">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -31,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter }) => {
                   <span className="text-sm font-semibold">{activeCharacter.name}</span>
                 </Link>
               )}
-              <button className="text-sm text-red-400 hover:text-red-300">Logout</button>
+              <button onClick={onLogout} className="text-sm text-red-400 hover:text-red-300">Logout</button>
             </div>
           ) : (
             <div className="space-x-4">
