@@ -22,14 +22,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter }) => {
             <div className="flex items-center space-x-4">
               <span>Welcome, {user.username}</span>
               {activeCharacter && (
-                <div className="flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded">
+                <Link to="/manage-characters" className="flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded hover:bg-gray-700 transition-colors">
                   <img 
                     src={activeCharacter.imageUrl} 
                     alt={activeCharacter.name} 
                     className="w-8 h-8 rounded-full object-cover"
                   />
                   <span className="text-sm font-semibold">{activeCharacter.name}</span>
-                </div>
+                </Link>
               )}
               <button className="text-sm text-red-400 hover:text-red-300">Logout</button>
             </div>

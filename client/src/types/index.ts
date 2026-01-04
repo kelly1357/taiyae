@@ -37,6 +37,8 @@ export interface Character {
   packId?: string;
   rank?: string;
   bio?: string;
+  monthsAge?: number;
+  healthStatusId?: number;
 }
 
 export interface ForumSubarea {

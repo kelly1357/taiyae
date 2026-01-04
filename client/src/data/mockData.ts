@@ -152,18 +152,18 @@ export const regions: ForumRegion[] = [
 
 export const mockUsers: User[] = [
   {
-    id: 'user1',
+    id: '1',
     username: 'WolfLover99',
     email: 'wolf@example.com',
-    characters: ['char1', 'char2'],
-    activeCharacterId: 'char1'
+    characters: ['1', '2'],
+    activeCharacterId: '1'
   }
 ];
 
 export const mockCharacters: Character[] = [
   {
-    id: 'char1',
-    userId: 'user1',
+    id: '1',
+    userId: '1',
     name: 'Fenrir',
     sex: 'Male',
     age: '4 years',
@@ -176,8 +176,8 @@ export const mockCharacters: Character[] = [
     bio: 'A loyal ranger of the Adunati.'
   },
   {
-    id: 'char2',
-    userId: 'user1',
+    id: '2',
+    userId: '1',
     name: 'Luna',
     sex: 'Female',
     age: '2 years',
@@ -195,7 +195,7 @@ export const mockThreads: Thread[] = [
   {
     id: 'thread1',
     title: 'No wonder they call it a wasteland',
-    authorId: 'char1',
+    authorId: '1',
     regionId: 'eastern-wasteland',
     createdAt: '2026-01-02T10:00:00Z',
     updatedAt: '2026-01-02T12:00:00Z',
@@ -204,7 +204,7 @@ export const mockThreads: Thread[] = [
       {
         id: 'reply1',
         threadId: 'thread1',
-        authorId: 'char2',
+        authorId: '2',
         content: 'It really is dry out here.',
         createdAt: '2026-01-02T11:00:00Z'
       }
