@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "start": "npx concurrently \"cd api && npm start\" \"cd client && npm run dev\"",
+    "install:all": "cd api && npm install && cd ../client && npm install"
+  },
+  "dependencies": {
+    "react-router-dom": "^7.11.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "concurrently": "^9.2.1",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18"
+  }
+}
