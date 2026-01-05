@@ -119,8 +119,8 @@ const Home: React.FC = () => {
   }, []);
 
   const regionImages: Record<string, string> = {
-    'Eastern Wasteland': 'https://s3.amazonaws.com/HorizonRPG/layout/Eastern%20Wasteland.jpg',
-    'Verdant Hills': 'https://web.archive.org/web/20181216142402im_/https://s3.amazonaws.com/HorizonRPG/layout/Verdant%20Hills.jpg',
+    'Eastern Wasteland': 'https://taiyaefiles.blob.core.windows.net/web/Eastern%20Wasteland%20Mini.jpg',
+    'Verdant Hills': 'https://taiyaefiles.blob.core.windows.net/web/Verdant%20Hills%20Mini.jpg',
   };
 
   if (loading) return <div className="text-center p-8">Loading regions...</div>;
