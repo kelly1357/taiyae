@@ -115,8 +115,8 @@ const Layout: React.FC<LayoutProps> = ({
               <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                 Packs
               </div>
-              <div className="px-4 py-4 text-sm text-gray-800">
-                <span className="block hover:text-gray-600 cursor-pointer">Rogue</span>
+              <div className="px-4 py-4 text-sm">
+                <span className="uppercase tracking-wide text-gray-600 cursor-pointer hover:text-gray-800" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
               </div>
             </section>
 

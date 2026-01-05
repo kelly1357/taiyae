@@ -110,7 +110,7 @@ const Home: React.FC = () => {
 
   // Fetch character statistics
   useEffect(() => {
-    fetch('/api/characters/stats')
+    fetch('/api/character-stats')
       .then(res => res.json())
       .then(data => {
         setCharacterStats(data);
@@ -165,8 +165,19 @@ const Home: React.FC = () => {
                   </h4>
                 </div>
                 <div className="px-4 py-4 text-sm text-gray-800">
-                  <div className="font-semibold">Full Summer, HY0</div>
-                  <div className="text-gray-600">Sunny · 90°F / 32°C</div>
+                  <img 
+                    src="https://taiyaefiles.blob.core.windows.net/web/Early%20Summer.jpg" 
+                    alt="Early Summer" 
+                    className="float-left w-24 mr-3 mb-8 border border-gray-300"
+                  />
+                  <div className="font-semibold">Early Summer, HY0</div>
+                  <div className="text-gray-600 flex items-center gap-1 mt-3 text-xs">
+                    <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="12" r="5" />
+                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+                    </svg>
+                    Sunny · 90°F / 32°C
+                  </div>
                 </div>
               </div>
 
@@ -177,17 +188,30 @@ const Home: React.FC = () => {
                     Population
                   </h4>
                 </div>
-                <div className="px-4 py-4 text-sm text-gray-800">
+                <div className="text-sm text-gray-800">
                   {characterStats ? (
-                    <div className="space-y-1">
-                      <div><span className="font-semibold">{characterStats.totalCharacters}</span> characters total</div>
-                      <div className="text-gray-600">
-                        {characterStats.maleCount} ♂ · {characterStats.femaleCount} ♀
-                      </div>
-                      {characterStats.pupsCount > 0 && (
-                        <div className="text-gray-600">{characterStats.pupsCount} pups</div>
-                      )}
-                    </div>
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr className="border-b border-gray-300">
+                          <td colSpan={2} className="px-2 py-2">
+                            <span className="font-semibold">Wolves:</span> {characterStats.totalCharacters} <Link to="/characters" className="text-gray-500 hover:text-gray-700 text-xs">(view list)</Link>
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-300">
+                          <td className="w-1/2 px-2 py-2 border-r border-gray-300">
+                            <span className="text-blue-600">♂</span> {characterStats.maleCount}
+                          </td>
+                          <td className="w-1/2 px-2 py-2">
+                            <span className="text-pink-500">♀</span> {characterStats.femaleCount}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan={2} className="px-2 py-2">
+                            <span className="font-semibold">Pups:</span> 0
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   ) : (
                     <div className="text-gray-600">Loading...</div>
                   )}
@@ -201,8 +225,11 @@ const Home: React.FC = () => {
                     Packs
                   </h4>
                 </div>
-                <div className="px-4 py-4 text-sm text-gray-800">
-                  <div className="text-gray-600 italic">Rogue</div>
+                <div className="px-4 py-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600">R</span>
+                    <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogues</span>
+                  </div>
                 </div>
               </div>
             </div>

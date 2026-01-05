@@ -236,10 +236,11 @@ app.http('getCharacters', {
     handler: getCharacters
 });
 
+// IMPORTANT: This must be registered BEFORE characters/{id} to avoid route conflicts
 app.http('getCharacterStats', {
     methods: ['GET'],
     authLevel: 'anonymous',
-    route: 'characters/stats',
+    route: 'character-stats',
     handler: getCharacterStats
 });
 
