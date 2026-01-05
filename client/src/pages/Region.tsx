@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import type { ForumRegion, Thread } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
+import { useBackground } from '../contexts/BackgroundContext';
 
 // Extended type to match the API response which includes joined fields
 interface ThreadSummary extends Omit<Thread, 'replies'> {
@@ -12,11 +13,25 @@ interface ThreadSummary extends Omit<Thread, 'replies'> {
 
 const Region: React.FC = () => {
   const { regionId } = useParams<{ regionId: string }>();
-  const [region, setRegion] = useState<ForumRegion | null>(null);
+  const location = useLocation();
+  const passedRegion = (location.state as { region?: ForumRegion })?.region;
+  
+  const [region, setRegion] = useState<ForumRegion | null>(passedRegion || null);
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!passedRegion);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPhotoMode, setShowPhotoMode] = useState(false);
+  const { setBackgroundUrl, resetBackground } = useBackground();
+
+  // Set background immediately if we have region data from navigation state
+  useLayoutEffect(() => {
+    if (passedRegion?.imageUrl) {
+      setBackgroundUrl(passedRegion.imageUrl);
+    }
+    return () => {
+      resetBackground();
+    };
+  }, [passedRegion, setBackgroundUrl, resetBackground]);
 
   const fetchThreads = () => {
     if (!regionId) return;
@@ -29,18 +44,21 @@ const Region: React.FC = () => {
 
   useEffect(() => {
     if (!regionId) return;
-    setLoading(true);
-
-    // Fetch region details (could be optimized to fetch single region)
-    fetch('/api/region')
-      .then(res => res.json())
-      .then((data: ForumRegion[]) => {
-        console.log('RegionId param:', regionId);
-        console.log('API Data:', data);
-        const found = data.find(r => String(r.id) === regionId);
-        console.log('Found region:', found);
-        setRegion(found || null);
-      });
+    
+    // Only fetch region data if we didn't get it from navigation state
+    if (!passedRegion) {
+      setLoading(true);
+      fetch('/api/region')
+        .then(res => res.json())
+        .then((data: ForumRegion[]) => {
+          const found = data.find(r => String(r.id) === regionId);
+          setRegion(found || null);
+          // Set the background when region data loads
+          if (found?.imageUrl) {
+            setBackgroundUrl(found.imageUrl);
+          }
+        });
+    }
 
     // Fetch threads
     fetch(`/api/threads?regionId=${regionId}`)
@@ -49,28 +67,24 @@ const Region: React.FC = () => {
         setThreads(data);
         setLoading(false);
       });
-  }, [regionId]);
+  }, [regionId, passedRegion, setBackgroundUrl]);
 
   if (loading) return <div>Loading...</div>;
   if (!region) return <div>Region not found</div>;
 
   return (
     <>
-      {/* Override the Layout background with region-specific image */}
-      <style>{`
-        .min-h-screen > div.fixed {
-          background-image: url('${region.imageUrl || 'https://taiyaefiles.blob.core.windows.net/web/home.jpg'}') !important;
-          background-position: center top !important;
-        }
-        ${showPhotoMode ? `
-        .min-h-screen > header,
-        .min-h-screen > main,
-        .min-h-screen > footer {
-          opacity: 0 !important;
-          pointer-events: none !important;
-        }
-        ` : ''}
-      `}</style>
+      {/* Photo mode styles */}
+      {showPhotoMode && (
+        <style>{`
+          .min-h-screen > header,
+          .min-h-screen > main,
+          .min-h-screen > footer {
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+        `}</style>
+      )}
 
       {/* Show Photo Button - rendered via portal to body */}
       {createPortal(
@@ -117,7 +131,7 @@ const Region: React.FC = () => {
                   threads.map(thread => (
                     <tr key={thread.id} className="hover:bg-gray-50 transition-colors border-t border-gray-300">
                       <td className="px-4 py-3 border-r border-gray-300">
-                        <Link to={`/thread/${thread.id}`} style={{ color: '#111827' }} className="hover:underline font-medium">
+                        <Link to={`/thread/${thread.id}`} state={{ region }} style={{ color: '#111827' }} className="hover:underline font-medium">
                           {thread.title}
                         </Link>
                         <div className="text-xs text-gray-500 mt-1">

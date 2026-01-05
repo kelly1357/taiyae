@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, Link, useOutletContext } from 'react-router-dom';
+import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
-import type { Character } from '../types';
+import { useBackground } from '../contexts/BackgroundContext';
+import type { Character, ForumRegion } from '../types';
 
 // Helper type for the API response which flattens character/pack info
 interface PostAuthor {
@@ -104,6 +105,10 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
 const ThreadView: React.FC = () => {
   const { threadId } = useParams<{ threadId: string }>();
   const { activeCharacter } = useOutletContext<{ activeCharacter?: Character }>();
+  const location = useLocation();
+  const passedRegion = (location.state as { region?: ForumRegion })?.region;
+  const { setBackgroundUrl, resetBackground } = useBackground();
+  
   const [thread, setThread] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -112,6 +117,16 @@ const ThreadView: React.FC = () => {
   const [editContent, setEditContent] = useState('');
   const [showPhotoMode, setShowPhotoMode] = useState(false);
 
+  // Set background immediately if we have region data from navigation state
+  useLayoutEffect(() => {
+    if (passedRegion?.imageUrl) {
+      setBackgroundUrl(passedRegion.imageUrl);
+    }
+    return () => {
+      resetBackground();
+    };
+  }, [passedRegion, setBackgroundUrl, resetBackground]);
+
   const fetchThread = () => {
     if (!threadId) return;
     
@@ -119,6 +134,10 @@ const ThreadView: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         setThread(data);
+        // Set background from thread data if we didn't get it from navigation
+        if (!passedRegion && data.regionImage) {
+          setBackgroundUrl(data.regionImage);
+        }
         setLoading(false);
       })
       .catch(err => {
@@ -220,21 +239,15 @@ const ThreadView: React.FC = () => {
 
   return (
     <>
-      {/* Override the Layout background with region-specific image */}
-      {thread.regionImage && (
+      {/* Photo mode styles */}
+      {showPhotoMode && (
         <style>{`
-          .min-h-screen > div.fixed {
-            background-image: url('${thread.regionImage}') !important;
-            background-position: center top !important;
-          }
-          ${showPhotoMode ? `
           .min-h-screen > header,
           .min-h-screen > main,
           .min-h-screen > footer {
             opacity: 0 !important;
             pointer-events: none !important;
           }
-          ` : ''}
         `}</style>
       )}
 

@@ -228,7 +228,7 @@ const Home: React.FC = () => {
               return (
                 <div key={region.id} className="px-4 py-4">
                   {heroImage ? (
-                    <Link to={`/region/${region.id}`} className="relative block cursor-pointer mx-0.5">
+                    <Link to={`/region/${region.id}`} state={{ region }} className="relative block cursor-pointer mx-0.5">
                       <img
                         src={heroImage}
                         alt={`${region.name} landscape`}
@@ -243,6 +243,7 @@ const Home: React.FC = () => {
                   ) : (
                     <Link
                       to={`/region/${region.id}`}
+                      state={{ region }}
                       className="text-xl font-semibold text-black mb-2 block"
                     >
                       {region.name}
@@ -292,6 +293,7 @@ const Home: React.FC = () => {
                               <div className="space-y-1">
                                 <Link
                                   to={`/thread/${stats.latestThread.id}`}
+                                  state={{ region }}
                                   className="font-semibold text-gray-900 hover:underline"
                                 >
                                   {stats.latestThread.title}

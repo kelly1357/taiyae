@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { BackgroundProvider } from './contexts/BackgroundContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Region from './pages/Region';
@@ -123,6 +124,7 @@ const App: React.FC = () => {
   }
 
   return (
+    <BackgroundProvider>
     <Routes>
       <Route path="/" element={
         <Layout 
@@ -169,6 +171,7 @@ const App: React.FC = () => {
         <Route path="*" element={<div className="text-center mt-20">Page not found</div>} />
       </Route>
     </Routes>
+    </BackgroundProvider>
   );
 };
 

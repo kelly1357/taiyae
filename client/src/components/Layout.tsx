@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
+import { useBackground } from '../contexts/BackgroundContext';
 import type { User, Character } from '../types';
 
 interface LayoutProps {
@@ -21,6 +22,7 @@ const Layout: React.FC<LayoutProps> = ({
   onCharacterSelect,
 }) => {
   const onlineList = onlineCharacters ?? [];
+  const { backgroundUrl } = useBackground();
 
   return (
     <div className="min-h-screen text-gray-100 font-sans flex flex-col relative">
@@ -28,7 +30,7 @@ const Layout: React.FC<LayoutProps> = ({
       <div
         className="fixed inset-0 w-full h-full"
         style={{
-          backgroundImage: "url('https://taiyaefiles.blob.core.windows.net/web/home.jpg')",
+          backgroundImage: `url('${backgroundUrl}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
