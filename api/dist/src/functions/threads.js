@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
+exports.getLatestPosts = exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
 const functions_1 = require("@azure/functions");
 const db_1 = require("../db");
 const sql = require("mssql");
@@ -234,5 +234,58 @@ functions_1.app.http('updatePost', {
     authLevel: 'anonymous',
     handler: updatePost,
     route: 'posts/{postId}'
+});
+function getLatestPosts(request, context) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const pool = yield (0, db_1.getPool)();
+            const result = yield pool.request()
+                .query(`
+                SELECT TOP 10
+                    p.PostID as id,
+                    p.Subject as title,
+                    p.Body as content,
+                    p.Created as createdAt,
+                    t.ThreadID as threadId,
+                    r.RegionID as regionId,
+                    r.RegionName as regionName,
+                    c.CharacterName as authorName,
+                    c.CharacterID as authorId,
+                    c.AvatarImage as authorImage,
+                    pk.PackName as packName,
+                    CASE 
+                        WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        ELSE 0 
+                    END as isOnline,
+                    firstPost.Subject as threadTitle
+                FROM Post p
+                JOIN Thread t ON p.ThreadID = t.ThreadID
+                JOIN Region r ON t.RegionID = r.RegionID
+                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                LEFT JOIN Pack pk ON c.PackID = pk.PackID
+                CROSS APPLY (
+                    SELECT TOP 1 Subject 
+                    FROM Post 
+                    WHERE ThreadID = t.ThreadID 
+                    ORDER BY Created ASC
+                ) firstPost
+                ORDER BY p.Created DESC
+            `);
+            return {
+                jsonBody: result.recordset
+            };
+        }
+        catch (error) {
+            context.error(error);
+            return { status: 500, body: "Internal Server Error" };
+        }
+    });
+}
+exports.getLatestPosts = getLatestPosts;
+functions_1.app.http('getLatestPosts', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    handler: getLatestPosts,
+    route: 'latest-posts'
 });
 //# sourceMappingURL=threads.js.map

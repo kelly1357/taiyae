@@ -246,3 +246,56 @@ app.http('updatePost', {
     handler: updatePost,
     route: 'posts/{postId}'
 });
+
+export async function getLatestPosts(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+        
+        const result = await pool.request()
+            .query(`
+                SELECT TOP 10
+                    p.PostID as id,
+                    p.Subject as title,
+                    p.Body as content,
+                    p.Created as createdAt,
+                    t.ThreadID as threadId,
+                    r.RegionID as regionId,
+                    r.RegionName as regionName,
+                    c.CharacterName as authorName,
+                    c.CharacterID as authorId,
+                    c.AvatarImage as authorImage,
+                    pk.PackName as packName,
+                    CASE 
+                        WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        ELSE 0 
+                    END as isOnline,
+                    firstPost.Subject as threadTitle
+                FROM Post p
+                JOIN Thread t ON p.ThreadID = t.ThreadID
+                JOIN Region r ON t.RegionID = r.RegionID
+                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                LEFT JOIN Pack pk ON c.PackID = pk.PackID
+                CROSS APPLY (
+                    SELECT TOP 1 Subject 
+                    FROM Post 
+                    WHERE ThreadID = t.ThreadID 
+                    ORDER BY Created ASC
+                ) firstPost
+                ORDER BY p.Created DESC
+            `);
+
+        return {
+            jsonBody: result.recordset
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('getLatestPosts', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    handler: getLatestPosts,
+    route: 'latest-posts'
+});

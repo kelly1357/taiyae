@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { ForumRegion } from '../types';
 
@@ -21,12 +21,52 @@ interface CharacterStats {
   pupsCount: number;
 }
 
+interface ThreadItem {
+  id: string;
+  title: string;
+  authorName?: string;
+  regionId: string;
+  regionName?: string;
+  createdAt: string;
+  updatedAt: string;
+  replyCount: number;
+  lastReplyAuthorName?: string;
+  lastReplyIsOnline?: boolean;
+}
+
+interface LatestPost {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  threadId: string;
+  threadTitle: string;
+  regionId: string;
+  regionName: string;
+  authorName?: string;
+  authorId?: string;
+  authorImage?: string;
+  packName?: string;
+  isOnline?: boolean;
+}
+
+type ViewMode = 'areas' | 'active' | 'lonely' | 'latest';
+type ThreadSortField = 'title' | 'date' | 'area';
+type SortDirection = 'asc' | 'desc';
+
 const Home: React.FC = () => {
   const [regions, setRegions] = useState<ForumRegion[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionStats, setRegionStats] = useState<Record<string, RegionStats>>({});
   const [statsLoading, setStatsLoading] = useState(false);
   const [characterStats, setCharacterStats] = useState<CharacterStats | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('areas');
+  const [allThreads, setAllThreads] = useState<ThreadItem[]>([]);
+  const [threadsLoading, setThreadsLoading] = useState(false);
+  const [threadSortField, setThreadSortField] = useState<ThreadSortField>('date');
+  const [threadSortDirection, setThreadSortDirection] = useState<SortDirection>('desc');
+  const [latestPosts, setLatestPosts] = useState<LatestPost[]>([]);
+  const [latestPostsLoading, setLatestPostsLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/region')
@@ -40,6 +80,59 @@ const Home: React.FC = () => {
         setLoading(false);
       });
   }, []);
+
+  // Fetch all threads when switching to active or lonely view
+  useEffect(() => {
+    if ((viewMode !== 'active' && viewMode !== 'lonely') || !regions.length) return;
+    
+    setThreadsLoading(true);
+    
+    const fetchAllThreads = async () => {
+      const allThreadsData: ThreadItem[] = [];
+      
+      for (const region of regions) {
+        try {
+          const response = await fetch(`/api/threads?regionId=${region.id}`);
+          if (response.ok) {
+            const threads = await response.json();
+            threads.forEach((thread: any) => {
+              allThreadsData.push({
+                ...thread,
+                regionName: region.name,
+              });
+            });
+          }
+        } catch (err) {
+          console.error(`Failed to fetch threads for region ${region.id}:`, err);
+        }
+      }
+      
+      // Sort by most recent post
+      allThreadsData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      setAllThreads(allThreadsData);
+      setThreadsLoading(false);
+    };
+    
+    fetchAllThreads();
+  }, [viewMode, regions]);
+
+  // Fetch latest posts when switching to latest view
+  useEffect(() => {
+    if (viewMode !== 'latest') return;
+    
+    setLatestPostsLoading(true);
+    
+    fetch('/api/latest-posts')
+      .then(res => res.json())
+      .then(data => {
+        setLatestPosts(data);
+        setLatestPostsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch latest posts:', err);
+        setLatestPostsLoading(false);
+      });
+  }, [viewMode]);
 
   useEffect(() => {
     if (!regions.length) return;
@@ -119,6 +212,62 @@ const Home: React.FC = () => {
         console.error('Failed to fetch character stats:', err);
       });
   }, []);
+
+  const handleThreadSort = (field: ThreadSortField) => {
+    if (threadSortField === field) {
+      setThreadSortDirection(threadSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setThreadSortField(field);
+      setThreadSortDirection(field === 'date' ? 'desc' : 'asc');
+    }
+  };
+
+  const sortedThreads = useMemo(() => {
+    return [...allThreads].sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+
+      switch (threadSortField) {
+        case 'title':
+          aVal = a.title.toLowerCase();
+          bVal = b.title.toLowerCase();
+          break;
+        case 'date':
+          aVal = new Date(a.updatedAt).getTime();
+          bVal = new Date(b.updatedAt).getTime();
+          break;
+        case 'area':
+          aVal = (a.regionName || '').toLowerCase();
+          bVal = (b.regionName || '').toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aVal < bVal) return threadSortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return threadSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [allThreads, threadSortField, threadSortDirection]);
+
+  const ThreadSortIcon = ({ field }: { field: ThreadSortField }) => {
+    if (threadSortField !== field) {
+      return (
+        <svg className="ml-1 w-3 h-3 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return threadSortDirection === 'asc' ? (
+      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
 
   const regionImages: Record<string, string> = {
     'Eastern Wasteland': 'https://taiyaefiles.blob.core.windows.net/web/Eastern%20Wasteland%20Mini.jpg',
@@ -243,10 +392,38 @@ const Home: React.FC = () => {
             </h2>
           </div>
 
-          <div className="bg-gray-200 px-4 py-2">
-            <span className="text-xs text-gray-700">View:</span>
+          <div className="bg-gray-200 px-4 py-2 flex items-center gap-2">
+            <span className="text-xs text-gray-700 uppercase tracking-wider">View:</span>
+            <button
+              onClick={() => setViewMode('areas')}
+              className={`text-xs uppercase tracking-wider ${viewMode === 'areas' ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-800'}`}
+            >
+              Areas
+            </button>
+            <span className="text-gray-400">|</span>
+            <button
+              onClick={() => setViewMode('active')}
+              className={`text-xs uppercase tracking-wider ${viewMode === 'active' ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-800'}`}
+            >
+              Active Threads
+            </button>
+            <span className="text-gray-400">|</span>
+            <button
+              onClick={() => setViewMode('lonely')}
+              className={`text-xs uppercase tracking-wider ${viewMode === 'lonely' ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-800'}`}
+            >
+              Lonely Threads
+            </button>
+            <span className="text-gray-400">|</span>
+            <button
+              onClick={() => setViewMode('latest')}
+              className={`text-xs uppercase tracking-wider ${viewMode === 'latest' ? 'text-gray-900 font-semibold' : 'text-gray-600 hover:text-gray-800'}`}
+            >
+              Latest Posts
+            </button>
           </div>
 
+          {viewMode === 'areas' && (
           <div>
             {regions.map((region) => {
               const stats = regionStats[region.id];
@@ -349,6 +526,210 @@ const Home: React.FC = () => {
               );
             })}
           </div>
+          )}
+
+          {/* Active Threads View */}
+          {viewMode === 'active' && (
+            <div className="px-4 py-4">
+              {threadsLoading ? (
+                <div className="text-gray-600 text-sm">Loading threads...</div>
+              ) : sortedThreads.length === 0 ? (
+                <div className="text-gray-600 text-sm">No active threads found.</div>
+              ) : (
+                <div className="mx-0.5">
+                  <table className="w-full border border-gray-300 text-sm bg-white">
+                    <thead>
+                      <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                        <th 
+                          className="w-1/2 px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                          onClick={() => handleThreadSort('title')}
+                        >
+                          Thread<ThreadSortIcon field="title" />
+                        </th>
+                        <th 
+                          className="w-1/4 px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                          onClick={() => handleThreadSort('area')}
+                        >
+                          Area<ThreadSortIcon field="area" />
+                        </th>
+                        <th 
+                          className="w-1/4 px-4 py-2 text-left cursor-pointer hover:bg-gray-300 select-none"
+                          onClick={() => handleThreadSort('date')}
+                        >
+                          Latest Post<ThreadSortIcon field="date" />
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedThreads.map((thread) => {
+                        const region = regions.find(r => r.id === thread.regionId);
+                        return (
+                          <tr key={thread.id} className="border-t border-gray-300">
+                            <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
+                              <Link
+                                to={`/thread/${thread.id}`}
+                                state={{ region }}
+                                className="font-semibold text-gray-900 hover:underline"
+                              >
+                                {thread.title}
+                              </Link>
+                              <div className="text-xs text-gray-600">
+                                by {thread.authorName || 'Unknown'} · {thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}
+                              </div>
+                            </td>
+                            <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
+                              <Link
+                                to={`/region/${thread.regionId}`}
+                                state={{ region }}
+                                className="text-gray-900 hover:underline"
+                              >
+                                {thread.regionName}
+                              </Link>
+                            </td>
+                            <td className="align-top px-4 py-3 text-gray-800">
+                              <div className="text-sm text-gray-700 flex items-center gap-1">
+                                by {thread.lastReplyAuthorName || thread.authorName || 'Unknown'}
+                                {!!thread.lastReplyIsOnline && (
+                                  <span className="w-2 h-2 bg-green-500 rounded-full border border-white shadow-sm" title="Online Now"></span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(thread.updatedAt).toLocaleString()}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Lonely Threads View */}
+          {viewMode === 'lonely' && (
+            <div className="px-4 py-4">
+              {threadsLoading ? (
+                <div className="text-gray-600 text-sm">Loading threads...</div>
+              ) : (() => {
+                const lonelyThreads = sortedThreads.filter(t => t.replyCount === 0);
+                if (lonelyThreads.length === 0) {
+                  return <div className="text-gray-600 text-sm">No lonely threads found. All threads have replies!</div>;
+                }
+                return (
+                  <div className="mx-0.5">
+                    <table className="w-full border border-gray-300 text-sm bg-white">
+                      <thead>
+                        <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                          <th 
+                            className="w-1/2 px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                            onClick={() => handleThreadSort('title')}
+                          >
+                            Thread<ThreadSortIcon field="title" />
+                          </th>
+                          <th 
+                            className="w-1/4 px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                            onClick={() => handleThreadSort('area')}
+                          >
+                            Area<ThreadSortIcon field="area" />
+                          </th>
+                          <th 
+                            className="w-1/4 px-4 py-2 text-left cursor-pointer hover:bg-gray-300 select-none"
+                            onClick={() => handleThreadSort('date')}
+                          >
+                            Posted<ThreadSortIcon field="date" />
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {lonelyThreads.map((thread) => {
+                          const region = regions.find(r => r.id === thread.regionId);
+                          return (
+                            <tr key={thread.id} className="border-t border-gray-300">
+                              <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
+                                <Link
+                                  to={`/thread/${thread.id}`}
+                                  state={{ region }}
+                                  className="font-semibold text-gray-900 hover:underline"
+                                >
+                                  {thread.title}
+                                </Link>
+                                <div className="text-xs text-gray-600">
+                                  by {thread.authorName || 'Unknown'}
+                                </div>
+                              </td>
+                              <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
+                                <Link
+                                  to={`/region/${thread.regionId}`}
+                                  state={{ region }}
+                                  className="text-gray-900 hover:underline"
+                                >
+                                  {thread.regionName}
+                                </Link>
+                              </td>
+                              <td className="align-top px-4 py-3 text-gray-800">
+                                <div className="text-xs text-gray-500">
+                                  {new Date(thread.createdAt).toLocaleString()}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Latest Posts View */}
+          {viewMode === 'latest' && (
+            <div className="px-4 py-4">
+              {latestPostsLoading ? (
+                <div className="text-gray-600 text-sm">Loading latest posts...</div>
+              ) : latestPosts.length === 0 ? (
+                <div className="text-gray-600 text-sm">No posts found.</div>
+              ) : (
+                <div className="space-y-4">
+                  {latestPosts.map((post) => {
+                    const region = regions.find(r => r.id === post.regionId);
+                    // Strip HTML tags and truncate content for preview
+                    const plainContent = post.content?.replace(/<[^>]*>/g, '') || '';
+                    const truncatedContent = plainContent.length > 300 
+                      ? plainContent.substring(0, 300) + '...' 
+                      : plainContent;
+                    
+                    return (
+                      <div key={post.id} className="bg-white">
+                        {/* Quote content */}
+                        <div className="px-4 py-3">
+                          <div className="text-sm text-gray-700 leading-relaxed border-l-4 border-gray-300 pl-3 bg-gray-50 py-2">
+                            {truncatedContent}
+                          </div>
+                          
+                          {/* Attribution */}
+                          <div className="mt-2 text-left">
+                            <Link
+                              to={`/thread/${post.threadId}`}
+                              state={{ region }}
+                              className="text-sm text-gray-700 hover:underline"
+                            >
+                              — {post.authorName || 'Unknown'}, {post.threadTitle}
+                            </Link>
+                            <div className="text-xs text-gray-500">
+                              {new Date(post.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </section>
     </div>
   );
