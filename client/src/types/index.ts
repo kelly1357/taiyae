@@ -28,6 +28,7 @@ export interface Pack {
 export interface Character {
   id: string;
   userId: string;
+  username?: string;
   name: string;
   sex: 'Male' | 'Female' | 'Other';
   age: string; // e.g., "3 years"

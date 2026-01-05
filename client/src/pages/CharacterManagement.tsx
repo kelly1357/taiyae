@@ -279,7 +279,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{char.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.packName || 'Loner'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.packName || 'Rogue'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.age}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.height || 'N/A'}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{char.build || 'N/A'}</td>
