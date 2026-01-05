@@ -48,27 +48,47 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="bg-white/35 p-4">
           <div className="flex flex-col lg:flex-row gap-6">
           <aside className="lg:w-64 flex-shrink-0 space-y-6">
-            <section className="bg-white border border-gray-300 shadow">
-              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-                Member Login
-              </div>
-              <div className="px-4 py-4 space-y-3 text-gray-800">
-                <input
-                  type="text"
-                  placeholder="Username"
-                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
-                />
-                <button className="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2 uppercase tracking-wide">
-                  Log In
-                </button>
-                <div className="text-xs text-gray-500 text-center">New here? Join Horizon</div>
-              </div>
-            </section>
+            {activeCharacter && (
+              <section className="bg-white border border-gray-300 shadow">
+                <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                  Active Character
+                </div>
+                <div className="relative">
+                  <img
+                    src={activeCharacter.imageUrl || '/default-avatar.png'}
+                    alt={activeCharacter.name}
+                    className="w-full aspect-square object-cover block"
+                  />
+                  <span className="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 text-sm font-semibold uppercase tracking-wide shadow">
+                    {activeCharacter.name}
+                  </span>
+                </div>
+              </section>
+            )}
+
+            {!activeCharacter && (
+              <section className="bg-white border border-gray-300 shadow">
+                <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                  Member Login
+                </div>
+                <div className="px-4 py-4 space-y-3 text-gray-800">
+                  <input
+                    type="text"
+                    placeholder="Username"
+                    className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Password"
+                    className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
+                  />
+                  <button className="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2 uppercase tracking-wide">
+                    Log In
+                  </button>
+                  <div className="text-xs text-gray-500 text-center">New here? Join Horizon</div>
+                </div>
+              </section>
+            )}
 
             <section className="bg-white border border-gray-300 shadow">
               <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
