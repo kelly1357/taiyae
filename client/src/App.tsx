@@ -11,6 +11,32 @@ import UserManagement from './pages/UserManagement';
 import Login from './pages/Login';
 import type { User, Character } from './types';
 
+// Wiki pages
+import {
+  AbsencesAndScarcity,
+  Achievements,
+  ActivityChecks,
+  FAQ,
+  GameOverview,
+  GettingStarted,
+  Handbook,
+  Map,
+  OffscreenInteractions,
+  PackCreation,
+  ProfileHelp,
+  RulesCompilation,
+  RulesGeneral,
+  RulesMindReading,
+  SettingOverview,
+  SkillPoints,
+  SpiritSymbols,
+  ThreeStrikeRule,
+  UsingTags,
+  WolfGuide,
+  WolfGuideFighting,
+  WolfGuidePupDevelopment,
+} from './pages/wiki';
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userCharacters, setUserCharacters] = useState<Character[]>([]);
@@ -115,6 +141,31 @@ const App: React.FC = () => {
         <Route path="characters" element={<Characters />} />
         <Route path="my-characters" element={<CharacterManagement user={user} />} />
         <Route path="account" element={<UserManagement user={user} onUpdateUser={handleUpdateUser} />} />
+        
+        {/* Wiki Routes */}
+        <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />
+        <Route path="wiki/achievements" element={<Achievements />} />
+        <Route path="wiki/activity-checks" element={<ActivityChecks />} />
+        <Route path="wiki/faq" element={<FAQ />} />
+        <Route path="wiki/game-overview" element={<GameOverview />} />
+        <Route path="wiki/getting-started" element={<GettingStarted />} />
+        <Route path="wiki/handbook" element={<Handbook />} />
+        <Route path="wiki/map" element={<Map />} />
+        <Route path="wiki/offscreen-interactions" element={<OffscreenInteractions />} />
+        <Route path="wiki/pack-creation" element={<PackCreation />} />
+        <Route path="wiki/profile-help" element={<ProfileHelp />} />
+        <Route path="wiki/rules-compilation" element={<RulesCompilation />} />
+        <Route path="wiki/rules-general" element={<RulesGeneral />} />
+        <Route path="wiki/rules-mind-reading" element={<RulesMindReading />} />
+        <Route path="wiki/setting-overview" element={<SettingOverview />} />
+        <Route path="wiki/skill-points" element={<SkillPoints />} />
+        <Route path="wiki/spirit-symbols" element={<SpiritSymbols />} />
+        <Route path="wiki/three-strike-rule" element={<ThreeStrikeRule />} />
+        <Route path="wiki/using-tags" element={<UsingTags />} />
+        <Route path="wiki/wolf-guide" element={<WolfGuide />} />
+        <Route path="wiki/wolf-guide-fighting" element={<WolfGuideFighting />} />
+        <Route path="wiki/wolf-guide-pup-development" element={<WolfGuidePupDevelopment />} />
+        
         <Route path="*" element={<div className="text-center mt-20">Page not found</div>} />
       </Route>
     </Routes>

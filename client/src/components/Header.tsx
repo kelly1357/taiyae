@@ -108,6 +108,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           </NavDropdown>
           <NavDropdown label="Wiki">
             <DropdownLink to="/wiki">Wiki Home</DropdownLink>
+            <DropdownLink to="/wiki/handbook">Handbook</DropdownLink>
           </NavDropdown>
           <NavDropdown label="OOC">
             <DropdownLink to="/ooc">OOC Forums</DropdownLink>

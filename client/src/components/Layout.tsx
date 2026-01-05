@@ -1,7 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
-import Footer from './Footer';
 import type { User, Character } from '../types';
 
 interface LayoutProps {
@@ -121,7 +120,6 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
