@@ -190,6 +190,34 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
     }
 }
 
+export async function getCharacterStats(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+        const result = await pool.request().query(`
+            SELECT 
+                COUNT(*) as totalCharacters,
+                SUM(CASE WHEN Sex = 'Male' THEN 1 ELSE 0 END) as maleCount,
+                SUM(CASE WHEN Sex = 'Female' THEN 1 ELSE 0 END) as femaleCount,
+                SUM(CASE WHEN MonthsAge < 12 THEN 1 ELSE 0 END) as pupsCount
+            FROM Character
+            WHERE Is_Active = 1
+        `);
+        
+        const stats = result.recordset[0];
+        return { 
+            jsonBody: {
+                totalCharacters: stats.totalCharacters || 0,
+                maleCount: stats.maleCount || 0,
+                femaleCount: stats.femaleCount || 0,
+                pupsCount: stats.pupsCount || 0
+            }
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 app.http('getHealthStatuses', {
     methods: ['GET'],
     authLevel: 'anonymous',
@@ -202,6 +230,13 @@ app.http('getCharacters', {
     authLevel: 'anonymous',
     route: 'characters',
     handler: getCharacters
+});
+
+app.http('getCharacterStats', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'characters/stats',
+    handler: getCharacterStats
 });
 
 app.http('getCharacter', {

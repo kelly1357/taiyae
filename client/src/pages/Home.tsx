@@ -13,11 +13,19 @@ interface RegionStats {
   };
 }
 
+interface CharacterStats {
+  totalCharacters: number;
+  maleCount: number;
+  femaleCount: number;
+  pupsCount: number;
+}
+
 const Home: React.FC = () => {
   const [regions, setRegions] = useState<ForumRegion[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionStats, setRegionStats] = useState<Record<string, RegionStats>>({});
   const [statsLoading, setStatsLoading] = useState(false);
+  const [characterStats, setCharacterStats] = useState<CharacterStats | null>(null);
 
   useEffect(() => {
     fetch('/api/region')
@@ -95,6 +103,18 @@ const Home: React.FC = () => {
     };
   }, [regions]);
 
+  // Fetch character statistics
+  useEffect(() => {
+    fetch('/api/characters/stats')
+      .then(res => res.json())
+      .then(data => {
+        setCharacterStats(data);
+      })
+      .catch(err => {
+        console.error('Failed to fetch character stats:', err);
+      });
+  }, []);
+
   const regionImages: Record<string, string> = {
     'Eastern Wasteland': 'https://s3.amazonaws.com/HorizonRPG/layout/Eastern%20Wasteland.jpg',
     'Verdant Hills': 'https://web.archive.org/web/20181216142402im_/https://s3.amazonaws.com/HorizonRPG/layout/Verdant%20Hills.jpg',
@@ -103,22 +123,7 @@ const Home: React.FC = () => {
   if (loading) return <div className="text-center p-8">Loading regions...</div>;
 
   return (
-    <div className="relative">
-      {/* Background Image */}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: "url('https://taiyaefiles.blob.core.windows.net/web/home.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        {/* Overlay to ensure text readability */}
-        <div className="absolute inset-0 bg-gray-900/50" />
-      </div>
-
-      <div className="space-y-8 relative z-10">
+    <div className="space-y-8">
         <section className="border border-gray-300 bg-white">
           <div className="bg-[#2f3a2f] px-4 py-2">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">
@@ -126,13 +131,74 @@ const Home: React.FC = () => {
             </h2>
           </div>
 
-          <div className="px-6 py-6">
-            <div className="space-y-4">
+          {/* Sitewide Updates and Plot News - side by side */}
+          <div className="grid grid-cols-2 px-4 py-4">
+            {/* Sitewide Updates */}
+            <div className="pr-4">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Sitewide Updates</h3>
+              <p className="text-sm text-gray-800 leading-relaxed">
+                Welcome to the new Horizon! We have migrated to a new system.
+              </p>
+            </div>
+
+            {/* Plot News */}
+            <div className="pl-4 border-l border-gray-300">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">Plot News</h3>
+              <p className="text-sm text-gray-600 italic">None.</p>
+            </div>
+          </div>
+
+          {/* Game Statistics */}
+          <div className="px-4 py-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Game Statistics</h3>
+            <div className="grid grid-cols-3 border border-gray-300 mx-0.5">
+              {/* Setting */}
+              <div className="border-r border-gray-300">
+                <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
+                    Setting
+                  </h4>
+                </div>
+                <div className="px-4 py-4 text-sm text-gray-800">
+                  <div className="font-semibold">Full Summer, HY0</div>
+                  <div className="text-gray-600">Sunny · 90°F / 32°C</div>
+                </div>
+              </div>
+
+              {/* Population */}
+              <div className="border-r border-gray-300">
+                <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
+                    Population
+                  </h4>
+                </div>
+                <div className="px-4 py-4 text-sm text-gray-800">
+                  {characterStats ? (
+                    <div className="space-y-1">
+                      <div><span className="font-semibold">{characterStats.totalCharacters}</span> characters total</div>
+                      <div className="text-gray-600">
+                        {characterStats.maleCount} ♂ · {characterStats.femaleCount} ♀
+                      </div>
+                      {characterStats.pupsCount > 0 && (
+                        <div className="text-gray-600">{characterStats.pupsCount} pups</div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-gray-600">Loading...</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Packs */}
               <div>
-                <h3 className="text-2xl font-semibold text-gray-900">Sitewide Updates</h3>
-                <p className="mt-2 text-base leading-relaxed text-gray-800">
-                  Welcome to the new Horizon! We have migrated to a new system.
-                </p>
+                <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
+                    Packs
+                  </h4>
+                </div>
+                <div className="px-4 py-4 text-sm text-gray-800">
+                  <div className="text-gray-600 italic">Rogue</div>
+                </div>
               </div>
             </div>
           </div>
@@ -153,19 +219,18 @@ const Home: React.FC = () => {
               return (
                 <div key={region.id} className="px-6 py-6">
                   {heroImage ? (
-                    <div className="relative -mx-6">
+                    <Link to={`/region/${region.id}`} className="relative -mx-6 block cursor-pointer">
                       <img
                         src={heroImage}
                         alt={`${region.name} landscape`}
                         className="w-full h-48 object-cover"
                       />
-                      <Link
-                        to={`/region/${region.id}`}
+                      <span
                         className="absolute bottom-4 left-4 bg-black/70 text-white px-4 py-2 text-lg font-semibold uppercase tracking-wide shadow"
                       >
                         {region.name}
-                      </Link>
-                    </div>
+                      </span>
+                    </Link>
                   ) : (
                     <Link
                       to={`/region/${region.id}`}
@@ -244,7 +309,6 @@ const Home: React.FC = () => {
             })}
           </div>
         </section>
-      </div>
     </div>
   );
 };

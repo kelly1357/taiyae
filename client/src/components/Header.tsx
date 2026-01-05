@@ -28,19 +28,19 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   }, []);
 
   return (
-    <header className="bg-gray-900 text-white border-b border-gray-700 relative z-20">
+    <header className="bg-white/35 border-b border-white/20 relative z-20">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="logo">
-          <Link to="/" className="text-2xl font-bold tracking-wider">HORIZON</Link>
+          <Link to="/" className="text-4xl font-normal tracking-widest hover:text-white" style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: 'black' }}>HORIZON</Link>
         </div>
-        <nav className="flex items-center space-x-6">
-          <Link to="/" className="hover:text-gray-300">Home</Link>
-          <Link to="/wiki" className="hover:text-gray-300">Wiki</Link>
-          <Link to="/regions" className="hover:text-gray-300">Regions</Link>
-          <Link to="/characters" className="hover:text-gray-300">Characters</Link>
+        <nav className="flex items-center space-x-6" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+          <Link to="/" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Home</Link>
+          <Link to="/wiki" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Wiki</Link>
+          <Link to="/regions" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Regions</Link>
+          <Link to="/characters" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Characters</Link>
           {user ? (
             <div className="flex items-center space-x-4">
-              <span>Welcome, {user.username}!</span>
+              <span className="text-xs uppercase tracking-wide" style={{ color: 'black' }}>Welcome, {user.username}!</span>
               
               {activeCharacter ? (
                 <div className="relative" ref={dropdownRef}>
@@ -108,12 +108,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   )}
                 </div>
               ) : (
-                <Link to="/my-characters" className="text-sm text-blue-400 hover:text-blue-300">
+                <Link to="/my-characters" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>
                   Create Character
                 </Link>
               )}
               
-              <button onClick={onLogout} className="text-sm text-red-400 hover:text-red-300">Logout</button>
+              <button onClick={onLogout} className="text-xs uppercase tracking-wide font-bold hover:text-white" style={{ color: 'black' }}>Logout</button>
             </div>
           ) : (
             <div className="space-x-4">

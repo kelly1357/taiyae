@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Region from './pages/Region';
@@ -14,6 +14,7 @@ import type { User, Character } from './types';
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userCharacters, setUserCharacters] = useState<Character[]>([]);
+  const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +40,13 @@ const App: React.FC = () => {
       setUserCharacters([]);
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    fetch('/api/characters')
+      .then(res => res.json())
+      .then(data => setAllCharacters(Array.isArray(data) ? data : []))
+      .catch(err => console.error('Failed to fetch characters list', err));
+  }, []);
 
   const handleLogin = (userData: User) => {
     setUser(userData);
@@ -95,6 +103,7 @@ const App: React.FC = () => {
           user={user} 
           activeCharacter={activeCharacter} 
           userCharacters={userCharacters}
+          onlineCharacters={allCharacters}
           onLogout={handleLogout} 
           onCharacterSelect={handleCharacterSelect}
         />

@@ -88,7 +88,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         body: JSON.stringify({ credential: credentialResponse.credential })
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = { body: text };
+      }
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
