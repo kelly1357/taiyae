@@ -31,7 +31,7 @@ const Layout: React.FC<LayoutProps> = ({
         style={{
           backgroundImage: "url('https://taiyaefiles.blob.core.windows.net/web/home.jpg')",
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           zIndex: -1,
         }}
@@ -44,13 +44,13 @@ const Layout: React.FC<LayoutProps> = ({
         onLogout={onLogout} 
         onCharacterSelect={onCharacterSelect}
       />
-      <main className="flex-grow py-8 relative z-10">
+      <main className="flex-grow py-8 relative z-10 mt-5">
         <div className="max-w-[1325px] mx-auto px-4">
           <div className="bg-white/35 p-4">
           <div className="flex flex-col lg:flex-row gap-6">
           <aside className="lg:w-64 flex-shrink-0 space-y-6">
             <section className="bg-white border border-gray-300 shadow">
-              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-semibold tracking-wider text-gray-200">
+              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                 Member Login
               </div>
               <div className="px-4 py-4 space-y-3 text-gray-800">
@@ -72,7 +72,7 @@ const Layout: React.FC<LayoutProps> = ({
             </section>
 
             <section className="bg-white border border-gray-300 shadow">
-              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-semibold tracking-wider text-gray-200">
+              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                 Who's Online ({onlineList.length})
               </div>
               <div className="px-4 py-4 text-sm text-gray-800 space-y-2">
@@ -91,7 +91,7 @@ const Layout: React.FC<LayoutProps> = ({
             </section>
 
             <section className="bg-white border border-gray-300 shadow">
-              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-semibold tracking-wider text-gray-200">
+              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                 Packs
               </div>
               <div className="px-4 py-4 text-sm text-gray-800">
@@ -100,7 +100,7 @@ const Layout: React.FC<LayoutProps> = ({
             </section>
 
             <section className="bg-white border border-gray-300 shadow">
-              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-semibold tracking-wider text-gray-200">
+              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                 Need Assistance?
               </div>
               <div className="px-4 py-4 text-sm text-gray-800 space-y-3">

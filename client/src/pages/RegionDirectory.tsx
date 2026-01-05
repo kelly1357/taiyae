@@ -134,8 +134,8 @@ const RegionDirectory: React.FC = () => {
 
         {isEditing && (
           <section className="border border-gray-300 bg-white mb-8 shadow-lg">
-            <div className="bg-[#2f3a2f] px-4 py-2">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">
+            <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+              <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
                 {currentRegion.id ? 'Edit Region' : 'New Region'}
               </h2>
             </div>
@@ -202,8 +202,8 @@ const RegionDirectory: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {regions.map(region => (
             <section key={region.id} className="border border-gray-300 bg-white shadow-lg flex flex-col">
-              <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-200 truncate">
+              <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center dark-header">
+                <h3 className="text-xs font-normal uppercase tracking-wider text-[#fff9] truncate">
                   {region.name}
                 </h3>
                 <span className="text-[10px] text-gray-300 uppercase tracking-wider">

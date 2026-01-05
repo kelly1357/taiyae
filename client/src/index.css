@@ -19,3 +19,25 @@ a {
   text-decoration: none;
 }
 
+/* Header link styles */
+.header-link {
+  color: black !important;
+}
+.header-link:hover {
+  color: white !important;
+}
+
+/* Dropdown link styles */
+.dropdown-link {
+  color: black !important;
+}
+.dropdown-link:hover {
+  color: black !important;
+  background-color: #f3f4f6;
+}
+
+/* Dark table header styles */
+.dark-header {
+  font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
+}
+

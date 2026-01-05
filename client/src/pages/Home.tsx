@@ -128,8 +128,8 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-8">
         <section className="border border-gray-300 bg-white">
-          <div className="bg-[#2f3a2f] px-4 py-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">
+          <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+            <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
               Game Updates
             </h2>
           </div>
@@ -208,10 +208,14 @@ const Home: React.FC = () => {
         </section>
 
         <section className="border border-gray-300 bg-white">
-          <div className="bg-[#2f3a2f] px-4 py-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">
+          <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+            <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
               Roleplay Forums
             </h2>
+          </div>
+
+          <div className="bg-gray-200 px-4 py-2">
+            <span className="text-xs text-gray-700">View:</span>
           </div>
 
           <div>
@@ -220,9 +224,9 @@ const Home: React.FC = () => {
               const heroImage = regionImages[region.name];
 
               return (
-                <div key={region.id} className="px-6 py-6">
+                <div key={region.id} className="px-4 py-4">
                   {heroImage ? (
-                    <Link to={`/region/${region.id}`} className="relative -mx-6 block cursor-pointer">
+                    <Link to={`/region/${region.id}`} className="relative block cursor-pointer mx-0.5">
                       <img
                         src={heroImage}
                         alt={`${region.name} landscape`}
@@ -243,17 +247,17 @@ const Home: React.FC = () => {
                     </Link>
                   )}
 
-                  <div className={`${heroImage ? '-mx-6' : 'mt-2'}`}>
+                  <div className="mx-0.5">
                     <table className="w-full border border-gray-300 text-sm bg-white">
                       <thead>
                         <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                          <th className="w-1/2 px-4 py-2 text-left">Area Info</th>
-                          <th className="w-1/2 px-4 py-2 text-left">Latest Post Info</th>
+                          <th className="w-1/3 px-4 py-2 text-left border-r border-gray-300">Area Info</th>
+                          <th className="w-2/3 px-4 py-2 text-left">Latest Post Info</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
-                          <td className="align-top px-4 py-3 text-gray-800">
+                          <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
                             <div className="space-y-2">
                               <div>
                                 <span className="font-semibold">Active Threads: </span>

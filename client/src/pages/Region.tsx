@@ -81,8 +81,8 @@ const Region: React.FC = () => {
         </div>
 
         <section className="border border-gray-300 bg-white shadow-lg">
-          <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-200">Threads</h2>
+          <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center dark-header">
+            <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Threads</h2>
             <button 
               onClick={() => setIsModalOpen(true)}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded text-xs font-bold uppercase tracking-wide shadow"

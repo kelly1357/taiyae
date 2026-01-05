@@ -12,12 +12,18 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters = [], onLogout, onCharacterSelect }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
+  const [dropdownHovering, setDropdownHovering] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
+      }
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setOpenNavDropdown(null);
       }
     };
 
@@ -27,17 +33,85 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     };
   }, []);
 
+  const handleDropdownMouseEnter = (label: string) => {
+    setOpenNavDropdown(label);
+    setDropdownHovering(label);
+  };
+  const handleDropdownMouseLeave = (label: string) => {
+    setDropdownHovering(null);
+    setTimeout(() => {
+      if (dropdownHovering !== label) setOpenNavDropdown(null);
+    }, 120);
+  };
+
+  const handleDropdownContentEnter = (label: string) => {
+    setDropdownHovering(label);
+  };
+  const handleDropdownContentLeave = (label: string) => {
+    setDropdownHovering(null);
+    setTimeout(() => {
+      if (openNavDropdown === label && dropdownHovering !== label) setOpenNavDropdown(null);
+    }, 120);
+  };
+
+  const NavDropdown = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div
+      className="relative"
+      onMouseEnter={() => handleDropdownMouseEnter(label)}
+      onMouseLeave={() => handleDropdownMouseLeave(label)}
+    >
+      <button
+        type="button"
+        onClick={() => setOpenNavDropdown(openNavDropdown === label ? null : label)}
+        className="header-link text-xs uppercase tracking-wide transition-colors flex items-center gap-1"
+      >
+        {label}
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {openNavDropdown === label && (
+        <div
+          className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-300 shadow-lg z-50"
+          onMouseEnter={() => handleDropdownContentEnter(label)}
+          onMouseLeave={() => handleDropdownContentLeave(label)}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+
+  const DropdownLink = ({ to, children }: { to: string; children: React.ReactNode }) => (
+    <Link
+      to={to}
+      onClick={() => setOpenNavDropdown(null)}
+      className="dropdown-link block px-4 py-2 text-xs uppercase tracking-wide transition-colors"
+    >
+      {children}
+    </Link>
+  );
+
   return (
     <header className="bg-white/35 border-b border-white/20 relative z-20">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div className="max-w-[1325px] mx-auto px-8 py-4 flex justify-between items-center">
         <div className="logo">
-          <Link to="/" className="text-4xl font-normal tracking-widest hover:text-white" style={{ fontFamily: 'Georgia, "Times New Roman", serif', color: 'black' }}>HORIZON</Link>
+          <Link to="/" className="header-link text-4xl font-normal tracking-widest transition-colors" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>HORIZON</Link>
         </div>
-        <nav className="flex items-center space-x-6" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-          <Link to="/" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Home</Link>
-          <Link to="/wiki" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Wiki</Link>
-          <Link to="/regions" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Regions</Link>
-          <Link to="/characters" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>Characters</Link>
+        <nav ref={navRef} className="flex items-center space-x-6" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+          <NavDropdown label="For Guests">
+            <DropdownLink to="/my-characters">Create Character</DropdownLink>
+          </NavDropdown>
+          <NavDropdown label="Characters">
+            <DropdownLink to="/characters">Character List</DropdownLink>
+            <DropdownLink to="/regions">Regions</DropdownLink>
+          </NavDropdown>
+          <NavDropdown label="Wiki">
+            <DropdownLink to="/wiki">Wiki Home</DropdownLink>
+          </NavDropdown>
+          <NavDropdown label="OOC">
+            <DropdownLink to="/ooc">OOC Forums</DropdownLink>
+          </NavDropdown>
           {user ? (
             <div className="flex items-center space-x-4">
               <span className="text-xs uppercase tracking-wide" style={{ color: 'black' }}>Welcome, {user.username}!</span>
@@ -107,11 +181,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                     </div>
                   )}
                 </div>
-              ) : (
-                <Link to="/my-characters" className="text-xs uppercase tracking-wide hover:text-white" style={{ color: 'black' }}>
-                  Create Character
-                </Link>
-              )}
+              ) : null}
               
               <button onClick={onLogout} className="text-xs uppercase tracking-wide font-bold hover:text-white" style={{ color: 'black' }}>Logout</button>
             </div>
