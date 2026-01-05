@@ -55,7 +55,14 @@ const Characters: React.FC = () => {
                     className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
                   />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{char.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                  <div className="flex items-center gap-2">
+                    {char.name}
+                    {!!char.isOnline && (
+                      <span className="w-2.5 h-2.5 bg-green-500 rounded-full border border-gray-800 shadow-sm" title="Online Now"></span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.packName || 'Loner'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.age}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{char.height || 'N/A'}</td>

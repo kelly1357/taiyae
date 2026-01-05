@@ -40,13 +40,13 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({ onSelect, className = '
 
   return (
     <div className={`region-selector ${className}`}>
-      <label htmlFor="region-select" className="block text-sm font-medium text-gray-300 mb-1">
+      <label htmlFor="region-select" className="block text-sm font-medium text-gray-200 mb-1 drop-shadow-md">
         Jump to Region
       </label>
       <select
         id="region-select"
         onChange={handleChange}
-        className="block w-full bg-gray-700 border border-gray-600 text-white rounded px-3 py-2 focus:outline-none focus:border-blue-500"
+        className="block w-full bg-white border border-gray-300 text-gray-900 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
         defaultValue=""
       >
         <option value="" disabled>Select a region...</option>

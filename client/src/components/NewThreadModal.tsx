@@ -60,15 +60,15 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">
-            Post New Thread in <span className="text-blue-400">{regionName}</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/75 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col border border-gray-200">
+        <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-lg">
+          <h2 className="text-xl font-bold text-gray-900">
+            Post New Thread in <span className="text-blue-600">{regionName}</span>
           </h2>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-500 hover:text-gray-800 transition-colors"
           >
             ✕
           </button>
@@ -77,7 +77,7 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
         <div className="p-6 overflow-y-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="thread-title" className="block text-sm font-medium text-gray-300 mb-1">
+              <label htmlFor="thread-title" className="block text-sm font-medium text-gray-700 mb-1">
                 Thread Title
               </label>
               <input
@@ -85,14 +85,14 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-gray-700 border border-gray-600 text-white rounded px-4 py-2 focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-gray-300 text-gray-900 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter a descriptive title..."
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Content
               </label>
               <RichTextEditor
@@ -104,20 +104,20 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
           </form>
         </div>
 
-        <div className="p-4 border-t border-gray-700 flex justify-end gap-3">
+        <div className="p-4 border-t border-gray-200 flex justify-end gap-3 bg-gray-50 rounded-b-lg">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded text-gray-300 hover:bg-gray-700"
+            className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !title.trim() || !content.trim()}
-            className={`px-6 py-2 rounded font-bold text-white ${
+            className={`px-6 py-2 rounded font-bold text-white shadow transition-colors ${
               isSubmitting || !title.trim() || !content.trim()
-                ? 'bg-blue-800 cursor-not-allowed' 
+                ? 'bg-blue-300 cursor-not-allowed' 
                 : 'bg-blue-600 hover:bg-blue-500'
             }`}
           >

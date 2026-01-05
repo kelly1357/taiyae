@@ -25,7 +25,11 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                     pk.PackName as packName, pk.Colors,
                     c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus,
                     (c.Experience + c.Physical + c.Knowledge) as skillPoints,
-                    mc.CharacterName as modifiedByName
+                    mc.CharacterName as modifiedByName,
+                    CASE 
+                        WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        ELSE 0 
+                    END as isOnline
                 FROM Post p
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
                 LEFT JOIN Pack pk ON c.PackID = pk.PackID
@@ -54,6 +58,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             age: p.age,
             healthStatus: p.healthStatus,
             skillPoints: p.skillPoints,
+            isOnline: p.isOnline === 1,
             createdAt: p.Created,
             modifiedAt: p.Modified,
             modifiedByName: p.modifiedByName
@@ -74,6 +79,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             age: op.age,
             healthStatus: op.healthStatus,
             skillPoints: op.skillPoints,
+            isOnline: op.isOnline === 1,
             createdAt: op.Created,
             modifiedAt: op.Modified,
             modifiedByName: op.modifiedByName,
