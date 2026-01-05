@@ -115,28 +115,26 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           </NavDropdown>
           {user ? (
             <div className="flex items-center space-x-4">
-              <span className="text-xs uppercase tracking-wide" style={{ color: 'black' }}>Welcome, {user.username}!</span>
-              
               {activeCharacter ? (
                 <div className="relative" ref={dropdownRef}>
                   <button 
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded hover:bg-gray-700 transition-colors border border-gray-600"
+                    className="flex items-center space-x-2 bg-white px-3 py-1 hover:bg-gray-50 transition-colors border border-gray-300"
                   >
                     <img 
                       src={activeCharacter.imageUrl} 
                       alt={activeCharacter.name} 
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-8 h-8 object-cover border border-gray-300"
                     />
-                    <span className="text-sm font-semibold">{activeCharacter.name}</span>
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="text-sm font-semibold text-gray-900">{activeCharacter.name}</span>
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
 
                   {isDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-64 bg-gray-800 rounded-md shadow-lg py-1 border border-gray-700 z-50">
-                      <div className="px-4 py-2 border-b border-gray-700 text-xs text-gray-400 uppercase font-semibold">
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 shadow-lg z-50">
+                      <div className="bg-[#2f3a2f] px-4 py-2 text-xs text-[#fff9] uppercase font-normal tracking-wider">
                         Switch Profile
                       </div>
                       {userCharacters.map(char => (
@@ -146,34 +144,34 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                             onCharacterSelect?.(char.id);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-700 transition-colors ${
-                            activeCharacter.id === char.id ? 'bg-gray-700' : ''
+                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-100 transition-colors border-b border-gray-200 ${
+                            activeCharacter.id === char.id ? 'bg-gray-100' : ''
                           }`}
                         >
                           <img 
                             src={char.imageUrl} 
                             alt={char.name} 
-                            className="w-8 h-8 rounded-full object-cover"
+                            className="w-8 h-8 object-cover border border-gray-300"
                           />
-                          <span className="text-sm text-white">{char.name}</span>
+                          <span className="text-sm text-gray-900">{char.name}</span>
                           {activeCharacter.id === char.id && (
-                            <svg className="w-4 h-4 text-green-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-[#2f3a2f] ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
                         </button>
                       ))}
-                      <div className="border-t border-gray-700 mt-1 pt-1">
+                      <div className="py-1">
                         <Link 
                           to="/my-characters" 
-                          className="block px-4 py-2 text-sm text-blue-400 hover:bg-gray-700 hover:text-blue-300"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Characters
                         </Link>
                         <Link 
                           to="/account" 
-                          className="block px-4 py-2 text-sm text-blue-400 hover:bg-gray-700 hover:text-blue-300"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Account

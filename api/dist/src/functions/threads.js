@@ -29,26 +29,39 @@ function getThreads(request, context) {
                     t.RegionId as regionId,
                     t.Created as createdAt,
                     t.Modified as updatedAt,
-                    p.Subject as title,
-                    p.Body as content,
-                    c.CharacterName as authorName,
-                    c.CharacterID as authorId,
+                    firstPost.Subject as title,
+                    firstPost.Body as content,
+                    threadAuthor.CharacterName as authorName,
+                    threadAuthor.CharacterID as authorId,
                     CASE 
-                        WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
                     END as isOnline,
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
-                    0 as views -- Placeholder
+                    0 as views,
+                    lastPostAuthor.CharacterName as lastReplyAuthorName,
+                    lastPost.Created as lastPostDate,
+                    CASE 
+                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        ELSE 0 
+                    END as lastReplyIsOnline
                 FROM Thread t
                 CROSS APPLY (
                     SELECT TOP 1 * 
                     FROM Post 
                     WHERE ThreadID = t.ThreadID 
                     ORDER BY Created ASC
-                ) p
-                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                ) firstPost
+                LEFT JOIN Character threadAuthor ON firstPost.CharacterID = threadAuthor.CharacterID
+                CROSS APPLY (
+                    SELECT TOP 1 *
+                    FROM Post 
+                    WHERE ThreadID = t.ThreadID 
+                    ORDER BY Created DESC
+                ) lastPost
+                LEFT JOIN Character lastPostAuthor ON lastPost.CharacterID = lastPostAuthor.CharacterID
                 WHERE t.RegionId = @regionId
-                ORDER BY t.Modified DESC
+                ORDER BY lastPost.Created DESC
             `);
             return {
                 jsonBody: result.recordset

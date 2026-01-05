@@ -63,6 +63,8 @@ const Home: React.FC = () => {
               updatedAt: string;
               replyCount: number;
               isOnline?: boolean;
+              lastReplyAuthorName?: string;
+              lastReplyIsOnline?: boolean;
             }> = await response.json();
 
             if (!Array.isArray(threads) || threads.length === 0) {
@@ -80,9 +82,9 @@ const Home: React.FC = () => {
                 latestThread: {
                   id: latestThread.id,
                   title: latestThread.title,
-                  authorName: latestThread.authorName,
+                  authorName: latestThread.lastReplyAuthorName || latestThread.authorName,
                   updatedAt: latestThread.updatedAt,
-                  isOnline: latestThread.isOnline,
+                  isOnline: latestThread.lastReplyIsOnline ?? latestThread.isOnline,
                 },
               },
             ] as const;
