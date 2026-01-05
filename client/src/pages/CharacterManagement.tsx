@@ -143,7 +143,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
         <h1 className="text-3xl font-bold text-gray-900">My Characters</h1>
         <button 
           onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded shadow"
+          className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded shadow"
         >
           Create New Character
         </button>
@@ -159,7 +159,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 type="text" 
                 value={currentCharacter.name || ''} 
                 onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
-                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 required
               />
             </div>
@@ -170,7 +170,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 <select 
                   value={currentCharacter.sex || 'Male'} 
                   onChange={e => setCurrentCharacter({...currentCharacter, sex: e.target.value as any})}
-                  className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -183,7 +183,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                   type="number" 
                   value={currentCharacter.monthsAge || ''} 
                   onChange={e => setCurrentCharacter({...currentCharacter, monthsAge: parseInt(e.target.value)})}
-                  className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                   placeholder="e.g. 36"
                 />
               </div>
@@ -194,7 +194,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               <select 
                 value={currentCharacter.healthStatusId || 1} 
                 onChange={e => setCurrentCharacter({...currentCharacter, healthStatusId: parseInt(e.target.value)})}
-                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               >
                 {healthStatuses.map(status => (
                   <option key={status.id} value={status.id}>{status.name}</option>
@@ -212,7 +212,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                   type="file" 
                   accept="image/*"
                   onChange={handleImageUpload}
-                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
                 />
                 {uploading && <span className="text-sm text-yellow-600">Uploading...</span>}
               </div>
@@ -223,7 +223,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               <textarea 
                 value={currentCharacter.bio || ''} 
                 onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
-                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:ring-2 focus:ring-gray-500 focus:border-transparent"
               />
             </div>
 
@@ -272,7 +272,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                       />
                       <button 
                         onClick={() => handleEdit(char)}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                        className="text-xs text-gray-700 hover:text-gray-900 font-medium"
                       >
                         Edit
                       </button>
@@ -296,7 +296,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                         <div className="p-1 border-r border-gray-300">{char.experience || 0}</div>
                         <div className="p-1 border-r border-gray-300">{char.physical || 0}</div>
                         <div className="p-1 border-r border-gray-300">{char.knowledge || 0}</div>
-                        <div className="p-1 font-bold text-blue-600">{char.totalSkill || 0}</div>
+                        <div className="p-1 font-bold text-gray-900">{char.totalSkill || 0}</div>
                       </div>
                     </div>
                   </td>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import type { ForumRegion, Thread } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
-import RegionSelector from '../components/RegionSelector';
 
 // Extended type to match the API response which includes joined fields
 interface ThreadSummary extends Omit<Thread, 'replies'> {
@@ -16,6 +16,7 @@ const Region: React.FC = () => {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showPhotoMode, setShowPhotoMode] = useState(false);
 
   const fetchThreads = () => {
     if (!regionId) return;
@@ -54,80 +55,109 @@ const Region: React.FC = () => {
   if (!region) return <div>Region not found</div>;
 
   return (
-    <div className="relative min-h-screen">
-      {region.imageUrl && (
-        <div 
-          className="fixed inset-0 z-0"
-          style={{
-            backgroundImage: `url('${region.imageUrl}')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
+    <>
+      {/* Override the Layout background with region-specific image */}
+      <style>{`
+        .min-h-screen > div.fixed {
+          background-image: url('${region.imageUrl || 'https://taiyaefiles.blob.core.windows.net/web/home.jpg'}') !important;
+          background-position: center top !important;
+        }
+        ${showPhotoMode ? `
+        .min-h-screen > header,
+        .min-h-screen > main,
+        .min-h-screen > footer {
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+        ` : ''}
+      `}</style>
+
+      {/* Show Photo Button - rendered via portal to body */}
+      {createPortal(
+        <button
+          onClick={() => setShowPhotoMode(!showPhotoMode)}
+          className="show-photo-btn"
         >
-          <div className="absolute inset-0 bg-gray-900/50" />
-        </div>
+          {showPhotoMode ? 'Hide Photo' : 'Show Photo'}
+        </button>,
+        document.body
       )}
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-md">{region.name}</h1>
-            <p className="text-gray-200 drop-shadow-md">{region.description}</p>
-          </div>
-          <div className="w-64">
-            <RegionSelector />
-          </div>
+      <section className={`bg-white border border-gray-300 shadow ${showPhotoMode ? 'invisible' : ''}`}>
+        <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+          <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">{region.name}</h2>
         </div>
-
-        <section className="border border-gray-300 bg-white shadow-lg">
-          <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center dark-header">
-            <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Threads</h2>
+        
+        <div className="px-4 py-4">
+          <div className="flex justify-between items-start mb-4">
+            <div className="w-1/2">
+              <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
+              <p className="text-xs text-gray-600">{region.description}</p>
+            </div>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded text-xs font-bold uppercase tracking-wide shadow"
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
             >
               New Thread
             </button>
           </div>
-          
-          <div className="divide-y divide-gray-200">
-            {threads.length > 0 ? (
-              threads.map(thread => {
-                return (
-                  <div key={thread.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
-                    <div>
-                      <Link to={`/thread/${thread.id}`} className="text-lg font-semibold text-blue-700 hover:text-blue-600 block">
-                        {thread.title}
-                      </Link>
-                      <div className="text-sm text-gray-600 mt-1">
-                        Started by <span className="text-gray-800 font-medium">{thread.authorName || 'Unknown'}</span> · {new Date(thread.createdAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <div className="text-right text-sm text-gray-500">
-                      <p>{thread.replyCount} Replies</p>
-                      <p>{thread.views} Views</p>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="p-8 text-center text-gray-500">
-                No threads in this region yet. Be the first to post!
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
 
-      <NewThreadModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        regionId={region.id}
-        regionName={region.name}
-        onThreadCreated={fetchThreads}
-      />
-    </div>
+          <div className="border border-gray-300 mx-0.5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                  <th className="px-4 py-2 text-left border-r border-gray-300">Thread</th>
+                  <th className="px-4 py-2 text-left border-r border-gray-300 w-32">Author</th>
+                  <th className="px-4 py-2 text-center border-r border-gray-300 w-20">Replies</th>
+                  <th className="px-4 py-2 text-center w-20">Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {threads.length > 0 ? (
+                  threads.map(thread => (
+                    <tr key={thread.id} className="hover:bg-gray-50 transition-colors border-t border-gray-300">
+                      <td className="px-4 py-3 border-r border-gray-300">
+                        <Link to={`/thread/${thread.id}`} style={{ color: '#111827' }} className="hover:underline font-medium">
+                          {thread.title}
+                        </Link>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(thread.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-700 border-r border-gray-300">
+                        {thread.authorName || 'Unknown'}
+                      </td>
+                      <td className="px-4 py-3 text-center text-gray-700 border-r border-gray-300">
+                        {thread.replyCount}
+                      </td>
+                      <td className="px-4 py-3 text-center text-gray-700">
+                        {thread.views}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-gray-500 border-t border-gray-300">
+                      No threads in this region yet. Be the first to post!
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {!showPhotoMode && (
+        <NewThreadModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          regionId={region.id}
+          regionName={region.name}
+          onThreadCreated={fetchThreads}
+        />
+      )}
+    </>
   );
 };
 

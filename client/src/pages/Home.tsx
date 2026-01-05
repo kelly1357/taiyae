@@ -274,7 +274,7 @@ const Home: React.FC = () => {
                                     <span key={sub.id}>
                                       <Link
                                         to={`/region/${region.id}/subarea/${sub.id}`}
-                                        className="text-blue-600 hover:underline"
+                                        className="text-gray-900 hover:underline"
                                       >
                                         {sub.name}
                                       </Link>
@@ -290,7 +290,7 @@ const Home: React.FC = () => {
                               <div className="space-y-1">
                                 <Link
                                   to={`/thread/${stats.latestThread.id}`}
-                                  className="font-semibold text-blue-700 hover:underline"
+                                  className="font-semibold text-gray-900 hover:underline"
                                 >
                                   {stats.latestThread.title}
                                 </Link>

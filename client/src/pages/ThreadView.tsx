@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import type { Character } from '../types';
@@ -17,70 +18,85 @@ interface PostAuthor {
   healthStatus?: string;
   skillPoints?: number;
   isOnline?: boolean;
+  playerName?: string;
 }
 
-const CharacterPostInfo: React.FC<{ author: PostAuthor }> = ({ author }) => {
+// Character info panel component with table styling
+const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
   return (
-    <div className="w-full md:w-64 bg-gray-50 p-4 flex flex-col items-center text-center border-r border-gray-200">
-      <div className="flex items-center gap-2 mb-2">
-        <Link to={`/character/${author.id}`} className="text-lg font-bold text-blue-700 hover:text-blue-600">
-          {author.name}
-        </Link>
-        {author.isOnline && (
-          <span className="w-3 h-3 bg-green-500 rounded-full border border-white shadow-sm" title="Online Now"></span>
-        )}
-      </div>
-      <div className="mb-3 relative">
+    <div className={`w-full md:w-56 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
+      {/* Avatar - same width as table */}
+      <Link to={`/character/${author.id}`} className="mb-2 w-full">
         <img 
           src={author.imageUrl} 
           alt={author.name} 
-          className="w-32 h-32 object-cover rounded border-4 border-gray-200 shadow-sm"
+          className="w-full h-auto object-cover border-2 border-gray-300"
         />
-      </div>
+      </Link>
       
-      {author.packName && (
-        <div className="mb-2 w-full">
-          <div 
-            className="text-xs font-bold uppercase tracking-wider py-1 px-2 rounded shadow-sm"
-            style={{ 
-              backgroundColor: author.primaryColor || '#444', 
-              color: '#fff' 
-            }}
-          >
-            {author.packName}
-          </div>
-          {author.rank && (
-            <div 
-              className="text-xs font-bold uppercase tracking-wider py-1 px-2 mt-1 rounded shadow-sm"
-              style={{ 
-                backgroundColor: author.secondaryColor || '#666', 
-                color: '#000' 
-              }}
-            >
-              {author.rank}
-            </div>
-          )}
+      {/* Status badge if inactive */}
+      {author.healthStatus === 'Inactive' && (
+        <div className="text-xs font-bold uppercase tracking-wider py-0.5 px-2 mb-2 bg-gray-400 text-white">
+          Inactive
         </div>
       )}
-
-      <div className="text-xs text-gray-600 w-full text-left mt-4 space-y-1">
-        <div className="flex justify-between border-b border-gray-200 pb-1">
-          <span className="font-semibold">Sex:</span>
-          <span className="text-gray-800">{author.sex}</span>
-        </div>
-        <div className="flex justify-between border-b border-gray-200 pb-1">
-          <span className="font-semibold">Age:</span>
-          <span className="text-gray-800">{author.age}</span>
-        </div>
-        <div className="flex justify-between border-b border-gray-200 pb-1">
-          <span className="font-semibold">Health:</span>
-          <span className="text-gray-800">{author.healthStatus}</span>
-        </div>
-        <div className="flex justify-between border-b border-gray-200 pb-1">
-          <span className="font-semibold">Skill Points:</span>
-          <span className="text-gray-800">{author.skillPoints}</span>
-        </div>
-      </div>
+      
+      {/* Character info table */}
+      <table className="w-full text-xs border border-gray-300 mb-2">
+        <tbody>
+          <tr className="border-b border-gray-300">
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300 w-1/2">Name</td>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 w-1/2">Player</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="px-2 py-2 border-r border-gray-300">
+              <Link to={`/character/${author.id}`} className="text-gray-900 hover:underline font-medium">
+                {author.name}
+              </Link>
+              {author.isOnline && (
+                <span className="ml-1 w-2 h-2 bg-green-500 rounded-full inline-block" title="Online Now"></span>
+              )}
+            </td>
+            <td className="px-2 py-2 text-gray-700">{author.playerName || 'Unknown'}</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300">Age</td>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600">Sex</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{author.age}</td>
+            <td className="px-2 py-2 text-gray-700">{author.sex}</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300">Status</td>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600">Skill Points</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{author.healthStatus}</td>
+            <td className="px-2 py-2 text-gray-700">{author.skillPoints} SP</td>
+          </tr>
+          <tr className="border-b border-gray-300">
+            <td colSpan={2} className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Pack</td>
+          </tr>
+          <tr>
+            <td colSpan={2} className="px-2 py-2 text-center">
+              {author.packName ? (
+                <span 
+                  className="inline-block text-xs font-bold uppercase tracking-wider py-0.5 px-2"
+                  style={{ 
+                    backgroundColor: author.primaryColor || '#444', 
+                    color: '#fff' 
+                  }}
+                >
+                  {author.packName}
+                </span>
+              ) : (
+                <span className="text-gray-600">ROGUE</span>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };
@@ -94,6 +110,7 @@ const ThreadView: React.FC = () => {
   const [isPosting, setIsPosting] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | number | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [showPhotoMode, setShowPhotoMode] = useState(false);
 
   const fetchThread = () => {
     if (!threadId) return;
@@ -194,152 +211,208 @@ const ThreadView: React.FC = () => {
     secondaryColor: thread.secondaryColor,
     rank: thread.rank,
     sex: thread.sex || 'Unknown',
-    age: thread.age ? `${thread.age} months` : 'Unknown',
+    age: thread.age ? `${thread.age} mos.` : 'Unknown',
     healthStatus: thread.healthStatus || 'Unknown',
     skillPoints: thread.skillPoints || 0,
-    isOnline: thread.isOnline
+    isOnline: thread.isOnline,
+    playerName: thread.playerName || 'Unknown'
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Image */}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: "url('https://taiyaefiles.blob.core.windows.net/web/home.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <div className="absolute inset-0 bg-gray-900/50" />
-      </div>
+    <>
+      {/* Override the Layout background with region-specific image */}
+      {thread.regionImage && (
+        <style>{`
+          .min-h-screen > div.fixed {
+            background-image: url('${thread.regionImage}') !important;
+            background-position: center top !important;
+          }
+          ${showPhotoMode ? `
+          .min-h-screen > header,
+          .min-h-screen > main,
+          .min-h-screen > footer {
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+          ` : ''}
+        `}</style>
+      )}
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex justify-between items-end border-b border-gray-400 pb-4 bg-white/10 backdrop-blur-sm p-4 rounded-t">
-          <h1 className="text-2xl font-bold text-white drop-shadow-md">{thread.title}</h1>
-          <div className="text-sm text-gray-200 drop-shadow-md">
-            Started {new Date(thread.createdAt).toLocaleDateString()}
-          </div>
+      {/* Show Photo Button - rendered via portal to body */}
+      {createPortal(
+        <button
+          onClick={() => setShowPhotoMode(!showPhotoMode)}
+          className="show-photo-btn"
+        >
+          {showPhotoMode ? 'Hide Photo' : 'Show Photo'}
+        </button>,
+        document.body
+      )}
+
+      <section className={`bg-white border border-gray-300 shadow ${showPhotoMode ? 'invisible' : ''}`}>
+        <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+          <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
+            <Link to={`/region/${thread.regionId}`} className="hover:text-white">
+              {thread.regionName || 'Thread'}
+            </Link>
+            {' › '}{thread.title}
+          </h2>
         </div>
 
-        {/* Original Post */}
-        <div className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col md:flex-row border border-gray-300">
-          <CharacterPostInfo author={mainAuthor} />
-          <div className="flex-grow p-6 relative">
-            {activeCharacter && String(activeCharacter.id) === String(mainAuthor.id) && (
-              <div className="absolute top-2 right-2">
-                <button 
-                  onClick={() => handleEditClick(thread.postId, thread.content)}
-                  className="text-gray-500 hover:text-gray-800 text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded border border-gray-300"
-                >
-                  Edit
-                </button>
-              </div>
-            )}
-            
-            {thread.modifiedAt && thread.createdAt !== thread.modifiedAt && (
-               <div className="text-xs text-gray-500 mb-2 italic border-b border-gray-100 pb-2">
-                  Edited by {thread.modifiedByName || 'Unknown'} on {new Date(thread.modifiedAt).toLocaleString()}
-               </div>
-            )}
-
-            {editingPostId === thread.postId ? (
-              <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                <RichTextEditor value={editContent} onChange={setEditContent} />
-                <div className="flex justify-end gap-2 mt-2">
-                  <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancel</button>
-                  <button onClick={() => handleSaveEdit(thread.postId)} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500">Save</button>
-                </div>
-              </div>
-            ) : (
-              <div 
-                  className="prose prose-slate max-w-none text-gray-800"
-                  dangerouslySetInnerHTML={{ __html: thread.content }}
-              />
-            )}
+        <div className="px-4 py-4">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900 mb-1">{thread.title}</h3>
+              <p className="text-sm text-gray-600">Started {new Date(thread.createdAt).toLocaleDateString()}</p>
+            </div>
+            <Link 
+              to={`/region/${thread.regionId}`}
+              style={{ color: '#111827' }}
+              className="hover:underline text-sm"
+            >
+              ← Back to {thread.regionName}
+            </Link>
           </div>
-        </div>
 
-        {/* Replies */}
-        {thread.replies?.map((reply: any) => {
-          const replyAuthor: PostAuthor = {
-              id: reply.authorId,
-              name: reply.authorName,
-              imageUrl: reply.authorImage,
-              packName: reply.packName,
-              primaryColor: reply.primaryColor,
-              secondaryColor: reply.secondaryColor,
-              rank: reply.rank,
-              sex: reply.sex || 'Unknown',
-              age: reply.age ? `${reply.age} months` : 'Unknown',
-              healthStatus: reply.healthStatus || 'Unknown',
-              skillPoints: reply.skillPoints || 0,
-              isOnline: reply.isOnline
-          };
-  
-            return (
-              <div key={reply.id} className="bg-white rounded-lg overflow-hidden shadow-lg flex flex-col md:flex-row border border-gray-300 mt-4">
-                <CharacterPostInfo author={replyAuthor} />
-                <div className="flex-grow p-6 relative">
+          {/* Original Post - avatar on RIGHT */}
+          <div className="border border-gray-300 mx-0.5 mb-4">
+            {/* Post header with date */}
+            <div className="bg-gray-100 px-3 py-1 border-b border-gray-300 text-xs text-gray-600">
+              {new Date(thread.createdAt).toLocaleString()}
+            </div>
+            <div className="flex flex-col md:flex-row">
+              {/* Content on LEFT */}
+              <div className="flex-grow p-4 relative bg-white md:order-1">
+                {activeCharacter && String(activeCharacter.id) === String(mainAuthor.id) && (
                   <div className="absolute top-2 right-2">
-                    {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
-                        <button 
-                            onClick={() => handleEditClick(reply.id, reply.content)}
-                            className="text-gray-500 hover:text-gray-800 text-sm bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded border border-gray-300"
-                        >
-                            Edit
-                        </button>
-                    )}
+                    <button 
+                      onClick={() => handleEditClick(thread.postId, thread.content)}
+                      className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300"
+                    >
+                      Edit
+                    </button>
                   </div>
-
-                {reply.modifiedAt && reply.createdAt !== reply.modifiedAt && (
-                   <div className="text-xs text-gray-500 mb-2 italic">
-                      Edited by {reply.modifiedByName || 'Unknown'} on {new Date(reply.modifiedAt).toLocaleString()}
+                )}
+                
+                {thread.modifiedAt && thread.createdAt !== thread.modifiedAt && (
+                   <div className="text-xs text-gray-500 mb-2 italic border-b border-gray-200 pb-2">
+                      Edited by {thread.modifiedByName || 'Unknown'} on {new Date(thread.modifiedAt).toLocaleString()}
                    </div>
                 )}
 
-                {editingPostId === reply.id ? (
-                  <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                {editingPostId === thread.postId ? (
+                  <div className="bg-gray-50 p-4 border border-gray-200">
                     <RichTextEditor value={editContent} onChange={setEditContent} />
                     <div className="flex justify-end gap-2 mt-2">
-                      <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancel</button>
-                      <button onClick={() => handleSaveEdit(reply.id)} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-500">Save</button>
+                      <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300">Cancel</button>
+                      <button onClick={() => handleSaveEdit(thread.postId)} className="px-3 py-1 bg-gray-800 text-white hover:bg-gray-700">Save</button>
                     </div>
                   </div>
                 ) : (
                   <div 
                       className="prose prose-slate max-w-none text-gray-800"
-                      dangerouslySetInnerHTML={{ __html: reply.content }}
+                      dangerouslySetInnerHTML={{ __html: thread.content }}
                   />
                 )}
               </div>
+              {/* Character info on RIGHT */}
+              <CharacterInfoPanel author={mainAuthor} isOriginalPost={true} />
             </div>
-          );
-        })}
-
-
-        <div className="bg-white p-6 rounded-lg shadow-lg mt-8 border border-gray-300">
-          <h3 className="text-lg font-bold mb-4 text-gray-900">Post a Reply</h3>
-          <div className="bg-white text-gray-900 border border-gray-300 rounded">
-              <RichTextEditor 
-                  value={replyContent} 
-                  onChange={setReplyContent} 
-                  placeholder="Write your reply here..."
-              />
           </div>
-          <div className="mt-4 flex justify-end">
-            <button 
-              onClick={handlePostReply}
-              disabled={isPosting}
-              className={`bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded font-bold shadow ${isPosting ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isPosting ? 'Posting...' : 'Post Reply'}
-            </button>
+
+          {/* Replies - avatar on LEFT */}
+          {thread.replies?.map((reply: any, index: number) => {
+            const replyAuthor: PostAuthor = {
+                id: reply.authorId,
+                name: reply.authorName,
+                imageUrl: reply.authorImage,
+                packName: reply.packName,
+                primaryColor: reply.primaryColor,
+                secondaryColor: reply.secondaryColor,
+                rank: reply.rank,
+                sex: reply.sex || 'Unknown',
+                age: reply.age ? `${reply.age} mos.` : 'Unknown',
+                healthStatus: reply.healthStatus || 'Unknown',
+                skillPoints: reply.skillPoints || 0,
+                isOnline: reply.isOnline,
+                playerName: reply.playerName || 'Unknown'
+            };
+    
+            return (
+              <div key={reply.id} className="border border-gray-300 mx-0.5 mb-4">
+                {/* Post header with date and post number */}
+                <div className="bg-gray-100 px-3 py-1 border-b border-gray-300 text-xs text-gray-600 flex justify-between">
+                  <span>{new Date(reply.createdAt).toLocaleString()} — Post #{index + 1}</span>
+                </div>
+                <div className="flex flex-col md:flex-row">
+                  {/* Character info on LEFT */}
+                  <CharacterInfoPanel author={replyAuthor} isOriginalPost={false} />
+                  {/* Content on RIGHT */}
+                  <div className="flex-grow p-4 relative bg-white">
+                    <div className="absolute top-2 right-2">
+                      {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
+                          <button 
+                              onClick={() => handleEditClick(reply.id, reply.content)}
+                              className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300"
+                          >
+                              Edit
+                          </button>
+                      )}
+                    </div>
+
+                    {reply.modifiedAt && reply.createdAt !== reply.modifiedAt && (
+                       <div className="text-xs text-gray-500 mb-2 italic">
+                          Edited by {reply.modifiedByName || 'Unknown'} on {new Date(reply.modifiedAt).toLocaleString()}
+                       </div>
+                    )}
+
+                    {editingPostId === reply.id ? (
+                      <div className="bg-gray-50 p-4 border border-gray-200">
+                        <RichTextEditor value={editContent} onChange={setEditContent} />
+                        <div className="flex justify-end gap-2 mt-2">
+                          <button onClick={handleCancelEdit} className="px-3 py-1 bg-gray-200 text-gray-700 hover:bg-gray-300">Cancel</button>
+                          <button onClick={() => handleSaveEdit(reply.id)} className="px-3 py-1 bg-gray-800 text-white hover:bg-gray-700">Save</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                          className="prose prose-slate max-w-none text-gray-800"
+                          dangerouslySetInnerHTML={{ __html: reply.content }}
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Reply Form */}
+          <div className="border border-gray-300 mx-0.5">
+            <div className="bg-gray-200 px-4 py-2">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
+            </div>
+            <div className="p-4 bg-white">
+              <div className="border border-gray-300">
+                <RichTextEditor 
+                    value={replyContent} 
+                    onChange={setReplyContent} 
+                    placeholder="Write your reply here..."
+                />
+              </div>
+              <div className="mt-4 flex justify-end">
+                <button 
+                  onClick={handlePostReply}
+                  disabled={isPosting}
+                  className={`bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 font-bold text-sm uppercase tracking-wide ${isPosting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {isPosting ? 'Posting...' : 'Post Reply'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 };
 

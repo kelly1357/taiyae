@@ -126,7 +126,7 @@ const RegionDirectory: React.FC = () => {
           <h1 className="text-3xl font-bold text-white drop-shadow-md">Region Directory</h1>
           <button 
             onClick={handleCreate}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition-colors shadow-lg"
+            className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors shadow-lg"
           >
             Add New Region
           </button>
@@ -147,7 +147,7 @@ const RegionDirectory: React.FC = () => {
                     type="text" 
                     value={currentRegion.name || ''} 
                     onChange={e => setCurrentRegion({...currentRegion, name: e.target.value})}
-                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-gray-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -157,7 +157,7 @@ const RegionDirectory: React.FC = () => {
                   <textarea 
                     value={currentRegion.description || ''} 
                     onChange={e => setCurrentRegion({...currentRegion, description: e.target.value})}
-                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:border-gray-500 focus:outline-none"
                     required
                   />
                 </div>
@@ -172,7 +172,7 @@ const RegionDirectory: React.FC = () => {
                       type="file" 
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+                      className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700 cursor-pointer"
                     />
                     {uploading && <span className="text-sm text-yellow-600 animate-pulse">Uploading...</span>}
                   </div>
@@ -222,7 +222,7 @@ const RegionDirectory: React.FC = () => {
               <div className="p-6 flex-grow flex flex-col justify-between">
                 <p className="text-gray-800 text-sm mb-4 line-clamp-3 leading-relaxed">{region.description}</p>
                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                  <Link to={`/region/${region.id}`} className="text-blue-700 hover:text-blue-600 text-sm font-bold uppercase tracking-wide">
+                  <Link to={`/region/${region.id}`} className="text-gray-900 hover:text-gray-700 text-sm font-bold uppercase tracking-wide">
                     View
                   </Link>
                   <button 

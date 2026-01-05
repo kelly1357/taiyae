@@ -40,7 +40,7 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({ onSelect, className = '
 
   return (
     <div className={`region-selector ${className}`}>
-      <label htmlFor="region-select" className="block text-sm font-medium text-gray-200 mb-1 drop-shadow-md">
+      <label htmlFor="region-select" className="block text-sm font-medium text-gray-700 mb-1">
         Jump to Region
       </label>
       <select

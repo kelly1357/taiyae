@@ -163,7 +163,7 @@ const Characters: React.FC = () => {
                   </td>
                   <td className="px-3 py-3 font-medium text-gray-800 border-r border-gray-300">
                     <div className="flex items-center gap-2">
-                      <span className="text-blue-700 hover:underline cursor-pointer">{char.name}</span>
+                      <span className="text-gray-900 hover:underline cursor-pointer">{char.name}</span>
                       {!!char.isOnline && (
                         <span className="w-2 h-2 bg-green-500 rounded-full border border-white shadow-sm" title="Online Now"></span>
                       )}
@@ -173,7 +173,7 @@ const Characters: React.FC = () => {
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">{char.packName || 'Rogue'}</td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">{char.age}</td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">{char.healthStatus || 'Unknown'}</td>
-                  <td className="px-3 py-3 text-center font-bold text-blue-600">{char.totalSkill || 0}</td>
+                  <td className="px-3 py-3 text-center font-bold text-gray-900">{char.totalSkill || 0}</td>
                 </tr>
               ))}
             </tbody>

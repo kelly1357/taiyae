@@ -57,14 +57,14 @@ const Layout: React.FC<LayoutProps> = ({
                 <input
                   type="text"
                   placeholder="Username"
-                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
                 />
                 <input
                   type="password"
                   placeholder="Password"
-                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-blue-500"
+                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
                 />
-                <button className="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold py-2 uppercase tracking-wide">
+                <button className="w-full bg-gray-800 hover:bg-gray-700 text-white text-sm font-semibold py-2 uppercase tracking-wide">
                   Log In
                 </button>
                 <div className="text-xs text-gray-500 text-center">New here? Join Horizon</div>
@@ -79,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({
                 {onlineList.length ? (
                   <div className="flex flex-wrap gap-x-3 gap-y-2">
                     {onlineList.map((character) => (
-                      <span key={character.id} className="hover:text-blue-600 cursor-pointer">
+                      <span key={character.id} className="hover:text-gray-600 cursor-pointer">
                         {character.name}
                       </span>
                     ))}
@@ -95,7 +95,7 @@ const Layout: React.FC<LayoutProps> = ({
                 Packs
               </div>
               <div className="px-4 py-4 text-sm text-gray-800">
-                <span className="block hover:text-blue-600 cursor-pointer">Rogue</span>
+                <span className="block hover:text-gray-600 cursor-pointer">Rogue</span>
               </div>
             </section>
 

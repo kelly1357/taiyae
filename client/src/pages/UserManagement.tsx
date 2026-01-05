@@ -137,13 +137,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-gray-400 focus:outline-none"
                 required
             />
             <button
                 type="submit"
                 disabled={isLoading || username === user.username}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-medium disabled:opacity-50 transition-colors text-sm"
+                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium disabled:opacity-50 transition-colors text-sm"
             >
                 {isLoading ? 'Saving...' : 'Save Username'}
             </button>
@@ -175,7 +175,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   disabled={!isPasswordEditMode}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed"
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-gray-400 focus:outline-none disabled:cursor-not-allowed"
                   placeholder="Required to set new password"
                 />
               </div>
@@ -187,7 +187,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={!isPasswordEditMode}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed"
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-gray-400 focus:outline-none disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-gray-400 mt-1">
                     Must be at least 8 characters with uppercase, lowercase, number, and special char.
@@ -201,7 +201,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={!isPasswordEditMode}
-                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-blue-500 focus:outline-none disabled:cursor-not-allowed"
+                  className="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-white focus:border-gray-400 focus:outline-none disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -209,7 +209,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
                 <button
                     type="submit"
                     disabled={isLoading || !isPasswordEditMode}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded font-medium disabled:opacity-50 transition-colors"
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-medium disabled:opacity-50 transition-colors"
                 >
                     {isLoading ? 'Updating...' : 'Update Password'}
                 </button>

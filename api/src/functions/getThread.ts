@@ -15,7 +15,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
     try {
         const pool = await getPool();
         
-        // Get all posts for the thread
+        // Get all posts for the thread with region info
         const result = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
             .query(`
@@ -26,12 +26,19 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                     c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus,
                     (c.Experience + c.Physical + c.Knowledge) as skillPoints,
                     mc.CharacterName as modifiedByName,
+                    t.RegionID as regionId,
+                    r.RegionName as regionName,
+                    r.ImageURL as regionImage,
+                    u.Username as playerName,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
                     END as isOnline
                 FROM Post p
+                LEFT JOIN Thread t ON p.ThreadID = t.ThreadID
+                LEFT JOIN Region r ON t.RegionID = r.RegionID
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN Pack pk ON c.PackID = pk.PackID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 LEFT JOIN Character mc ON p.ModifiedByCharacterId = mc.CharacterID
@@ -59,6 +66,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             healthStatus: p.healthStatus,
             skillPoints: p.skillPoints,
             isOnline: p.isOnline === 1,
+            playerName: p.playerName,
             createdAt: p.Created,
             modifiedAt: p.Modified,
             modifiedByName: p.modifiedByName
@@ -80,9 +88,13 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             healthStatus: op.healthStatus,
             skillPoints: op.skillPoints,
             isOnline: op.isOnline === 1,
+            playerName: op.playerName,
             createdAt: op.Created,
             modifiedAt: op.Modified,
             modifiedByName: op.modifiedByName,
+            regionId: op.regionId,
+            regionName: op.regionName,
+            regionImage: op.regionImage,
             replies: replies
         };
 
