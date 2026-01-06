@@ -100,7 +100,11 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         </div>
         <nav ref={navRef} className="flex items-center space-x-6" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
           <NavDropdown label="For Guests">
-            <DropdownLink to="/my-characters">Create Character</DropdownLink>
+            <DropdownLink to="/wiki/game-overview">About Us</DropdownLink>
+            <DropdownLink to="/wiki/faq">FAQ</DropdownLink>
+            <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
+            <DropdownLink to="/adopt">Adoptables</DropdownLink>
+            <DropdownLink to="/my-characters">Join Horizon</DropdownLink>
           </NavDropdown>
           <NavDropdown label="Characters">
             <DropdownLink to="/characters">Character List</DropdownLink>
