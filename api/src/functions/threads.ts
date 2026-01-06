@@ -79,39 +79,33 @@ export async function createThread(request: HttpRequest, context: InvocationCont
         await transaction.begin();
 
         try {
-            // Get max ThreadID
-            const maxThreadResult = await transaction.request().query("SELECT ISNULL(MAX(ThreadID), 0) + 1 as nextId FROM Thread");
-            const nextThreadId = maxThreadResult.recordset[0].nextId;
-
-            await transaction.request()
-                .input('id', sql.Int, nextThreadId)
+            // Insert Thread and get generated ID
+            const threadResult = await transaction.request()
                 .input('regionId', sql.Int, parseInt(regionId))
                 .query(`
-                    INSERT INTO Thread (ThreadID, RegionId, Created, Modified)
-                    VALUES (@id, @regionId, GETDATE(), GETDATE())
+                    INSERT INTO Thread (RegionId, Created, Modified)
+                    OUTPUT INSERTED.ThreadID
+                    VALUES (@regionId, GETDATE(), GETDATE())
                 `);
-
-            // Get max PostID
-            const maxPostResult = await transaction.request().query("SELECT ISNULL(MAX(PostID), 0) + 1 as nextId FROM Post");
-            const nextPostId = maxPostResult.recordset[0].nextId;
+            
+            const newThreadId = threadResult.recordset[0].ThreadID;
 
             await transaction.request()
-                .input('id', sql.Int, nextPostId)
-                .input('threadId', sql.Int, nextThreadId)
+                .input('threadId', sql.Int, newThreadId)
                 .input('authorId', sql.Int, parseInt(authorId))
                 .input('regionId', sql.Int, parseInt(regionId))
                 .input('subject', sql.NVarChar, title)
                 .input('body', sql.NVarChar, content)
                 .query(`
-                    INSERT INTO Post (PostID, ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
-                    VALUES (@id, @threadId, @authorId, @regionId, @subject, @body, GETDATE(), GETDATE())
+                    INSERT INTO Post (ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
+                    VALUES (@threadId, @authorId, @regionId, @subject, @body, GETDATE(), GETDATE())
                 `);
 
             await transaction.commit();
 
             return {
                 status: 201,
-                jsonBody: { id: nextThreadId, message: "Thread created" }
+                jsonBody: { id: newThreadId, message: "Thread created" }
             };
 
         } catch (err) {
