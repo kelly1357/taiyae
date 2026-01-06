@@ -35,6 +35,24 @@ a {
   background-color: #f3f4f6;
 }
 
+.html-description ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.html-description ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.html-description li {
+  margin-bottom: 0.25rem;
+}
+
 /* Dark table header styles */
 .dark-header {
   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;

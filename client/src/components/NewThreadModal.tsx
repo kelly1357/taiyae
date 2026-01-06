@@ -4,17 +4,21 @@ import RichTextEditor from './RichTextEditor';
 interface NewThreadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  regionId: string;
+  regionId?: string;
+  oocForumId?: string;
   regionName: string;
   onThreadCreated: () => void;
+  authorId?: number | string;
 }
 
 const NewThreadModal: React.FC<NewThreadModalProps> = ({ 
   isOpen, 
   onClose, 
-  regionId, 
+  regionId,
+  oocForumId,
   regionName,
-  onThreadCreated 
+  onThreadCreated,
+  authorId
 }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -37,10 +41,10 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
         },
         body: JSON.stringify({
           regionId,
+          oocForumId,
           title,
           content,
-          // In a real app, you'd get the current user ID from context/auth
-          authorId: 1, 
+          authorId: authorId || 1, 
         }),
       });
 

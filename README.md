@@ -49,7 +49,7 @@ High Priority:
 
 [X] Character list with 
 
-[] Add sorting, grouping, and search to characters list
+[X] Add sorting, grouping, and search to characters list
 
 Low Priority:
 
@@ -61,7 +61,7 @@ Low Priority:
 
 [] Discord integration
 
-[X] "Online Now" status indicator
+[] "Online Now" status indicator
 
 [] Notifications
 

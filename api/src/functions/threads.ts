@@ -4,36 +4,37 @@ import * as sql from 'mssql';
 
 export async function getThreads(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const regionId = request.query.get('regionId');
+    const oocForumId = request.query.get('oocForumId');
 
-    if (!regionId) {
-        return { status: 400, body: "regionId is required" };
+    if (!regionId && !oocForumId) {
+        return { status: 400, body: "regionId or oocForumId is required" };
     }
 
     try {
         const pool = await getPool();
         
-        const result = await pool.request()
-            .input('regionId', sql.Int, parseInt(regionId))
-            .query(`
-                SELECT 
+        let header = `SELECT 
                     t.ThreadID as id,
                     t.RegionId as regionId,
+                    t.OOCForumID as oocForumId,
                     t.Created as createdAt,
                     t.Modified as updatedAt,
                     firstPost.Subject as title,
                     firstPost.Body as content,
-                    threadAuthor.CharacterName as authorName,
-                    threadAuthor.CharacterID as authorId,
+                    COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
+                    COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
                     CASE 
                         WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
                         ELSE 0 
                     END as isOnline,
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                     0 as views,
-                    lastPostAuthor.CharacterName as lastReplyAuthorName,
+                    COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
                     lastPost.Created as lastPostDate,
                     CASE 
                         WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
                         ELSE 0 
                     END as lastReplyIsOnline
                 FROM Thread t
@@ -44,6 +45,7 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                     ORDER BY Created ASC
                 ) firstPost
                 LEFT JOIN Character threadAuthor ON firstPost.CharacterID = threadAuthor.CharacterID
+                LEFT JOIN [User] threadUser ON firstPost.UserID = threadUser.UserID
                 CROSS APPLY (
                     SELECT TOP 1 *
                     FROM Post 
@@ -51,9 +53,22 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                     ORDER BY Created DESC
                 ) lastPost
                 LEFT JOIN Character lastPostAuthor ON lastPost.CharacterID = lastPostAuthor.CharacterID
-                WHERE t.RegionId = @regionId
-                ORDER BY lastPost.Created DESC
-            `);
+                LEFT JOIN [User] lastPostUser ON lastPost.UserID = lastPostUser.UserID`;
+
+        const requestBuilder = pool.request();
+        
+        let whereClause = "";
+        if (regionId) {
+            whereClause = " WHERE t.RegionId = @regionId";
+            requestBuilder.input('regionId', sql.Int, parseInt(regionId));
+        } else {
+            whereClause = " WHERE t.OOCForumID = @oocForumId";
+            requestBuilder.input('oocForumId', sql.Int, parseInt(oocForumId));
+        }
+        
+        const query = header + whereClause + " ORDER BY lastPost.Created DESC";
+
+        const result = await requestBuilder.query(query);
 
         return {
             jsonBody: result.recordset
@@ -67,9 +82,9 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
 export async function createThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const body = await request.json() as any;
-        const { regionId, title, content, authorId } = body;
+        const { regionId, oocForumId, title, content, authorId } = body;
 
-        if (!regionId || !title || !content || !authorId) {
+        if ((!regionId && !oocForumId) || !title || !content || !authorId) {
             return { status: 400, body: "Missing required fields" };
         }
 
@@ -80,26 +95,45 @@ export async function createThread(request: HttpRequest, context: InvocationCont
 
         try {
             // Insert Thread and get generated ID
-            const threadResult = await transaction.request()
-                .input('regionId', sql.Int, parseInt(regionId))
-                .query(`
-                    INSERT INTO Thread (RegionId, Created, Modified)
-                    OUTPUT INSERTED.ThreadID
-                    VALUES (@regionId, GETDATE(), GETDATE())
-                `);
+            let insertThreadSQL = "INSERT INTO Thread (Created, Modified";
+            let valuesSQL = "VALUES (GETDATE(), GETDATE()";
+            
+            const req = transaction.request();
+            
+            if (regionId) {
+                insertThreadSQL += ", RegionId)";
+                valuesSQL += ", @regionId)";
+                req.input('regionId', sql.Int, parseInt(regionId));
+            } else {
+                insertThreadSQL += ", OOCForumID)";
+                valuesSQL += ", @oocForumId)";
+                req.input('oocForumId', sql.Int, parseInt(oocForumId));
+            }
+            
+            const threadQuery = `${insertThreadSQL} OUTPUT INSERTED.ThreadID ${valuesSQL}`;
+            const threadResult = await req.query(threadQuery);
             
             const newThreadId = threadResult.recordset[0].ThreadID;
 
-            await transaction.request()
+            const postReq = transaction.request()
                 .input('threadId', sql.Int, newThreadId)
                 .input('authorId', sql.Int, parseInt(authorId))
-                .input('regionId', sql.Int, parseInt(regionId))
                 .input('subject', sql.NVarChar, title)
-                .input('body', sql.NVarChar, content)
-                .query(`
-                    INSERT INTO Post (ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
-                    VALUES (@threadId, @authorId, @regionId, @subject, @body, GETDATE(), GETDATE())
-                `);
+                .input('body', sql.NVarChar, content);
+                
+            let insertPostSQL = "INSERT INTO Post (ThreadID, Subject, Body, Created, Modified";
+            let postValuesSQL = "VALUES (@threadId, @subject, @body, GETDATE(), GETDATE()";
+            
+            if (regionId) {
+                insertPostSQL += ", RegionID, CharacterID)";
+                postValuesSQL += ", @regionId, @authorId)";
+                postReq.input('regionId', sql.Int, parseInt(regionId));
+            } else {
+                 insertPostSQL += ", UserID)";
+                 postValuesSQL += ", @authorId)";
+            }
+
+            await postReq.query(insertPostSQL + postValuesSQL);
 
             await transaction.commit();
 
@@ -150,26 +184,34 @@ export async function createReply(request: HttpRequest, context: InvocationConte
 
         const pool = await getPool();
         
-        // We need regionId for the Post table. We can get it from the Thread table.
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
-            .query("SELECT RegionId FROM Thread WHERE ThreadID = @threadId");
+            .query("SELECT RegionId, OOCForumID FROM Thread WHERE ThreadID = @threadId");
             
-        const regionId = threadResult.recordset[0]?.RegionId;
-
-        if (!regionId) {
+        const thread = threadResult.recordset[0];
+        if (!thread) {
              return { status: 404, body: "Thread not found" };
         }
 
-        await pool.request()
+        const req = pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
-            .input('authorId', sql.Int, parseInt(authorId || 1)) // Default to 1 if not provided
-            .input('regionId', sql.Int, regionId)
-            .input('body', sql.NVarChar, content)
-            .query(`
-                INSERT INTO Post (ThreadID, CharacterID, RegionID, Subject, Body, Created, Modified)
-                VALUES (@threadId, @authorId, @regionId, 'Reply', @body, GETDATE(), GETDATE())
-            `);
+            .input('authorId', sql.Int, parseInt(authorId || 1))
+            .input('body', sql.NVarChar, content);
+            
+        let insertSQL = "INSERT INTO Post (ThreadID, Subject, Body, Created, Modified";
+        let valuesSQL = "VALUES (@threadId, 'Reply', @body, GETDATE(), GETDATE()";
+
+        if (thread.RegionId) {
+             insertSQL += ", CharacterID, RegionID)";
+             valuesSQL += ", @authorId, @regionId)";
+             req.input('regionId', sql.Int, thread.RegionId);
+        } else {
+             // OOC
+             insertSQL += ", UserID)";
+             valuesSQL += ", @authorId)";
+        }
+        
+        await req.query(insertSQL + valuesSQL);
             
         // Update Thread Modified date
         await pool.request()
