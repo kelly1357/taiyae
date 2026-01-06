@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useOutletContext } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import type { ForumRegion, Thread } from '../types';
+import type { ForumRegion, Thread, Character } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
 
@@ -11,9 +11,14 @@ interface ThreadSummary extends Omit<Thread, 'replies'> {
   replyCount: number;
 }
 
+interface RegionContext {
+  activeCharacter?: Character;
+}
+
 const Region: React.FC = () => {
   const { regionId } = useParams<{ regionId: string }>();
   const location = useLocation();
+  const { activeCharacter } = useOutletContext<RegionContext>();
   const passedRegion = (location.state as { region?: ForumRegion })?.region;
   
   const [region, setRegion] = useState<ForumRegion | null>(passedRegion || null);
@@ -169,6 +174,7 @@ const Region: React.FC = () => {
           regionId={region.id}
           regionName={region.name}
           onThreadCreated={fetchThreads}
+          authorId={activeCharacter?.id}
         />
       )}
     </>
