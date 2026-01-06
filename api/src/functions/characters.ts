@@ -21,7 +21,8 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
         let query = `
                 SELECT 
                     c.CharacterID as id, 
-                    c.UserID as userId, 
+                    c.UserID as odUserId, 
+                    u.Username as username,
                     c.CharacterName as name, 
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
@@ -42,6 +43,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                         ELSE 0 
                     END as isOnline
                 FROM Character c
+                LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 LEFT JOIN Pack p ON c.PackID = p.PackID
                 LEFT JOIN Height h ON c.HeightID = h.HeightID
@@ -66,7 +68,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
         // Map monthsAge to age string if needed, or handle in client
         const characters = result.recordset.map(c => ({
             ...c,
-            age: `${Math.floor(c.monthsAge / 12)} years ${c.monthsAge % 12} months` // Simple conversion
+            age: `${Math.floor(c.monthsAge / 12)} years, ${c.monthsAge % 12} months` // Simple conversion
         }));
 
         return {

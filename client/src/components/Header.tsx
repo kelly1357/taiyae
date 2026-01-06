@@ -111,8 +111,15 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/regions">Regions</DropdownLink>
           </NavDropdown>
           <NavDropdown label="Wiki">
-            <DropdownLink to="/wiki">Wiki Home</DropdownLink>
             <DropdownLink to="/wiki/handbook">Handbook</DropdownLink>
+            <DropdownLink to="/wiki/title-list">Title List</DropdownLink>
+            <hr className="border-t border-gray-300 my-1" />
+            <DropdownLink to="/wiki/activity-absences">Activity & Absences</DropdownLink>
+            <DropdownLink to="/wiki/map">Map</DropdownLink>
+            <DropdownLink to="/wiki/setting-overview">Setting Overview</DropdownLink>
+            <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
+            <DropdownLink to="/wiki/skill-points">Skill Points</DropdownLink>
+            <DropdownLink to="/wiki/wolf-guide">Wolf Guide</DropdownLink>
           </NavDropdown>
           <NavDropdown label="OOC">
             <DropdownLink to="/ooc">OOC Forums</DropdownLink>
@@ -123,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <div className="relative" ref={dropdownRef}>
                   <button 
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center space-x-2 bg-white px-3 py-1 hover:bg-gray-50 transition-colors border border-gray-300"
+                    className="flex items-center space-x-2 bg-white/35 px-3 py-1 hover:bg-white/50 transition-colors border border-white/20"
                   >
                     <img 
                       src={activeCharacter.imageUrl} 
@@ -138,9 +145,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 shadow-lg z-50">
-                      <div className="bg-[#2f3a2f] px-4 py-2 text-xs text-[#fff9] uppercase font-normal tracking-wider">
-                        Switch Profile
-                      </div>
                       {userCharacters.map(char => (
                         <button
                           key={char.id}

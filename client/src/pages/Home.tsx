@@ -536,47 +536,38 @@ const Home: React.FC = () => {
 
             {oocForums.length > 0 && (
               <>
-                <hr className="border-t border-gray-300 my-4" />
-                <div className="bg-[#2f3a2f] px-4 py-2 dark-header mx-4 mb-4">
-                  <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
-                    Out of Character
-                  </h2>
+                <hr className="border-t border-gray-300 w-2/3 mx-auto my-[50px]" />
+                <div className="px-4">
+                  <div className="mx-0.5 bg-[#2f3a2f] px-4 py-2 dark-header">
+                    <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
+                      Out of Character
+                    </h2>
+                  </div>
                 </div>
                 
                 {oocForums.map((forum) => (
-                  <div key={forum.id} className="px-4 py-4">
-                    <Link
-                      to={`/ooc-forum/${forum.id}`}
-                      state={{ forum }}
-                      className="text-xl font-semibold text-black mb-2 block"
-                    >
-                      {forum.title}
-                    </Link>
-
+                  <div key={forum.id} className="px-4">
                     <div className="mx-0.5">
-                      <table className="w-full border border-gray-300 text-sm bg-white">
+                      <table className="w-full border border-gray-300 border-t-0 text-sm bg-white">
                         <thead>
-                          <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                            <th className="w-1/3 px-4 py-2 text-left border-r border-gray-300">Forum Info</th>
-                            <th className="w-2/3 px-4 py-2 text-left">Latest Post Info</th>
+                          <tr>
+                            <th colSpan={2} className="bg-gray-200 px-4 py-2 text-left border-b border-gray-300">
+                              <Link
+                                to={`/ooc-forum/${forum.id}`}
+                                state={{ forum }}
+                                className="text-xs font-semibold uppercase tracking-wider text-gray-700 hover:text-gray-900"
+                              >
+                                {forum.title}
+                              </Link>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           <tr>
-                            <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
-                              <div className="space-y-2">
-                                <p className="text-gray-600 mb-2 html-description" dangerouslySetInnerHTML={{ __html: forum.description }} />
-                                <div>
-                                  <span className="font-semibold">Active Threads: </span>
-                                  {forum.activeThreads}
-                                </div>
-                                <div>
-                                  <span className="font-semibold">Total Posts: </span>
-                                  {forum.totalReplies}
-                                </div>
-                              </div>
+                            <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300 w-2/3">
+                              <p className="text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: forum.description }} />
                             </td>
-                            <td className="align-top px-4 py-3 text-gray-800">
+                            <td className="align-top px-4 py-3 text-gray-800 w-1/3">
                               {forum.latestThreadId ? (
                                 <div className="space-y-1">
                                   <Link
@@ -605,6 +596,7 @@ const Home: React.FC = () => {
                     </div>
                   </div>
                 ))}
+                <div className="mb-[50px]"></div>
               </>
             )}
           </div>

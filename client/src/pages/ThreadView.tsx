@@ -20,7 +20,77 @@ interface PostAuthor {
   skillPoints?: number;
   isOnline?: boolean;
   playerName?: string;
+  userId?: number;
 }
+
+// OOC Player info panel component
+const OOCPlayerInfoPanel: React.FC<{ 
+  playerName: string; 
+  userId: number; 
+  isOriginalPost?: boolean;
+}> = ({ playerName, userId, isOriginalPost }) => {
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/characters?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        // Filter to only active characters
+        const activeChars = data.filter((c: Character) => c.healthStatus !== 'Inactive');
+        setCharacters(activeChars);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [userId]);
+
+  return (
+    <div className={`w-full md:w-56 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
+      {/* Player section */}
+      <table className="w-full text-xs border border-gray-300 mb-2">
+        <tbody>
+          <tr>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
+          </tr>
+          <tr>
+            <td className="px-2 py-2 text-gray-700 text-center">{playerName || 'Unknown'}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Characters section */}
+      <table className="w-full text-xs border border-gray-300">
+        <tbody>
+          <tr>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Characters</td>
+          </tr>
+          <tr>
+            <td className="px-2 py-2 text-gray-700">
+              {loading ? (
+                <span className="text-gray-500 text-center block">Loading...</span>
+              ) : characters.length === 0 ? (
+                <span className="text-gray-500 text-center block">No characters</span>
+              ) : (
+                <div className="space-y-1">
+                  {characters.map(char => (
+                    <Link 
+                      key={char.id} 
+                      to={`/character/${char.id}`}
+                      className="block text-gray-900 hover:underline"
+                    >
+                      {char.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 // Character info panel component with table styling
 const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
@@ -220,6 +290,9 @@ const ThreadView: React.FC = () => {
   if (loading) return <div>Loading...</div>;
   if (!thread) return <div>Thread not found</div>;
 
+  // Check if this is an OOC thread
+  const isOOCThread = !!thread.oocForumId;
+
   // Construct author object for the main post from thread data
   const mainAuthor: PostAuthor = {
     id: thread.authorId,
@@ -234,7 +307,8 @@ const ThreadView: React.FC = () => {
     healthStatus: thread.healthStatus || 'Unknown',
     skillPoints: thread.skillPoints || 0,
     isOnline: thread.isOnline,
-    playerName: thread.playerName || 'Unknown'
+    playerName: thread.playerName || 'Unknown',
+    userId: thread.userId
   };
 
   return (
@@ -329,7 +403,15 @@ const ThreadView: React.FC = () => {
                 )}
               </div>
               {/* Character info on RIGHT */}
-              <CharacterInfoPanel author={mainAuthor} isOriginalPost={true} />
+              {isOOCThread ? (
+                <OOCPlayerInfoPanel 
+                  playerName={mainAuthor.playerName || 'Unknown'} 
+                  userId={mainAuthor.userId!} 
+                  isOriginalPost={true} 
+                />
+              ) : (
+                <CharacterInfoPanel author={mainAuthor} isOriginalPost={true} />
+              )}
             </div>
           </div>
 
@@ -348,7 +430,8 @@ const ThreadView: React.FC = () => {
                 healthStatus: reply.healthStatus || 'Unknown',
                 skillPoints: reply.skillPoints || 0,
                 isOnline: reply.isOnline,
-                playerName: reply.playerName || 'Unknown'
+                playerName: reply.playerName || 'Unknown',
+                userId: reply.userId
             };
     
             return (
@@ -358,8 +441,16 @@ const ThreadView: React.FC = () => {
                   <span>{new Date(reply.createdAt).toLocaleString()} — Post #{index + 1}</span>
                 </div>
                 <div className="flex flex-col md:flex-row">
-                  {/* Character info on LEFT */}
-                  <CharacterInfoPanel author={replyAuthor} isOriginalPost={false} />
+                  {/* Character/Player info on LEFT */}
+                  {isOOCThread ? (
+                    <OOCPlayerInfoPanel 
+                      playerName={replyAuthor.playerName || 'Unknown'} 
+                      userId={replyAuthor.userId!} 
+                      isOriginalPost={false} 
+                    />
+                  ) : (
+                    <CharacterInfoPanel author={replyAuthor} isOriginalPost={false} />
+                  )}
                   {/* Content on RIGHT */}
                   <div className="flex-grow p-4 relative bg-white">
                     <div className="absolute top-2 right-2">

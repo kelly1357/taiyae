@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({
             {activeCharacter && (
               <section className="bg-white border border-gray-300 shadow">
                 <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-                  Active Character
+                  Active Character: {activeCharacter.name}
                 </div>
                 <div className="relative">
                   <img
@@ -61,9 +61,6 @@ const Layout: React.FC<LayoutProps> = ({
                     alt={activeCharacter.name}
                     className="w-full aspect-square object-cover block"
                   />
-                  <span className="absolute bottom-2 right-2 bg-black/70 text-white px-3 py-1 text-sm font-semibold uppercase tracking-wide shadow">
-                    {activeCharacter.name}
-                  </span>
                 </div>
               </section>
             )}

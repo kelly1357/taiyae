@@ -16,6 +16,8 @@ export async function getThread(request: HttpRequest, context: InvocationContext
         const pool = await getPool();
         
         // Get all posts for the thread with region info
+        // For OOC posts, UserID is stored directly in Post table
+        // For IC posts, UserID is retrieved via Character table
         const result = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
             .query(`
@@ -27,9 +29,11 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                     (c.Experience + c.Physical + c.Knowledge) as skillPoints,
                     mc.CharacterName as modifiedByName,
                     t.RegionID as regionId,
+                    t.OOCForumID as oocForumId,
                     r.RegionName as regionName,
                     r.ImageURL as regionImage,
-                    u.Username as playerName,
+                    COALESCE(u.Username, oocUser.Username) as playerName,
+                    COALESCE(u.UserID, oocUser.UserID) as userId,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -39,6 +43,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                 LEFT JOIN Region r ON t.RegionID = r.RegionID
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
                 LEFT JOIN [User] u ON c.UserID = u.UserID
+                LEFT JOIN [User] oocUser ON p.UserID = oocUser.UserID
                 LEFT JOIN Pack pk ON c.PackID = pk.PackID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 LEFT JOIN Character mc ON p.ModifiedByCharacterId = mc.CharacterID
@@ -67,6 +72,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             skillPoints: p.skillPoints,
             isOnline: p.isOnline === 1,
             playerName: p.playerName,
+            userId: p.userId,
             createdAt: p.Created,
             modifiedAt: p.Modified,
             modifiedByName: p.modifiedByName
@@ -89,10 +95,12 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             skillPoints: op.skillPoints,
             isOnline: op.isOnline === 1,
             playerName: op.playerName,
+            userId: op.userId,
             createdAt: op.Created,
             modifiedAt: op.Modified,
             modifiedByName: op.modifiedByName,
             regionId: op.regionId,
+            oocForumId: op.oocForumId,
             regionName: op.regionName,
             regionImage: op.regionImage,
             replies: replies
