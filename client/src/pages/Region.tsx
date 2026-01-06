@@ -111,7 +111,7 @@ const Region: React.FC = () => {
           <div className="flex justify-between items-start mb-4">
             <div className="w-1/2">
               <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
-              <p className="text-xs text-gray-600">{region.description}</p>
+              <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: region.description }} />
             </div>
             <button 
               onClick={() => setIsModalOpen(true)}

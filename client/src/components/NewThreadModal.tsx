@@ -4,7 +4,8 @@ import RichTextEditor from './RichTextEditor';
 interface NewThreadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  regionId: string;
+  regionId?: string;
+  oocForumId?: string;
   regionName: string;
   onThreadCreated: () => void;
   authorId?: number | string;
@@ -13,7 +14,8 @@ interface NewThreadModalProps {
 const NewThreadModal: React.FC<NewThreadModalProps> = ({ 
   isOpen, 
   onClose, 
-  regionId, 
+  regionId,
+  oocForumId,
   regionName,
   onThreadCreated,
   authorId
@@ -39,6 +41,7 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
         },
         body: JSON.stringify({
           regionId,
+          oocForumId,
           title,
           content,
           authorId: authorId || 1, 

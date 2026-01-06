@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import type { ForumRegion } from '../types';
+import type { ForumRegion, OOCForum } from '../types';
 
 interface RegionStats {
   activeThreads: number;
@@ -56,6 +56,7 @@ type SortDirection = 'asc' | 'desc';
 
 const Home: React.FC = () => {
   const [regions, setRegions] = useState<ForumRegion[]>([]);
+  const [oocForums, setOocForums] = useState<OOCForum[]>([]);
   const [loading, setLoading] = useState(true);
   const [regionStats, setRegionStats] = useState<Record<string, RegionStats>>({});
   const [statsLoading, setStatsLoading] = useState(false);
@@ -79,6 +80,13 @@ const Home: React.FC = () => {
         console.error('Failed to fetch regions:', err);
         setLoading(false);
       });
+
+    fetch('/api/ooc-forums')
+      .then(res => res.json())
+      .then(data => {
+        setOocForums(data);
+      })
+      .catch(err => console.error('Failed to fetch stats:', err));
   }, []);
 
   // Fetch all threads when switching to active or lonely view
@@ -525,6 +533,80 @@ const Home: React.FC = () => {
                 </div>
               );
             })}
+
+            {oocForums.length > 0 && (
+              <>
+                <hr className="border-t border-gray-300 my-4" />
+                <div className="bg-[#2f3a2f] px-4 py-2 dark-header mx-4 mb-4">
+                  <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
+                    Out of Character
+                  </h2>
+                </div>
+                
+                {oocForums.map((forum) => (
+                  <div key={forum.id} className="px-4 py-4">
+                    <Link
+                      to={`/ooc-forum/${forum.id}`}
+                      state={{ forum }}
+                      className="text-xl font-semibold text-black mb-2 block"
+                    >
+                      {forum.title}
+                    </Link>
+
+                    <div className="mx-0.5">
+                      <table className="w-full border border-gray-300 text-sm bg-white">
+                        <thead>
+                          <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                            <th className="w-1/3 px-4 py-2 text-left border-r border-gray-300">Forum Info</th>
+                            <th className="w-2/3 px-4 py-2 text-left">Latest Post Info</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
+                              <div className="space-y-2">
+                                <p className="text-gray-600 mb-2 html-description" dangerouslySetInnerHTML={{ __html: forum.description }} />
+                                <div>
+                                  <span className="font-semibold">Active Threads: </span>
+                                  {forum.activeThreads}
+                                </div>
+                                <div>
+                                  <span className="font-semibold">Total Posts: </span>
+                                  {forum.totalReplies}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="align-top px-4 py-3 text-gray-800">
+                              {forum.latestThreadId ? (
+                                <div className="space-y-1">
+                                  <Link
+                                    to={`/thread/${forum.latestThreadId}`}
+                                    state={{ forum }}
+                                    className="font-semibold text-gray-900 hover:underline"
+                                  >
+                                    {forum.latestThreadTitle}
+                                  </Link>
+                                  <div className="text-sm text-gray-700 flex items-center gap-1">
+                                    by {forum.latestThreadAuthorName || 'Unknown'}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Updated {new Date(forum.latestThreadUpdatedAt!).toLocaleString()}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-600">
+                                  No threads yet
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
           )}
 

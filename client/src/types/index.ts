@@ -65,6 +65,20 @@ export interface ForumRegion {
   imageUrl?: string; // For the region banner/map
 }
 
+export interface OOCForum {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  activeThreads: number;
+  totalReplies: number;
+  latestThreadId?: string;
+  latestThreadTitle?: string;
+  latestThreadUpdatedAt?: string;
+  latestThreadAuthorName?: string;
+  latestThreadAuthorId?: string;
+}
+
 export interface Reply {
   id: string;
   threadId: string;
