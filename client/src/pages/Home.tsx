@@ -280,6 +280,9 @@ const Home: React.FC = () => {
   const regionImages: Record<string, string> = {
     'Eastern Wasteland': 'https://taiyaefiles.blob.core.windows.net/web/Eastern%20Wasteland%20Mini.jpg',
     'Verdant Hills': 'https://taiyaefiles.blob.core.windows.net/web/Verdant%20Hills%20Mini.jpg',
+    'Rolling Prairies': 'https://taiyaefiles.blob.core.windows.net/web/Rolling%20Prairies.jpg',
+    'Cloudmirror Lake': 'https://taiyaefiles.blob.core.windows.net/web/Cloudmirror%20Lake.jpg',
+    'Starlight Peaks': 'https://taiyaefiles.blob.core.windows.net/web/Starlight%20Peaks.jpg',
   };
 
   if (loading) return <div className="text-center p-8">Loading regions...</div>;
