@@ -26,6 +26,9 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ## Local development
 
+### local-settings file
+- Add a `local-settings.json` file which contains API keys for local development to `/api`.
+
 ### Common terminal commands
 - Create new terminal with ``ctrl + shift + ` ``
 - Start the api: `cd api && func start`
