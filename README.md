@@ -41,6 +41,10 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [] Place to edit profile fields
 
+[] Editable user fields to include: Biography (HTML), Social Media Links (HTML?)
+
+[] Place to edit user fields
+
 [] Moderator permissions: delete threads and posts, move threads, edit SP
 
 [] Skill Points
