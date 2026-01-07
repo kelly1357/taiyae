@@ -8,77 +8,94 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ## Technologies Used
 
-### Frontend
+### 🔥 Frontend
 - **React 19**: UI Library
 - **Vite**: Build tool and development server
 - **TypeScript**: Static typing
 - **Tailwind CSS**: Utility-first CSS framework
 - **Tiptap**: Headless rich text editor for thread posts
+- **Google Auth**: OAuth v2 implementation for user registration and login
 
-### Backend
+### 🏭 Backend
 - **Azure Functions**: Serverless compute (Node.js v4)
 - **Azure SQL Database**: Relational database (MSSQL)
+- **Azure Blob Storage**: Containerized file hosting for images and videos
 
 ### Infrastructure
 - **Azure Static Web Apps**: Hosting and CI/CD
 
-## Testing
-- Create new terminal with `ctrl + shift + `  `` `` 
-- type `npm start` and hit enter
-- Static Web Application: https://blue-desert-0f2890b1e.6.azurestaticapps.net/
-- In case of errors, rebuild the api with: New terminal, `cd api && npm run build`
+## Local development
+
+### Common terminal commands
+- Create new terminal with ``ctrl + shift + ` ``
+- Start the api: `cd api && func start`
+- Create another new terminal and `cd client && npm run dev` to start the application
+- Go to localhost to view the app in testing/development
+- Or, type `npm start` which combines those commands
+- (In case of api-related errors, rebuild the api with: New terminal, `cd api && npm run build`)
+
+### Locations
+- Localhost on http://localhost:5173/
+- Hosted Static Web Application: https://blue-desert-0f2890b1e.6.azurestaticapps.net/
+
+### Recommended toolset
+- VS Code for IDE
+- VS Code extensions: mssql, Azure Functions, GitHub Actions, GitHub Copilot Chat, npm intellisense
 
 ## To Do
 
-### kelly1357
+### Frontend updates
 
-- Update CSS styling in /client/src/index.css
-- Define + author feature set
+✅  Update CSS styling in /client/src/index.css
 
-### From kelly1357 to MBenson415
+✅  Define + author feature set
 
-[] Editable character fields to include: Avatar update, 5 photo uploads, dropdown Height (Petite, Small, Average, Large, Very Large), dropdown Build (Lean, Average, Stocky, Muscular), birthplace (HTML), Father (HTML), Mother (HTML), Siblings (HTML), Pups (HTML), Spirit Symbol (can only be chosen at character creation)
+✅  Place to edit character fields
 
-[] Place to edit profile fields
+[ ] Editable character fields to include: Avatar update, 5 photo uploads, dropdown Height (Petite, Small, Average, Large, Very Large), dropdown Build (Lean, Average, Stocky, Muscular), birthplace (HTML), Father (HTML), Mother (HTML), Siblings (HTML), Pups (HTML), Spirit Symbol (can only be chosen at character creation)
 
-[] Editable user fields to include: Biography (HTML), Social Media Links (HTML?)
+✅ Place to edit user fields
 
-[] Place to edit user fields
+[  ] Editable user fields to include: Biography (HTML), Social Media Links (HTML?)
 
-[] Skill Points
+### Backend updates
 
-[] Weather update system (manual or somehow automated based on season?)
+[ ] Skill Points
 
-[] Create subareas within regions
+[ ] Weather update system (manual or somehow automated based on season?)
 
-### MBenson415
+[ ] Create subareas within regions
 
-High Priority:
+✅  User registration / approval flow, OAuth implementation
 
-[x] User registration / approval flow, OAuth implementation
+✅  Character creation and editing
 
-[x] Character creation and editing
+✅  Region creation and editing
 
-[X] Region creation and editing
+✅  Thread and posts core interaction
 
-[X] Thread and posts core interaction
+✅  Character list sorting, grouping, and search to characters list
 
-[X] Character list with 
+[ ] Moderator actions (approving new users, updating user data, delete threads and posts, move threads)
 
-[X] Add sorting, grouping, and search to characters list
+[ ] Achievements management
 
-Low Priority:
+[ ] Hierarchy management
 
-[] Moderator actions (approving new users, updating user data, delete threads and posts, move threads)
+[ ] Discord integration
 
-[] Achievements management
+[ ] "Online Now" status indicator
 
-[] Hierarchy management
+[ ] Notifications
 
-[] Discord integration
+[ ] User DMing
 
-[] "Online Now" status indicator
+## Authors
 
-[] Notifications
+🤓 Marshall - **Backend and infrastructure engineering**
 
-[] User DMing
+🙋🏼‍♀️ Kelly - **Frontend design and feature definition** 
+
+🐺 Chelsie - **Developer TBD**
+
+🦾 Claude Opus 4.5 - **Code architect and implementation**
