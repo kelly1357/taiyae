@@ -49,6 +49,8 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [] Weather update system (manual or somehow automated based on season?)
 
+[] Create subareas within regions
+
 ### MBenson415
 
 High Priority:
