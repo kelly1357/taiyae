@@ -124,15 +124,15 @@ const Layout: React.FC<LayoutProps> = ({
                 ) : (
                   <p className="text-gray-500">No characters online.</p>
                 )}
-              </div>
-            </section>
-
-            <section className="bg-white border border-gray-300 shadow">
-              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-                Packs
-              </div>
-              <div className="px-4 py-4 text-sm">
-                <span className="uppercase tracking-wide text-gray-600 cursor-pointer hover:text-gray-800" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-gray-500">Rogue</span>
+                    <span>•</span>
+                    <span className="italic text-gray-500">Joining</span>
+                    <span>•</span>
+                    <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Staff</span>
+                  </div>
+                </div>
               </div>
             </section>
 
