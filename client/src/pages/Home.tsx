@@ -375,7 +375,7 @@ const Home: React.FC = () => {
                         </tr>
                         <tr>
                           <td colSpan={2} className="px-2 py-2">
-                            <span className="font-semibold">Pups:</span> 0
+                            <span className="font-semibold">Pups:</span> {characterStats.pupsCount}
                           </td>
                         </tr>
                       </tbody>

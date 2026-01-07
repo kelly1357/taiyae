@@ -45,9 +45,9 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [] Place to edit user fields
 
-[] Moderator permissions: delete threads and posts, move threads, edit SP
-
 [] Skill Points
+
+[] Weather update system (manual or somehow automated based on season?)
 
 ### MBenson415
 
@@ -67,7 +67,7 @@ High Priority:
 
 Low Priority:
 
-[] Moderator actions (approving new users, updating user data)
+[] Moderator actions (approving new users, updating user data, delete threads and posts, move threads)
 
 [] Achievements management
 
