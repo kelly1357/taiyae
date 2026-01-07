@@ -283,6 +283,14 @@ const Home: React.FC = () => {
     'Rolling Prairies': 'https://taiyaefiles.blob.core.windows.net/web/Rolling%20Prairies.jpg',
     'Cloudmirror Lake': 'https://taiyaefiles.blob.core.windows.net/web/Cloudmirror%20Lake.jpg',
     'Starlight Peaks': 'https://taiyaefiles.blob.core.windows.net/web/Starlight%20Peaks.jpg',
+    'Moonrise Bay': 'https://taiyaefiles.blob.core.windows.net/web/Moonrise%20Bay.jpg',
+    'Firefly Woods': 'https://taiyaefiles.blob.core.windows.net/web/Firefly%20Woods.jpg',
+    'Evergreen Forest': 'https://taiyaefiles.blob.core.windows.net/web/Evergreen%20Forest.jpg',
+    'Western Plains': 'https://taiyaefiles.blob.core.windows.net/web/Western%20Plains.jpg',
+    'Falter Glen': 'https://taiyaefiles.blob.core.windows.net/web/Falter%20Glen.jpg',
+    'Strongwind Range': 'https://taiyaefiles.blob.core.windows.net/web/Strongwind%20Range.jpg',
+    'Skyrise Pass': 'https://taiyaefiles.blob.core.windows.net/web/Skyrise%20Pass.jpg',
+    'Sundown Coast': 'https://taiyaefiles.blob.core.windows.net/web/Sundown%20Coast.jpg',
   };
 
   if (loading) return <div className="text-center p-8">Loading regions...</div>;
