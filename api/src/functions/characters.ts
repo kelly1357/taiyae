@@ -23,6 +23,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.CharacterID as id, 
                     c.UserID as odUserId, 
                     u.Username as username,
+                    u.Created as userCreatedAt,
                     c.CharacterName as name, 
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
@@ -41,7 +42,9 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
-                    END as isOnline
+                    END as isOnline,
+                    (SELECT COUNT(*) FROM Post WHERE CharacterID = c.CharacterID) as icPostCount,
+                    (SELECT COUNT(*) FROM OOCPost WHERE UserID = c.UserID) as oocPostCount
                 FROM Character c
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
@@ -224,6 +227,85 @@ export async function getCharacterStats(request: HttpRequest, context: Invocatio
     }
 }
 
+export async function getCharacterThreadlog(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const characterId = request.params.id;
+    
+    if (!characterId) {
+        return { status: 400, body: "Please provide a character id" };
+    }
+
+    try {
+        const pool = await getPool();
+        
+        // Get all threads the character has posted in, ordered by thread creation date desc
+        const result = await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .query(`
+                WITH CharacterThreads AS (
+                    SELECT DISTINCT ThreadID
+                    FROM Post
+                    WHERE CharacterID = @characterId
+                    AND ThreadID IN (SELECT ThreadID FROM Thread WHERE OOCForumID IS NULL)
+                ),
+                ThreadInfo AS (
+                    SELECT 
+                        t.ThreadID,
+                        t.Created as threadCreated,
+                        (SELECT TOP 1 p.Subject FROM Post p WHERE p.ThreadID = t.ThreadID ORDER BY p.Created ASC) as threadTitle,
+                        (SELECT COUNT(*) FROM Post p WHERE p.ThreadID = t.ThreadID) as replyCount
+                    FROM Thread t
+                    WHERE t.ThreadID IN (SELECT ThreadID FROM CharacterThreads)
+                ),
+                DistinctParticipants AS (
+                    SELECT DISTINCT p.ThreadID, c.CharacterID, c.CharacterName
+                    FROM Post p
+                    JOIN Character c ON p.CharacterID = c.CharacterID
+                    WHERE p.ThreadID IN (SELECT ThreadID FROM CharacterThreads)
+                ),
+                ThreadParticipants AS (
+                    SELECT 
+                        ThreadID,
+                        STRING_AGG(CharacterName, ', ') WITHIN GROUP (ORDER BY CharacterName) as participants,
+                        STRING_AGG(CAST(CharacterID AS VARCHAR), ', ') WITHIN GROUP (ORDER BY CharacterName) as participantIds
+                    FROM DistinctParticipants
+                    GROUP BY ThreadID
+                ),
+                LastPosts AS (
+                    SELECT 
+                        p.ThreadID,
+                        c.CharacterID as lastPosterId,
+                        c.CharacterName as lastPosterName,
+                        p.Created as lastPostDate,
+                        ROW_NUMBER() OVER (PARTITION BY p.ThreadID ORDER BY p.Created DESC) as rn
+                    FROM Post p
+                    JOIN Character c ON p.CharacterID = c.CharacterID
+                    WHERE p.ThreadID IN (SELECT ThreadID FROM CharacterThreads)
+                )
+                SELECT 
+                    ti.ThreadID as threadId,
+                    ti.threadTitle,
+                    ti.threadCreated,
+                    ti.replyCount,
+                    tp.participants,
+                    tp.participantIds,
+                    lp.lastPosterId,
+                    lp.lastPosterName,
+                    lp.lastPostDate
+                FROM ThreadInfo ti
+                LEFT JOIN ThreadParticipants tp ON ti.ThreadID = tp.ThreadID
+                LEFT JOIN LastPosts lp ON ti.ThreadID = lp.ThreadID AND lp.rn = 1
+                ORDER BY ti.threadCreated DESC
+            `);
+        
+        return {
+            jsonBody: result.recordset
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 app.http('getHealthStatuses', {
     methods: ['GET'],
     authLevel: 'anonymous',
@@ -265,4 +347,11 @@ app.http('updateCharacter', {
     authLevel: 'anonymous',
     route: 'characters/{id}',
     handler: updateCharacter
+});
+
+app.http('getCharacterThreadlog', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'characters/{id}/threadlog',
+    handler: getCharacterThreadlog
 });

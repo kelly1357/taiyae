@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Link } from 'react-router-dom';
 import Header from './Header';
 import { useBackground } from '../contexts/BackgroundContext';
 import type { User, Character } from '../types';
@@ -53,14 +53,16 @@ const Layout: React.FC<LayoutProps> = ({
             {activeCharacter && (
               <section className="bg-white border border-gray-300 shadow">
                 <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-                  Active Character: {activeCharacter.name}
+                  Active Character: <Link to={`/character/${activeCharacter.id}`}>{activeCharacter.name}</Link>
                 </div>
                 <div className="relative">
-                  <img
-                    src={activeCharacter.imageUrl || '/default-avatar.png'}
-                    alt={activeCharacter.name}
-                    className="w-full aspect-square object-cover block"
-                  />
+                  <Link to={`/character/${activeCharacter.id}`}>
+                    <img
+                      src={activeCharacter.imageUrl || '/default-avatar.png'}
+                      alt={activeCharacter.name}
+                      className="w-full aspect-square object-cover block"
+                    />
+                  </Link>
                 </div>
               </section>
             )}

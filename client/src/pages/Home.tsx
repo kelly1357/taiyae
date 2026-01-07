@@ -407,7 +407,7 @@ const Home: React.FC = () => {
         <section className="border border-gray-300 bg-white">
           <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
             <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
-              Roleplay Forums
+              Roleplay Forums | <a href="/wiki/map" className="font-bold text-white hover:underline">Map</a>
             </h2>
           </div>
 

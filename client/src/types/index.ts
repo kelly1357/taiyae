@@ -29,6 +29,7 @@ export interface Character {
   id: string;
   userId: string;
   username?: string;
+  userCreatedAt?: string;
   name: string;
   sex: 'Male' | 'Female' | 'Other';
   age: string; // e.g., "3 years"
@@ -49,6 +50,8 @@ export interface Character {
   knowledge?: number;
   totalSkill?: number;
   isOnline?: boolean;
+  icPostCount?: number;
+  oocPostCount?: number;
 }
 
 export interface ForumSubarea {
@@ -97,4 +100,16 @@ export interface Thread {
   updatedAt: string;
   views: number;
   replies: Reply[];
+}
+
+export interface ThreadlogEntry {
+  threadId: number;
+  threadTitle: string;
+  threadCreated: string;
+  replyCount: number;
+  participants: string;
+  participantIds: string;
+  lastPosterId: number;
+  lastPosterName: string;
+  lastPostDate: string;
 }

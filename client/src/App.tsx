@@ -8,6 +8,7 @@ import OOCForumPage from './pages/OOCForum';
 import RegionDirectory from './pages/RegionDirectory';
 import ThreadView from './pages/ThreadView';
 import CharacterManagement from './pages/CharacterManagement';
+import CharacterProfile from './pages/CharacterProfile';
 import Characters from './pages/Characters';
 import UserManagement from './pages/UserManagement';
 import Login from './pages/Login';
@@ -143,6 +144,7 @@ const App: React.FC = () => {
         <Route path="ooc-forum/:forumId" element={<OOCForumPage />} />
         <Route path="thread/:threadId" element={<ThreadView />} />
         <Route path="characters" element={<Characters />} />
+        <Route path="character/:characterId" element={<CharacterProfile />} />
         <Route path="my-characters" element={<CharacterManagement user={user} />} />
         <Route path="account" element={<UserManagement user={user} onUpdateUser={handleUpdateUser} />} />
         

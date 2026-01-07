@@ -116,10 +116,10 @@ const Characters: React.FC = () => {
   return (
     <section className="bg-white border border-gray-300 shadow">
       <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-        Character Directory
+        Character List
       </div>
       <div className="px-4 py-4">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">Active Characters</h3>
+        <h3 className="text-base font-semibold text-gray-900 mb-1">Character List</h3>
         <p className="text-sm text-gray-600 mb-3">There are currently {characters.length} wolves in Horizon:</p>
         
         {/* Search Bar */}
@@ -187,7 +187,7 @@ const Characters: React.FC = () => {
                       className="w-full object-cover block"
                       style={{ aspectRatio: '16/9' }}
                     />
-                    <span className="absolute top-0 left-0 text-white px-2 py-1 text-sm font-bold uppercase" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                    <span className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
                       {char.name}
                       {!!char.isOnline && (
                         <span className="ml-1 w-2 h-2 bg-green-500 rounded-full inline-block border border-white" title="Online Now"></span>

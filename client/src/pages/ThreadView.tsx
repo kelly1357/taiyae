@@ -46,7 +46,7 @@ const OOCPlayerInfoPanel: React.FC<{
   }, [userId]);
 
   return (
-    <div className={`w-full md:w-56 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
+    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
       {/* Player section */}
       <table className="w-full text-xs border border-gray-300 mb-2">
         <tbody>
@@ -72,12 +72,12 @@ const OOCPlayerInfoPanel: React.FC<{
               ) : characters.length === 0 ? (
                 <span className="text-gray-500 text-center block">No characters</span>
               ) : (
-                <div className="space-y-1">
+                <div className="grid grid-cols-2 gap-1">
                   {characters.map(char => (
                     <Link 
                       key={char.id} 
                       to={`/character/${char.id}`}
-                      className="block text-gray-900 hover:underline"
+                      className="block text-gray-900 hover:underline text-center border border-gray-300 px-1 py-1 bg-white"
                     >
                       {char.name}
                     </Link>
@@ -95,13 +95,14 @@ const OOCPlayerInfoPanel: React.FC<{
 // Character info panel component with table styling
 const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
   return (
-    <div className={`w-full md:w-56 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
+    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
       {/* Avatar - same width as table */}
       <Link to={`/character/${author.id}`} className="mb-2 w-full">
         <img 
           src={author.imageUrl} 
           alt={author.name} 
-          className="w-full h-auto object-cover border-2 border-gray-300"
+          className="w-full object-cover border-2 border-gray-300"
+          style={{ aspectRatio: '526/364' }}
         />
       </Link>
       
@@ -136,7 +137,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
           </tr>
           <tr className="border-b border-gray-300">
             <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{author.age}</td>
-            <td className="px-2 py-2 text-gray-700">{author.sex}</td>
+            <td className={`px-2 py-2 ${author.sex === 'Male' ? 'text-blue-600' : author.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{author.sex}</td>
           </tr>
           <tr className="border-b border-gray-300">
             <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300">Status</td>
@@ -162,7 +163,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
                   {author.packName}
                 </span>
               ) : (
-                <span className="text-gray-600">ROGUE</span>
+                <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
               )}
             </td>
           </tr>
