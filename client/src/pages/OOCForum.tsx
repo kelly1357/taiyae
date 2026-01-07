@@ -50,10 +50,12 @@ const OOCForumPage: React.FC = () => {
       setLoading(true);
       fetch('/api/ooc-forums')
         .then(res => res.json())
-        .then((data: { oocForums: OOCForum[] }) => {
-          const found = data.oocForums.find(f => String(f.id) === forumId);
+        .then((data: OOCForum[]) => {
+          const found = data.find(f => String(f.id) === forumId);
           setForum(found || null);
-        });
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
     }
 
     // Fetch threads

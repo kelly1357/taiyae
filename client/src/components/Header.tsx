@@ -179,7 +179,9 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/wiki/wolf-guide">Wolf Guide</DropdownLink>
           </NavDropdown>
           <NavDropdown label="OOC">
-            <DropdownLink to="/ooc">OOC Forums</DropdownLink>
+            <DropdownLink to="/ooc">Out of Character</DropdownLink>
+            <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
+            <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {user ? (
             <div className="flex items-center space-x-4">
@@ -303,7 +305,9 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/wiki/wolf-guide">Wolf Guide</MobileDropdownLink>
           </MobileNavSection>
           <MobileNavSection label="OOC">
-            <MobileDropdownLink to="/ooc">OOC Forums</MobileDropdownLink>
+            <MobileDropdownLink to="/ooc">Out of Character</MobileDropdownLink>
+            <MobileDropdownLink to="/ooc-forum/7">IC Archives</MobileDropdownLink>
+            <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           
           {user ? (
