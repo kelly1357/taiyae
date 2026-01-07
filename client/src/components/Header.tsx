@@ -132,11 +132,21 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                     className="flex items-center space-x-2 bg-white/35 px-3 py-1 hover:bg-white/50 transition-colors border border-white/20"
                   >
-                    <img 
-                      src={activeCharacter.imageUrl} 
-                      alt={activeCharacter.name} 
-                      className="w-8 h-8 object-cover border border-gray-300"
-                    />
+                    {activeCharacter.imageUrl && activeCharacter.imageUrl.trim() !== '' && !activeCharacter.imageUrl.includes('via.placeholder') ? (
+                      <img 
+                        src={activeCharacter.imageUrl} 
+                        alt={activeCharacter.name} 
+                        className="w-8 h-8 object-cover border border-gray-300"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gray-200 border border-gray-300 flex items-center justify-center">
+                        <img 
+                          src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                          alt="Placeholder" 
+                          className="w-5 h-5 opacity-40"
+                        />
+                      </div>
+                    )}
                     <span className="text-sm font-semibold text-gray-900">{activeCharacter.name}</span>
                     <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
@@ -156,11 +166,21 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                             activeCharacter.id === char.id ? 'bg-gray-100' : ''
                           }`}
                         >
-                          <img 
-                            src={char.imageUrl} 
-                            alt={char.name} 
-                            className="w-8 h-8 object-cover border border-gray-300"
-                          />
+                          {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') ? (
+                            <img 
+                              src={char.imageUrl} 
+                              alt={char.name} 
+                              className="w-8 h-8 object-cover border border-gray-300"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 bg-gray-200 border border-gray-300 flex items-center justify-center">
+                              <img 
+                                src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                                alt="Placeholder" 
+                                className="w-5 h-5 opacity-40"
+                              />
+                            </div>
+                          )}
                           <span className="text-sm text-gray-900">{char.name}</span>
                           {activeCharacter.id === char.id && (
                             <svg className="w-4 h-4 text-[#2f3a2f] ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

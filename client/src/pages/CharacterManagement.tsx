@@ -54,7 +54,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
       healthStatusId: 1, // Default to first status (usually Healthy)
       skillPoints: 0,
       achievements: [],
-      imageUrl: 'https://via.placeholder.com/150', // Default
+      imageUrl: '',
       monthsAge: 0
     });
     setIsEditing(true);
@@ -208,8 +208,16 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">Avatar Image</label>
               <div className="flex items-center space-x-4">
-                {currentCharacter.imageUrl && (
+                {currentCharacter.imageUrl && currentCharacter.imageUrl.trim() !== '' && !currentCharacter.imageUrl.includes('via.placeholder') ? (
                   <img src={currentCharacter.imageUrl} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-gray-300" />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center">
+                    <img 
+                      src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                      alt="Placeholder" 
+                      className="w-10 h-10 opacity-40"
+                    />
+                  </div>
                 )}
                 <input 
                   type="file" 
@@ -268,11 +276,21 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 border-r border-gray-300">
                     <div className="flex flex-col items-center space-y-2">
-                      <img 
-                        src={char.imageUrl} 
-                        alt={char.name} 
-                        className="w-12 h-12 rounded-full object-cover border border-gray-300"
-                      />
+                      {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') ? (
+                        <img 
+                          src={char.imageUrl} 
+                          alt={char.name} 
+                          className="w-12 h-12 rounded-full object-cover border border-gray-300"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center">
+                          <img 
+                            src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                            alt="Placeholder" 
+                            className="w-8 h-8 opacity-40"
+                          />
+                        </div>
+                      )}
                       <button 
                         onClick={() => handleEdit(char)}
                         className="text-xs text-[#2f3a2f] hover:underline font-medium"

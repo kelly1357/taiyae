@@ -9,6 +9,12 @@ const CharacterProfile: React.FC = () => {
   const [threadlog, setThreadlog] = useState<ThreadlogEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'character' | 'player' | 'threadlog'>('character');
+  const [imageError, setImageError] = useState(false);
+
+  // Reset imageError when character changes
+  useEffect(() => {
+    setImageError(false);
+  }, [characterId]);
 
   useEffect(() => {
     if (!characterId) return;
@@ -53,12 +59,26 @@ const CharacterProfile: React.FC = () => {
             {/* Left column: Avatar + Info Table - wrapped in white */}
             <div className="w-full md:w-72 flex-shrink-0 bg-white p-3">
               {/* Avatar */}
-              <img 
-                src={character.imageUrl} 
-                alt={character.name} 
-                className="w-full object-cover border border-gray-300"
-                style={{ aspectRatio: '526/364' }}
-              />
+              {character.imageUrl && character.imageUrl.trim() !== '' && !imageError ? (
+                <img 
+                  src={character.imageUrl} 
+                  alt={character.name} 
+                  className="w-full object-cover border border-gray-300"
+                  style={{ aspectRatio: '526/364' }}
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div 
+                  className="w-full bg-gray-200 border border-gray-300 flex items-center justify-center"
+                  style={{ aspectRatio: '526/364' }}
+                >
+                  <img 
+                    src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                    alt="Placeholder" 
+                    className="w-24 h-24 opacity-40"
+                  />
+                </div>
+              )}
               
               {/* Character Info Table */}
               <div className="border border-gray-300 mt-[30px]">

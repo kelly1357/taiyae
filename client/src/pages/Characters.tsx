@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import type { Character } from '../types';
 
 type SortField = 'name' | 'username' | 'packName' | 'age' | 'healthStatus' | 'totalSkill';
@@ -10,6 +11,7 @@ const Characters: React.FC = () => {
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [searchQuery, setSearchQuery] = useState('');
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     fetchCharacters();
@@ -181,18 +183,34 @@ const Characters: React.FC = () => {
               {sortedCharacters.map(char => (
                 <tr key={char.id} className="hover:bg-gray-50 transition-colors align-top border-t border-gray-300">
                   <td className="p-0 w-[25%] border-r border-gray-300 relative">
-                    <img 
-                      src={char.imageUrl} 
-                      alt={char.name} 
-                      className="w-full object-cover block"
-                      style={{ aspectRatio: '16/9' }}
-                    />
-                    <span className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                    <Link to={`/character/${char.id}`} className="block">
+                      {char.imageUrl && char.imageUrl.trim() !== '' && !imageErrors.has(char.id) ? (
+                        <img 
+                          src={char.imageUrl} 
+                          alt={char.name} 
+                          className="w-full object-cover block"
+                          style={{ aspectRatio: '16/9' }}
+                          onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
+                        />
+                      ) : (
+                        <div 
+                          className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+                          style={{ aspectRatio: '16/9' }}
+                        >
+                          <img 
+                            src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                            alt="Placeholder" 
+                            className="w-12 h-12 opacity-40"
+                          />
+                        </div>
+                      )}
+                    </Link>
+                    <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
                       {char.name}
                       {!!char.isOnline && (
                         <span className="ml-1 w-2 h-2 bg-green-500 rounded-full inline-block border border-white" title="Online Now"></span>
                       )}
-                    </span>
+                    </Link>
                   </td>
                   <td className={`px-3 py-3 border-r border-gray-300 ${char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{char.sex || 'Unknown'}</td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">{char.age}</td>

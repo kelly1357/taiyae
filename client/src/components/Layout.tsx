@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import Header from './Header';
 import { useBackground } from '../contexts/BackgroundContext';
@@ -23,6 +23,12 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const onlineList = onlineCharacters ?? [];
   const { backgroundUrl } = useBackground();
+  const [imageError, setImageError] = useState(false);
+
+  // Reset imageError when active character changes
+  useEffect(() => {
+    setImageError(false);
+  }, [activeCharacter?.id]);
 
   return (
     <div className="min-h-screen text-gray-100 font-sans flex flex-col relative">
@@ -57,11 +63,22 @@ const Layout: React.FC<LayoutProps> = ({
                 </div>
                 <div className="relative">
                   <Link to={`/character/${activeCharacter.id}`}>
-                    <img
-                      src={activeCharacter.imageUrl || '/default-avatar.png'}
-                      alt={activeCharacter.name}
-                      className="w-full aspect-square object-cover block"
-                    />
+                    {activeCharacter.imageUrl && activeCharacter.imageUrl.trim() !== '' && !imageError ? (
+                      <img
+                        src={activeCharacter.imageUrl}
+                        alt={activeCharacter.name}
+                        className="w-full aspect-square object-cover block"
+                        onError={() => setImageError(true)}
+                      />
+                    ) : (
+                      <div className="w-full aspect-square bg-gray-200 flex items-center justify-center">
+                        <img 
+                          src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                          alt="Placeholder" 
+                          className="w-24 h-24 opacity-40"
+                        />
+                      </div>
+                    )}
                   </Link>
                 </div>
               </section>

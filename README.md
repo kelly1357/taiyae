@@ -37,7 +37,13 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### From kelly1357 to MBenson415
 
-[] Editable character fields to include: dropdown Height (Petite, Small, Average, Large, Very Large), dropdown Build (Lean, Average, Stocky, Muscular), birthplace (HTML), Father (HTML), Mother (HTML), Siblings (HTML), Pups (HTML)
+[] Editable character fields to include: Avatar update, 5 photo uploads, dropdown Height (Petite, Small, Average, Large, Very Large), dropdown Build (Lean, Average, Stocky, Muscular), birthplace (HTML), Father (HTML), Mother (HTML), Siblings (HTML), Pups (HTML)
+
+[] Place to edit profile fields
+
+[] Moderator permissions: delete threads and posts, move threads, edit SP
+
+[] Skill Points
 
 ### MBenson415
 
