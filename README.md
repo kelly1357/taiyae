@@ -35,6 +35,10 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 - Update CSS styling in /client/src/index.css
 - Define + author feature set
 
+### From kelly1357 to MBenson415
+
+[] Editable character fields to include: dropdown Height (Petite, Small, Average, Large, Very Large), dropdown Build (Lean, Average, Stocky, Muscular), birthplace (HTML), Father (HTML), Mother (HTML), Siblings (HTML), Pups (HTML)
+
 ### MBenson415
 
 High Priority:

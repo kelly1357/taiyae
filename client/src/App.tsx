@@ -133,7 +133,7 @@ const App: React.FC = () => {
           user={user} 
           activeCharacter={activeCharacter} 
           userCharacters={userCharacters}
-          onlineCharacters={allCharacters}
+          onlineCharacters={allCharacters.filter(c => c.isOnline)}
           onLogout={handleLogout} 
           onCharacterSelect={handleCharacterSelect}
         />
