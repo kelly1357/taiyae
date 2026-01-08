@@ -192,7 +192,7 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
     try {
         const id = request.params.id;
         const body: any = await request.json();
-        const { username, currentPassword, newPassword } = body;
+        const { username, currentPassword, newPassword, playerInfo, facebook, instagram, discord } = body;
 
         if (!id) {
             return { status: 400, jsonBody: { body: "User ID is required" } };
@@ -245,6 +245,26 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
             updates.push("Username = @Username");
         }
 
+        // Update Player Info
+        if (playerInfo !== undefined) {
+            requestObj.input('Description', sql.NVarChar, playerInfo);
+            updates.push("Description = @Description");
+        }
+
+        // Update Social Media
+        if (facebook !== undefined) {
+            requestObj.input('Facebook', sql.NVarChar, facebook);
+            updates.push("Facebook = @Facebook");
+        }
+        if (instagram !== undefined) {
+            requestObj.input('Instagram', sql.NVarChar, instagram);
+            updates.push("Instagram = @Instagram");
+        }
+        if (discord !== undefined) {
+            requestObj.input('Discord', sql.NVarChar, discord);
+            updates.push("Discord = @Discord");
+        }
+
         // Update Password
         if (newPassword) {
             if (user.Auth_Provider !== 'email') {
@@ -272,7 +292,7 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
         const query = `
             UPDATE [User] 
             SET ${updates.join(', ')}
-            OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider
+            OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.Description, INSERTED.Facebook, INSERTED.Instagram, INSERTED.Discord
             WHERE UserID = @UserID
         `;
 

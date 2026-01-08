@@ -8,14 +8,19 @@ interface CharacterManagementProps {
 const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [healthStatuses, setHealthStatuses] = useState<{id: number, name: string}[]>([]);
+  const [heights, setHeights] = useState<{id: number, name: string}[]>([]);
+  const [builds, setBuilds] = useState<{id: number, name: string}[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [currentCharacter, setCurrentCharacter] = useState<Partial<Character>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     fetchCharacters();
     fetchHealthStatuses();
+    fetchHeights();
+    fetchBuilds();
   }, [user.id]);
 
   const fetchHealthStatuses = async () => {
@@ -27,6 +32,30 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
       }
     } catch (error) {
       console.error('Failed to fetch health statuses', error);
+    }
+  };
+
+  const fetchHeights = async () => {
+    try {
+      const response = await fetch('/api/heights');
+      if (response.ok) {
+        const data = await response.json();
+        setHeights(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch heights', error);
+    }
+  };
+
+  const fetchBuilds = async () => {
+    try {
+      const response = await fetch('/api/builds');
+      if (response.ok) {
+        const data = await response.json();
+        setBuilds(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch builds', error);
     }
   };
 
@@ -44,10 +73,12 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
   const handleEdit = (char: Character) => {
     setCurrentCharacter(char);
+    setMessage({ type: '', text: '' });
     setIsEditing(true);
   };
 
   const handleCreate = () => {
+    setMessage({ type: '', text: '' });
     setCurrentCharacter({
       userId: String(user.id),
       sex: 'Male',
@@ -93,16 +124,20 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
       });
 
       if (response.ok) {
-        setIsEditing(false);
-        fetchCharacters();
+        // For new characters, close the form. For existing, stay on the same character.
+        if (!currentCharacter.id) {
+          setIsEditing(false);
+        }
+        setMessage({ type: 'success', text: 'Character saved successfully.' });
+        await fetchCharacters();
       } else {
         const errorText = await response.text();
         console.error('Save failed:', errorText);
-        alert(`Failed to save character: ${errorText}`);
+        setMessage({ type: 'error', text: `Failed to save character: ${errorText}` });
       }
     } catch (error) {
       console.error('Error saving character', error);
-      alert(`Error saving character: ${error}`);
+      setMessage({ type: 'error', text: `Error saving character: ${error}` });
     } finally {
       setIsLoading(false);
     }
@@ -154,17 +189,31 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
       {isEditing ? (
         <div className="px-4 py-4">
+          {message.text && (
+            <div className={`p-3 mb-6 border text-sm ${message.type === 'error' ? 'bg-red-50 border-red-300 text-red-800' : 'bg-green-50 border-green-300 text-green-800'}`}>
+              {message.text}
+            </div>
+          )}
           <h3 className="text-base font-semibold text-gray-900 mb-4">{currentCharacter.id ? 'Edit Character' : 'New Character'}</h3>
           <form onSubmit={handleSave} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
-              <input 
-                type="text" 
-                value={currentCharacter.name || ''} 
-                onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
-                className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                required
-              />
+              {currentCharacter.id ? (
+                <>
+                  <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
+                    {currentCharacter.name}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Name cannot be changed.</p>
+                </>
+              ) : (
+                <input 
+                  type="text" 
+                  value={currentCharacter.name || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                  required
+                />
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -177,7 +226,6 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
-                  <option value="Other">Other</option>
                 </select>
               </div>
               <div>
@@ -205,6 +253,35 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               </select>
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Height</label>
+                <select 
+                  value={(currentCharacter as any).heightId || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, heightId: e.target.value ? parseInt(e.target.value) : undefined} as any)}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                >
+                  <option value="">-- Select --</option>
+                  {heights.map(h => (
+                    <option key={h.id} value={h.id}>{h.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Build</label>
+                <select 
+                  value={(currentCharacter as any).buildId || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, buildId: e.target.value ? parseInt(e.target.value) : undefined} as any)}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                >
+                  <option value="">-- Select --</option>
+                  {builds.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-700">Avatar Image</label>
               <div className="flex items-center space-x-4">
@@ -230,12 +307,64 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Character Information</label>
               <textarea 
                 value={currentCharacter.bio || ''} 
                 onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
                 className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 h-32 focus:outline-none focus:border-[#2f3a2f]"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Father</label>
+                <input 
+                  type="text" 
+                  value={(currentCharacter as any).father || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, father: e.target.value} as any)}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Mother</label>
+                <input 
+                  type="text" 
+                  value={(currentCharacter as any).mother || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, mother: e.target.value} as any)}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Birthplace</label>
+              <input 
+                type="text" 
+                value={(currentCharacter as any).birthplace || ''} 
+                onChange={e => setCurrentCharacter({...currentCharacter, birthplace: e.target.value} as any)}
+                className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Siblings</label>
+                <input 
+                  type="text" 
+                  value={(currentCharacter as any).siblings || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, siblings: e.target.value} as any)}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700">Pups</label>
+                <input 
+                  type="text" 
+                  value={(currentCharacter as any).pups || ''} 
+                  onChange={e => setCurrentCharacter({...currentCharacter, pups: e.target.value} as any)}
+                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">

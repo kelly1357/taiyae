@@ -13,6 +13,28 @@ export async function getHealthStatuses(request: HttpRequest, context: Invocatio
     }
 }
 
+export async function getHeights(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+        const result = await pool.request().query('SELECT HeightID as id, HeightValue as name FROM Height ORDER BY HeightID');
+        return { jsonBody: result.recordset };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+export async function getBuilds(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+        const result = await pool.request().query('SELECT BuildID as id, BuildValue as name FROM Build ORDER BY BuildID');
+        return { jsonBody: result.recordset };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 export async function getCharacters(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const userId = request.query.get('userId');
     
@@ -24,6 +46,10 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.UserID as odUserId, 
                     u.Username as username,
                     u.Created as userCreatedAt,
+                    u.Description as playerInfo,
+                    u.Facebook as facebook,
+                    u.Instagram as instagram,
+                    u.Discord as discord,
                     c.CharacterName as name, 
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
@@ -34,11 +60,18 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.HealthStatus_Id as healthStatusId,
                     c.CI_General_HTML as bio,
                     h.HeightValue as height,
+                    c.HeightID as heightId,
                     b.BuildValue as build,
+                    c.BuildID as buildId,
                     c.Experience as experience,
                     c.Physical as physical,
                     c.Knowledge as knowledge,
                     c.Total as totalSkill,
+                    c.Father as father,
+                    c.Mother as mother,
+                    c.Birthplace as birthplace,
+                    c.Siblings as siblings,
+                    c.Pups as pups,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -174,7 +207,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
     try {
         const body = await request.json() as any;
-        const { name, sex, monthsAge, imageUrl, bio, healthStatusId } = body;
+        const { name, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups } = body;
 
         const pool = await getPool();
         
@@ -186,9 +219,16 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
             .input('imageUrl', sql.NVarChar, imageUrl)
             .input('bio', sql.NVarChar, bio)
             .input('healthStatusId', sql.Int, healthStatusId)
+            .input('father', sql.NVarChar, father || null)
+            .input('mother', sql.NVarChar, mother || null)
+            .input('heightId', sql.Int, heightId || null)
+            .input('buildId', sql.Int, buildId || null)
+            .input('birthplace', sql.NVarChar, birthplace || null)
+            .input('siblings', sql.NVarChar, siblings || null)
+            .input('pups', sql.NVarChar, pups || null)
             .query(`
                 UPDATE Character 
-                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId
+                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups
                 WHERE CharacterID = @id
             `);
             
@@ -311,6 +351,20 @@ app.http('getHealthStatuses', {
     authLevel: 'anonymous',
     route: 'health-statuses',
     handler: getHealthStatuses
+});
+
+app.http('getHeights', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'heights',
+    handler: getHeights
+});
+
+app.http('getBuilds', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'builds',
+    handler: getBuilds
 });
 
 app.http('getCharacters', {

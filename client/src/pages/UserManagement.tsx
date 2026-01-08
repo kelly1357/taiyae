@@ -8,6 +8,10 @@ interface UserManagementProps {
 
 const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) => {
   const [username, setUsername] = useState(user.username);
+  const [playerInfo, setPlayerInfo] = useState(user.playerInfo || '');
+  const [facebook, setFacebook] = useState(user.facebook || '');
+  const [instagram, setInstagram] = useState(user.instagram || '');
+  const [discord, setDiscord] = useState(user.discord || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,6 +21,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
 
   useEffect(() => {
     setUsername(user.username);
+    setPlayerInfo(user.playerInfo || '');
+    setFacebook(user.facebook || '');
+    setInstagram(user.instagram || '');
+    setDiscord(user.discord || '');
   }, [user]);
 
   const updateUserData = async (payload: any) => {
@@ -53,6 +61,10 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
             ...user,
             username: data.user.Username || data.user.username,
             email: data.user.Email || data.user.email,
+            playerInfo: data.user.Description || data.user.playerInfo || '',
+            facebook: data.user.Facebook || data.user.facebook || '',
+            instagram: data.user.Instagram || data.user.instagram || '',
+            discord: data.user.Discord || data.user.discord || '',
         };
         
         onUpdateUser(normalizedUser);
@@ -70,9 +82,9 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
     }
   };
 
-  const handleUpdateUsername = async (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateUserData({ username });
+    await updateUserData({ username, playerInfo, facebook, instagram, discord });
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -121,7 +133,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
           </div>
         )}
 
-        <div className="space-y-6">
+        <form onSubmit={handleUpdateProfile} className="space-y-6">
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Email</label>
             <input
@@ -133,28 +145,67 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
             <p className="text-xs text-gray-500 mt-1">Email cannot be changed.</p>
           </div>
 
-          <form onSubmit={handleUpdateUsername}>
+          <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Username</label>
-            <div className="space-y-2">
+            <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f]"
+                required
+            />
+          </div>
+
+          <div className="border-t border-gray-300 pt-6">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Player Information</label>
+            <textarea
+              value={playerInfo}
+              onChange={(e) => setPlayerInfo(e.target.value)}
+              className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f] h-32"
+              placeholder="Tell others about yourself..."
+            />
+          </div>
+
+          <div className="border-t border-gray-300 pt-6">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-3">Social Media</label>
+            <div className="grid grid-cols-3 gap-4">
               <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f]"
-                  required
+                type="text"
+                value={facebook}
+                onChange={(e) => setFacebook(e.target.value)}
+                className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f]"
+                placeholder="Facebook URL"
               />
-              <button
-                  type="submit"
-                  disabled={isLoading || username === user.username}
-                  className="bg-[#2f3a2f] hover:bg-[#3d4a3d] text-white px-4 py-2 text-sm font-semibold uppercase tracking-wide disabled:opacity-50 transition-colors"
-              >
-                  {isLoading ? 'Saving...' : 'Save Username'}
-              </button>
+              <input
+                type="text"
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f]"
+                placeholder="Instagram URL"
+              />
+              <input
+                type="text"
+                value={discord}
+                onChange={(e) => setDiscord(e.target.value)}
+                className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f]"
+                placeholder="Discord Username"
+              />
             </div>
-          </form>
+          </div>
+
+          <div className="border-t border-gray-300 pt-6">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-[#2f3a2f] hover:bg-[#3d4a3d] text-white px-4 py-2 text-sm font-semibold uppercase tracking-wide disabled:opacity-50 transition-colors"
+            >
+              {isLoading ? 'Saving...' : 'Save Profile'}
+            </button>
+          </div>
+        </form>
 
           {user.authProvider === 'email' && (
-            <div className="border-t border-gray-300 pt-6">
+            <div className="border-t border-gray-300 pt-6 mt-6">
               <div className="flex items-center mb-4">
                   <h3 className="text-sm font-semibold text-gray-900 mr-2">Change Password</h3>
                   <button 
@@ -220,7 +271,6 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
               </form>
             </div>
           )}
-        </div>
       </div>
     </section>
   );

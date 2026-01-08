@@ -5,6 +5,10 @@ export interface User {
   authProvider?: string;
   characters?: string[]; // List of Character IDs
   activeCharacterId?: string | number; // Currently selected character for posting
+  playerInfo?: string; // Player biography/description
+  facebook?: string;
+  instagram?: string;
+  discord?: string;
 }
 
 export interface Achievement {
@@ -44,7 +48,9 @@ export interface Character {
   monthsAge?: number;
   healthStatusId?: number;
   height?: string;
+  heightId?: number;
   build?: string;
+  buildId?: number;
   experience?: number;
   physical?: number;
   knowledge?: number;
@@ -52,6 +58,15 @@ export interface Character {
   isOnline?: boolean;
   icPostCount?: number;
   oocPostCount?: number;
+  father?: string;
+  mother?: string;
+  birthplace?: string;
+  siblings?: string;
+  pups?: string;
+  playerInfo?: string;
+  facebook?: string;
+  instagram?: string;
+  discord?: string;
 }
 
 export interface ForumSubarea {

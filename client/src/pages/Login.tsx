@@ -67,6 +67,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             username: data.user.Username || data.user.username,
             email: data.user.Email || data.user.email,
             authProvider: data.user.Auth_Provider || data.user.authProvider,
+            playerInfo: data.user.Description || data.user.playerInfo || '',
+            facebook: data.user.Facebook || data.user.facebook || '',
+            instagram: data.user.Instagram || data.user.instagram || '',
+            discord: data.user.Discord || data.user.discord || '',
         };
         onLogin(normalizedUser);
         navigate('/');
@@ -104,6 +108,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             username: data.user.Username || data.user.username,
             email: data.user.Email || data.user.email,
             authProvider: data.user.Auth_Provider || data.user.authProvider,
+            playerInfo: data.user.Description || data.user.playerInfo || '',
+            facebook: data.user.Facebook || data.user.facebook || '',
+            instagram: data.user.Instagram || data.user.instagram || '',
+            discord: data.user.Discord || data.user.discord || '',
         };
         onLogin(normalizedUser);
         navigate('/');
