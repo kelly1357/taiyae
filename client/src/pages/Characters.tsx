@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Character } from '../types';
 
-type SortField = 'name' | 'username' | 'packName' | 'age' | 'healthStatus' | 'totalSkill';
+type SortField = 'name' | 'username' | 'packName' | 'age' | 'healthStatus' | 'totalSkill' | 'sex';
 type SortDirection = 'asc' | 'desc';
 
 const Characters: React.FC = () => {
@@ -65,6 +65,10 @@ const Characters: React.FC = () => {
         case 'username':
           aVal = (a.username || '').toLowerCase();
           bVal = (b.username || '').toLowerCase();
+          break;
+        case 'sex':
+          aVal = (a.sex || '').toLowerCase();
+          bVal = (b.sex || '').toLowerCase();
           break;
         case 'packName':
           aVal = (a.packName || 'Rogue').toLowerCase();
@@ -149,9 +153,9 @@ const Characters: React.FC = () => {
                 </th>
                 <th 
                   className="px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
-                  onClick={() => handleSort('name')}
+                  onClick={() => handleSort('sex')}
                 >
-                  Sex
+                  Sex<SortIcon field="sex" />
                 </th>
                 <th 
                   className="px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"

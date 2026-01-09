@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import type { Character, User } from '../types';
+
+type SortField = 'name' | 'sex' | 'packName' | 'age' | 'totalSkill';
+type SortDirection = 'asc' | 'desc';
 
 interface CharacterManagementProps {
   user: User;
@@ -11,6 +14,9 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   const [heights, setHeights] = useState<{id: number, name: string}[]>([]);
   const [builds, setBuilds] = useState<{id: number, name: string}[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [currentCharacter, setCurrentCharacter] = useState<Partial<Character>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -75,6 +81,70 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     setCurrentCharacter(char);
     setMessage({ type: '', text: '' });
     setIsEditing(true);
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedCharacters = useMemo(() => {
+    return [...characters].sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+
+      switch (sortField) {
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        case 'sex':
+          aVal = (a.sex || '').toLowerCase();
+          bVal = (b.sex || '').toLowerCase();
+          break;
+        case 'packName':
+          aVal = (a.packName || 'Rogue').toLowerCase();
+          bVal = (b.packName || 'Rogue').toLowerCase();
+          break;
+        case 'age':
+          aVal = a.monthsAge || 0;
+          bVal = b.monthsAge || 0;
+          break;
+        case 'totalSkill':
+          aVal = a.totalSkill || 0;
+          bVal = b.totalSkill || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [characters, sortField, sortDirection]);
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return (
+        <svg className="ml-1 w-3 h-3 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    return sortDirection === 'asc' ? (
+      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+      </svg>
+    ) : (
+      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    );
   };
 
   const handleCreate = () => {
@@ -390,50 +460,81 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
           <table className="w-full border border-gray-300 text-sm bg-white">
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                <th className="px-4 py-2 text-left border-r border-gray-300">Avatar</th>
-                <th className="px-4 py-2 text-left border-r border-gray-300">Name</th>
-                <th className="px-4 py-2 text-left border-r border-gray-300">Pack</th>
-                <th className="px-4 py-2 text-left border-r border-gray-300">Age</th>
-                <th className="px-4 py-2 text-left border-r border-gray-300">Height</th>
-                <th className="px-4 py-2 text-left border-r border-gray-300">Build</th>
-                <th className="px-4 py-2 text-left border-r border-gray-300">Health</th>
-                <th className="px-4 py-2 text-center">Skill Score</th>
+                <th 
+                  className="px-4 py-2 text-left border-r border-gray-300 w-[25%] cursor-pointer hover:bg-gray-300 select-none"
+                  onClick={() => handleSort('name')}
+                >
+                  Character<SortIcon field="name" />
+                </th>
+                <th 
+                  className="px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  onClick={() => handleSort('sex')}
+                >
+                  Sex<SortIcon field="sex" />
+                </th>
+                <th 
+                  className="px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  onClick={() => handleSort('packName')}
+                >
+                  Pack<SortIcon field="packName" />
+                </th>
+                <th 
+                  className="px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  onClick={() => handleSort('age')}
+                >
+                  Age<SortIcon field="age" />
+                </th>
+                <th 
+                  className="px-4 py-2 text-center cursor-pointer hover:bg-gray-300 select-none"
+                  onClick={() => handleSort('totalSkill')}
+                >
+                  Skill Score<SortIcon field="totalSkill" />
+                </th>
               </tr>
             </thead>
             <tbody>
-              {characters.map(char => (
-                <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 border-r border-gray-300">
-                    <div className="flex flex-col items-center space-y-2">
-                      {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') ? (
+              {sortedCharacters.map(char => (
+                <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors align-top">
+                  <td className="p-0 w-[25%] border-r border-gray-300 relative">
+                    <div className="relative">
+                      {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
                         <img 
                           src={char.imageUrl} 
                           alt={char.name} 
-                          className="w-12 h-12 rounded-full object-cover border border-gray-300"
+                          className="w-full object-cover block"
+                          style={{ aspectRatio: '16/9' }}
+                          onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center">
+                        <div 
+                          className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
+                          style={{ aspectRatio: '16/9' }}
+                        >
                           <img 
                             src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
                             alt="Placeholder" 
-                            className="w-8 h-8 opacity-40"
+                            className="w-12 h-12 opacity-40"
                           />
                         </div>
                       )}
+                      <span className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                        {char.name}
+                      </span>
                       <button 
                         onClick={() => handleEdit(char)}
-                        className="text-xs text-[#2f3a2f] hover:underline font-medium"
+                        className="absolute bottom-2 right-2 text-xs bg-white/90 hover:bg-white text-[#2f3a2f] px-2 py-1 font-medium border border-gray-300"
                       >
                         Edit
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-3 border-r border-gray-300 font-semibold text-gray-900">{char.name}</td>
-                  <td className="px-4 py-3 border-r border-gray-300 text-gray-600">{char.packName || 'Rogue'}</td>
+                  <td className={`px-4 py-3 border-r border-gray-300 ${char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{char.sex || 'Unknown'}</td>
+                  <td className="px-4 py-3 border-r border-gray-300 text-gray-600">
+                    {char.packName ? char.packName : (
+                      <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 border-r border-gray-300 text-gray-600">{char.age}</td>
-                  <td className="px-4 py-3 border-r border-gray-300 text-gray-600">{char.height || 'N/A'}</td>
-                  <td className="px-4 py-3 border-r border-gray-300 text-gray-600">{char.build || 'N/A'}</td>
-                  <td className="px-4 py-3 border-r border-gray-300 text-gray-600">{char.healthStatus || 'Unknown'}</td>
                   <td className="px-4 py-3">
                     <div className="border border-gray-300 text-xs text-center w-48 mx-auto">
                       <div className="grid grid-cols-4 bg-gray-200 text-gray-700 font-semibold">
