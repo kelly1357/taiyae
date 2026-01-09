@@ -55,7 +55,9 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Place to edit character fields
 
-[ ] Editable character fields to include: 5 photo uploads, Spirit Symbol (can only be chosen at character creation)
+[ ] Editable character fields to include: 5 photo uploads
+
+[ ] Display online characters on sidebar
 
 ✅ Place to edit user fields
 
