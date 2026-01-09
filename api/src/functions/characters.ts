@@ -102,10 +102,16 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
         // Map monthsAge to age string if needed, or handle in client
         
         // Map monthsAge to age string if needed, or handle in client
-        const characters = result.recordset.map(c => ({
-            ...c,
-            age: `${Math.floor(c.monthsAge / 12)} years, ${c.monthsAge % 12} months` // Simple conversion
-        }));
+        const characters = result.recordset.map(c => {
+            const years = Math.floor(c.monthsAge / 12);
+            const months = c.monthsAge % 12;
+            const yearStr = years === 1 ? 'year' : 'years';
+            const monthStr = months === 1 ? 'month' : 'months';
+            return {
+                ...c,
+                age: `${years} ${yearStr}, ${months} ${monthStr}`
+            };
+        });
 
         return {
             jsonBody: characters
@@ -153,9 +159,13 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
         }
 
         const c = result.recordset[0];
+        const years = Math.floor(c.monthsAge / 12);
+        const months = c.monthsAge % 12;
+        const yearStr = years === 1 ? 'year' : 'years';
+        const monthStr = months === 1 ? 'month' : 'months';
         const character = {
             ...c,
-            age: `${Math.floor(c.monthsAge / 12)} years ${c.monthsAge % 12} months`
+            age: `${years} ${yearStr} ${months} ${monthStr}`
         };
 
         return {

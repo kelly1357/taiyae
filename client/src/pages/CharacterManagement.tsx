@@ -259,183 +259,251 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
       {isEditing ? (
         <div className="px-4 py-4">
+          <button 
+            onClick={() => setIsEditing(false)} 
+            className="text-sm text-gray-600 hover:text-gray-900 hover:underline mb-4 block"
+          >
+            ← Back to My Characters
+          </button>
           {message.text && (
             <div className={`p-3 mb-6 border text-sm ${message.type === 'error' ? 'bg-red-50 border-red-300 text-red-800' : 'bg-green-50 border-green-300 text-green-800'}`}>
               {message.text}
             </div>
           )}
           <h3 className="text-base font-semibold text-gray-900 mb-4">{currentCharacter.id ? 'Edit Character' : 'New Character'}</h3>
-          <form onSubmit={handleSave} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-6">
+            {/* Basic Profile Section */}
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
-              {currentCharacter.id ? (
-                <>
-                  <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
-                    {currentCharacter.name}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Name cannot be changed.</p>
-                </>
-              ) : (
-                <input 
-                  type="text" 
-                  value={currentCharacter.name || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                  required
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Sex</label>
-                <select 
-                  value={currentCharacter.sex || 'Male'} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, sex: e.target.value as any})}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                >
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Age (Months)</label>
-                <input 
-                  type="number" 
-                  value={currentCharacter.monthsAge || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, monthsAge: parseInt(e.target.value)})}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                  placeholder="e.g. 36"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Health Status</label>
-              <select 
-                value={currentCharacter.healthStatusId || 1} 
-                onChange={e => setCurrentCharacter({...currentCharacter, healthStatusId: parseInt(e.target.value)})}
-                className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-              >
-                {healthStatuses.map(status => (
-                  <option key={status.id} value={status.id}>{status.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Height</label>
-                <select 
-                  value={(currentCharacter as any).heightId || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, heightId: e.target.value ? parseInt(e.target.value) : undefined} as any)}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                >
-                  <option value="">-- Select --</option>
-                  {heights.map(h => (
-                    <option key={h.id} value={h.id}>{h.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Build</label>
-                <select 
-                  value={(currentCharacter as any).buildId || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, buildId: e.target.value ? parseInt(e.target.value) : undefined} as any)}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                >
-                  <option value="">-- Select --</option>
-                  {builds.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Avatar Image</label>
-              <div className="flex items-center space-x-4">
-                {currentCharacter.imageUrl && currentCharacter.imageUrl.trim() !== '' && !currentCharacter.imageUrl.includes('via.placeholder') ? (
-                  <img src={currentCharacter.imageUrl} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-gray-300" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-200 border border-gray-300 flex items-center justify-center">
-                    <img 
-                      src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
-                      alt="Placeholder" 
-                      className="w-10 h-10 opacity-40"
+              <h4 className="uppercase text-sm font-normal tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 pt-4">Basic Profile</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
+                  {currentCharacter.id ? (
+                    <>
+                      <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
+                        {currentCharacter.name}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Name cannot be changed.</p>
+                    </>
+                  ) : (
+                    <input 
+                      type="text" 
+                      value={currentCharacter.name || ''} 
+                      onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
+                      className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                      required
                     />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Sex</label>
+                    {currentCharacter.id ? (
+                      <>
+                        <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
+                          {currentCharacter.sex || 'Unknown'}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Sex cannot be changed.</p>
+                      </>
+                    ) : (
+                      <select 
+                        value={currentCharacter.sex || 'Male'} 
+                        onChange={e => setCurrentCharacter({...currentCharacter, sex: e.target.value as any})}
+                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                      >
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">{currentCharacter.id ? 'Age' : 'Age (In Months)'}</label>
+                    {currentCharacter.id ? (
+                      <>
+                        <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
+                          {currentCharacter.age || 'Unknown'}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Age cannot be changed.</p>
+                      </>
+                    ) : (
+                      <input 
+                        type="number" 
+                        value={currentCharacter.monthsAge || ''} 
+                        onChange={e => setCurrentCharacter({...currentCharacter, monthsAge: parseInt(e.target.value)})}
+                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        placeholder="e.g. 36"
+                        required
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {currentCharacter.id && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Health Status</label>
+                    <select 
+                      value={currentCharacter.healthStatusId || 1} 
+                      onChange={e => setCurrentCharacter({...currentCharacter, healthStatusId: parseInt(e.target.value)})}
+                      className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                    >
+                      {healthStatuses.map(status => (
+                        <option key={status.id} value={status.id}>{status.name}</option>
+                      ))}
+                    </select>
                   </div>
                 )}
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-                />
-                {uploading && <span className="text-sm text-yellow-600">Uploading...</span>}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Character Information</label>
-              <textarea 
-                value={currentCharacter.bio || ''} 
-                onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
-                className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 h-32 focus:outline-none focus:border-[#2f3a2f]"
-              />
-            </div>
+            {/* Additional fields only shown when editing existing character */}
+            {currentCharacter.id && (
+              <>
+                {/* Physical Traits Section */}
+                <div>
+                  <h4 className="uppercase text-sm font-normal tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 pt-4">Physical Traits</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Avatar Image</label>
+                      <div className="flex items-start space-x-4">
+                        <div className="w-64 flex-shrink-0">
+                          {currentCharacter.imageUrl && currentCharacter.imageUrl.trim() !== '' && !currentCharacter.imageUrl.includes('via.placeholder') ? (
+                            <img 
+                              src={currentCharacter.imageUrl} 
+                              alt="Preview" 
+                              className="w-full object-cover border border-gray-300"
+                              style={{ aspectRatio: '16/9' }}
+                            />
+                          ) : (
+                            <div 
+                              className="w-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center"
+                              style={{ aspectRatio: '16/9' }}
+                            >
+                              <img 
+                                src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                                alt="Placeholder" 
+                                className="w-12 h-12 opacity-40"
+                              />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col space-y-2">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                          />
+                          {uploading && <span className="text-sm text-yellow-600">Uploading...</span>}
+                        </div>
+                      </div>
+                    </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Father</label>
-                <input 
-                  type="text" 
-                  value={(currentCharacter as any).father || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, father: e.target.value} as any)}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Mother</label>
-                <input 
-                  type="text" 
-                  value={(currentCharacter as any).mother || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, mother: e.target.value} as any)}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                />
-              </div>
-            </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Height</label>
+                        <select 
+                          value={(currentCharacter as any).heightId || ''} 
+                          onChange={e => setCurrentCharacter({...currentCharacter, heightId: e.target.value ? parseInt(e.target.value) : undefined} as any)}
+                          className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        >
+                          <option value="">-- Select --</option>
+                          {heights.map(h => (
+                            <option key={h.id} value={h.id}>{h.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Build</label>
+                        <select 
+                          value={(currentCharacter as any).buildId || ''} 
+                          onChange={e => setCurrentCharacter({...currentCharacter, buildId: e.target.value ? parseInt(e.target.value) : undefined} as any)}
+                          className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        >
+                          <option value="">-- Select --</option>
+                          {builds.map(b => (
+                            <option key={b.id} value={b.id}>{b.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Birthplace</label>
-              <input 
-                type="text" 
-                value={(currentCharacter as any).birthplace || ''} 
-                onChange={e => setCurrentCharacter({...currentCharacter, birthplace: e.target.value} as any)}
-                className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-              />
-            </div>
+                {/* Background Section */}
+                <div>
+                  <h4 className="uppercase text-sm font-normal tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 pt-4">Background</h4>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Birthplace</label>
+                      <input 
+                        type="text" 
+                        value={(currentCharacter as any).birthplace || ''} 
+                        onChange={e => setCurrentCharacter({...currentCharacter, birthplace: e.target.value} as any)}
+                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                      />
+                    </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Siblings</label>
-                <input 
-                  type="text" 
-                  value={(currentCharacter as any).siblings || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, siblings: e.target.value} as any)}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700">Pups</label>
-                <input 
-                  type="text" 
-                  value={(currentCharacter as any).pups || ''} 
-                  onChange={e => setCurrentCharacter({...currentCharacter, pups: e.target.value} as any)}
-                  className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                />
-              </div>
-            </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Character Information</label>
+                      <textarea 
+                        value={currentCharacter.bio || ''} 
+                        onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
+                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 h-32 focus:outline-none focus:border-[#2f3a2f]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Relationships Section */}
+                <div>
+                  <h4 className="uppercase text-sm font-normal tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 pt-4">Relationships</h4>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Father</label>
+                        <input 
+                          type="text" 
+                          value={(currentCharacter as any).father || ''} 
+                          onChange={e => setCurrentCharacter({...currentCharacter, father: e.target.value} as any)}
+                          className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Mother</label>
+                        <input 
+                          type="text" 
+                          value={(currentCharacter as any).mother || ''} 
+                          onChange={e => setCurrentCharacter({...currentCharacter, mother: e.target.value} as any)}
+                          className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Siblings</label>
+                        <input 
+                          type="text" 
+                          value={(currentCharacter as any).siblings || ''} 
+                          onChange={e => setCurrentCharacter({...currentCharacter, siblings: e.target.value} as any)}
+                          className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1 text-gray-700">Pups</label>
+                        <input 
+                          type="text" 
+                          value={(currentCharacter as any).pups || ''} 
+                          onChange={e => setCurrentCharacter({...currentCharacter, pups: e.target.value} as any)}
+                          className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             <div className="flex justify-end space-x-3 pt-4">
               <button 
