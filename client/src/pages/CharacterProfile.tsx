@@ -225,8 +225,27 @@ const CharacterProfile: React.FC = () => {
                         <tr className="border-b border-gray-300">
                           <td colSpan={2} className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600">Pups</td>
                         </tr>
-                        <tr>
+                        <tr className="border-b border-gray-300">
                           <td colSpan={2} className="px-2 py-2 text-gray-700" dangerouslySetInnerHTML={{ __html: character.pups || '—' }} />
+                        </tr>
+                        
+                        {/* Spirit Symbol & Emblems */}
+                        <tr className="border-b border-gray-300">
+                          <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-1/2">Spirit Symbol</td>
+                          <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 w-1/2">Emblems</td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-2 text-gray-700 border-r border-gray-300 text-center">
+                            {character.spiritSymbol ? (
+                              <img 
+                                src={`https://taiyaefiles.blob.core.windows.net/web/${character.spiritSymbol}_d.png`}
+                                alt={character.spiritSymbol}
+                                className="w-8 h-8 object-contain inline-block"
+                                title={character.spiritSymbol.charAt(0).toUpperCase() + character.spiritSymbol.slice(1)}
+                              />
+                            ) : '—'}
+                          </td>
+                          <td className="px-2 py-2 text-gray-700 text-center">—</td>
                         </tr>
                       </tbody>
                     </table>

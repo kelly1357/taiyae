@@ -31,7 +31,7 @@ const SpiritSymbols: React.FC = () => {
               </p>
               
               <p className="mb-4">
-                <strong>Take the Spirit Symbol quiz to determine your character's Symbol.</strong>
+                <strong><Link to="/wiki/spirit-symbol-quiz" className="text-[#2f3a2f] hover:underline">Take the Spirit Symbol quiz to determine your character's Symbol.</Link></strong>
               </p>
               
               <p className="mb-4">

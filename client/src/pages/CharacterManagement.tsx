@@ -128,25 +128,6 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     });
   }, [characters, sortField, sortDirection]);
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return (
-        <svg className="ml-1 w-3 h-3 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    return sortDirection === 'asc' ? (
-      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-      </svg>
-    ) : (
-      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-      </svg>
-    );
-  };
-
   const handleCreate = () => {
     setMessage({ type: '', text: '' });
     setCurrentCharacter({
@@ -340,17 +321,38 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 </div>
 
                 {currentCharacter.id && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">Health Status</label>
-                    <select 
-                      value={currentCharacter.healthStatusId || 1} 
-                      onChange={e => setCurrentCharacter({...currentCharacter, healthStatusId: parseInt(e.target.value)})}
-                      className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                    >
-                      {healthStatuses.map(status => (
-                        <option key={status.id} value={status.id}>{status.name}</option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Health Status</label>
+                      <select 
+                        value={currentCharacter.healthStatusId || 1} 
+                        onChange={e => setCurrentCharacter({...currentCharacter, healthStatusId: parseInt(e.target.value)})}
+                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                      >
+                        {healthStatuses.map(status => (
+                          <option key={status.id} value={status.id}>{status.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">Spirit Symbol</label>
+                      <select 
+                        value={currentCharacter.spiritSymbol || ''} 
+                        onChange={e => setCurrentCharacter({...currentCharacter, spiritSymbol: e.target.value})}
+                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                      >
+                        <option value="">Select a symbol...</option>
+                        <option value="hoof">Hoof</option>
+                        <option value="leaf">Leaf</option>
+                        <option value="feather">Feather</option>
+                        <option value="eye">Eye</option>
+                        <option value="stone">Stone</option>
+                        <option value="print">Print</option>
+                        <option value="antler">Antler</option>
+                        <option value="bone">Bone</option>
+                        <option value="fang">Fang</option>
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
@@ -529,34 +531,34 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                 <th 
-                  className="px-4 py-2 text-left border-r border-gray-300 w-[25%] cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-4 py-2 text-left border-r border-gray-300 w-[25%] cursor-pointer hover:bg-gray-300 select-none ${sortField === 'name' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('name')}
                 >
-                  Character<SortIcon field="name" />
+                  Character
                 </th>
                 <th 
-                  className="px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'sex' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('sex')}
                 >
-                  Sex<SortIcon field="sex" />
+                  Sex
                 </th>
                 <th 
-                  className="px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'packName' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('packName')}
                 >
-                  Pack<SortIcon field="packName" />
+                  Pack
                 </th>
                 <th 
-                  className="px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'age' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('age')}
                 >
-                  Age<SortIcon field="age" />
+                  Age
                 </th>
                 <th 
-                  className="px-4 py-2 text-center cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-4 py-2 text-center cursor-pointer hover:bg-gray-300 select-none ${sortField === 'totalSkill' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('totalSkill')}
                 >
-                  Skill Score<SortIcon field="totalSkill" />
+                  Skill Score
                 </th>
               </tr>
             </thead>

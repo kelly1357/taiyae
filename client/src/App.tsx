@@ -13,6 +13,7 @@ import CharacterProfile from './pages/CharacterProfile';
 import Characters from './pages/Characters';
 import UserManagement from './pages/UserManagement';
 import Login from './pages/Login';
+import SpiritSymbolQuiz from './pages/SpiritSymbolQuiz';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -168,6 +169,7 @@ const App: React.FC = () => {
         <Route path="wiki/setting-overview" element={<SettingOverview />} />
         <Route path="wiki/skill-points" element={<SkillPoints />} />
         <Route path="wiki/spirit-symbols" element={<SpiritSymbols />} />
+        <Route path="wiki/spirit-symbol-quiz" element={<SpiritSymbolQuiz />} />
         <Route path="wiki/three-strike-rule" element={<ThreeStrikeRule />} />
         <Route path="wiki/using-tags" element={<UsingTags />} />
         <Route path="wiki/wolf-guide" element={<WolfGuide />} />

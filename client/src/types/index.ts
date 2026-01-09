@@ -67,6 +67,7 @@ export interface Character {
   facebook?: string;
   instagram?: string;
   discord?: string;
+  spiritSymbol?: string;
 }
 
 export interface ForumSubarea {

@@ -72,6 +72,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.Birthplace as birthplace,
                     c.Siblings as siblings,
                     c.Pups as pups,
+                    c.SpiritSymbol as spiritSymbol,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -148,7 +149,8 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
                     c.Experience as experience,
                     c.Physical as physical,
                     c.Knowledge as knowledge,
-                    c.Total as totalSkill
+                    c.Total as totalSkill,
+                    c.SpiritSymbol as spiritSymbol
                 FROM Character c
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 WHERE c.CharacterID = @id
@@ -217,7 +219,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
     try {
         const body = await request.json() as any;
-        const { name, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups } = body;
+        const { name, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol } = body;
 
         const pool = await getPool();
         
@@ -236,9 +238,10 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
             .input('birthplace', sql.NVarChar, birthplace || null)
             .input('siblings', sql.NVarChar, siblings || null)
             .input('pups', sql.NVarChar, pups || null)
+            .input('spiritSymbol', sql.NVarChar, spiritSymbol || null)
             .query(`
                 UPDATE Character 
-                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups
+                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol
                 WHERE CharacterID = @id
             `);
             

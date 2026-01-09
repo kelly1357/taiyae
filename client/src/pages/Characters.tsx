@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Character } from '../types';
 
-type SortField = 'name' | 'username' | 'packName' | 'age' | 'healthStatus' | 'totalSkill' | 'sex';
+type SortField = 'name' | 'username' | 'packName' | 'age' | 'healthStatus' | 'totalSkill' | 'sex' | 'spiritSymbol';
 type SortDirection = 'asc' | 'desc';
 
 const Characters: React.FC = () => {
@@ -86,6 +86,10 @@ const Characters: React.FC = () => {
           aVal = a.totalSkill || 0;
           bVal = b.totalSkill || 0;
           break;
+        case 'spiritSymbol':
+          aVal = (a.spiritSymbol || '').toLowerCase();
+          bVal = (b.spiritSymbol || '').toLowerCase();
+          break;
         default:
           return 0;
       }
@@ -95,25 +99,6 @@ const Characters: React.FC = () => {
       return 0;
     });
   }, [characters, sortField, sortDirection, searchQuery]);
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return (
-        <svg className="ml-1 w-3 h-3 inline text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-        </svg>
-      );
-    }
-    return sortDirection === 'asc' ? (
-      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
-      </svg>
-    ) : (
-      <svg className="ml-1 w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-      </svg>
-    );
-  };
 
   if (isLoading) {
     return <div className="text-center mt-10 text-white">Loading characters...</div>;
@@ -126,7 +111,7 @@ const Characters: React.FC = () => {
       </div>
       <div className="px-4 py-4">
         <h3 className="text-base font-semibold text-gray-900 mb-1">Character List</h3>
-        <p className="text-sm text-gray-600 mb-3">There are currently {characters.length} wolves in Horizon:</p>
+        <p className="text-sm text-gray-600 mb-3">There are currently <span className="font-bold">{characters.length}</span> wolves in Horizon:</p>
         
         {/* Search Bar */}
         <div className="mb-4">
@@ -143,43 +128,47 @@ const Characters: React.FC = () => {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                <th className="px-3 py-2 text-left w-[25%] border-r border-gray-300">
-                  <span 
-                    className="cursor-pointer hover:text-gray-900 select-none"
-                    onClick={() => handleSort('name')}
-                  >
-                    Character<SortIcon field="name" />
-                  </span>
+                <th 
+                  className={`px-3 py-2 text-left w-[25%] border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'name' ? 'bg-gray-300' : ''}`}
+                  onClick={() => handleSort('name')}
+                >
+                  Character
                 </th>
                 <th 
-                  className="px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'sex' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('sex')}
                 >
-                  Sex<SortIcon field="sex" />
+                  Sex
                 </th>
                 <th 
-                  className="px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-1 py-2 text-center border-r border-gray-300 w-16 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'spiritSymbol' ? 'bg-gray-300' : ''}`}
+                  onClick={() => handleSort('spiritSymbol')}
+                >
+                  Symbol
+                </th>
+                <th 
+                  className={`px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'age' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('age')}
                 >
-                  Age<SortIcon field="age" />
+                  Age
                 </th>
                 <th 
-                  className="px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-3 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'packName' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('packName')}
                 >
-                  Pack<SortIcon field="packName" />
+                  Pack
                 </th>
                 <th 
-                  className="px-3 py-2 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-3 py-2 text-center border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'totalSkill' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('totalSkill')}
                 >
-                  Skill Points<SortIcon field="totalSkill" />
+                  Skill Points
                 </th>
                 <th 
-                  className="px-3 py-2 text-left cursor-pointer hover:bg-gray-300 select-none"
+                  className={`px-3 py-2 text-left cursor-pointer hover:bg-gray-300 select-none ${sortField === 'username' ? 'bg-gray-300' : ''}`}
                   onClick={() => handleSort('username')}
                 >
-                  Player<SortIcon field="username" />
+                  Player
                 </th>
               </tr>
             </thead>
@@ -217,6 +206,18 @@ const Characters: React.FC = () => {
                     </Link>
                   </td>
                   <td className={`px-3 py-3 border-r border-gray-300 ${char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{char.sex || 'Unknown'}</td>
+                  <td className="px-1 py-2 pt-3 text-center border-r border-gray-300">
+                    {char.spiritSymbol ? (
+                      <div className="flex flex-col items-center">
+                        <img 
+                          src={`https://taiyaefiles.blob.core.windows.net/web/${char.spiritSymbol}_d.png`}
+                          alt={char.spiritSymbol}
+                          className="w-6 h-6"
+                        />
+                        <span className="text-xs text-gray-500">{char.spiritSymbol}</span>
+                      </div>
+                    ) : '—'}
+                  </td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">{char.age}</td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">
                     {char.packName ? char.packName : (
