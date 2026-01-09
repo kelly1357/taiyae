@@ -13,11 +13,11 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters = [], onLogout, onCharacterSelect }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
-  const [dropdownHovering, setDropdownHovering] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -39,31 +39,49 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   }, []);
 
   const handleDropdownMouseEnter = (label: string) => {
+    // Clear any pending close timeout
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    // Close user dropdown when hovering nav dropdowns
+    setIsDropdownOpen(false);
     setOpenNavDropdown(label);
-    setDropdownHovering(label);
-  };
-  const handleDropdownMouseLeave = (label: string) => {
-    setDropdownHovering(null);
-    setTimeout(() => {
-      if (dropdownHovering !== label) setOpenNavDropdown(null);
-    }, 120);
   };
 
-  const handleDropdownContentEnter = (label: string) => {
-    setDropdownHovering(label);
+  const handleDropdownMouseLeave = () => {
+    // Set a timeout to close the dropdown
+    closeTimeoutRef.current = setTimeout(() => {
+      setOpenNavDropdown(null);
+    }, 150);
   };
-  const handleDropdownContentLeave = (label: string) => {
-    setDropdownHovering(null);
-    setTimeout(() => {
-      if (openNavDropdown === label && dropdownHovering !== label) setOpenNavDropdown(null);
-    }, 120);
+
+  const handleDropdownContentEnter = () => {
+    // Clear close timeout when entering dropdown content
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  };
+
+  const handleDropdownContentLeave = () => {
+    // Set a timeout to close the dropdown
+    closeTimeoutRef.current = setTimeout(() => {
+      setOpenNavDropdown(null);
+    }, 150);
+  };
+
+  const handleUserDropdownClick = () => {
+    // Close nav dropdowns when opening user dropdown
+    setOpenNavDropdown(null);
+    setIsDropdownOpen(!isDropdownOpen);
   };
 
   const NavDropdown = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div
       className="relative"
       onMouseEnter={() => handleDropdownMouseEnter(label)}
-      onMouseLeave={() => handleDropdownMouseLeave(label)}
+      onMouseLeave={() => handleDropdownMouseLeave()}
     >
       <button
         type="button"
@@ -78,8 +96,8 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
       {openNavDropdown === label && (
         <div
           className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-300 shadow-lg z-50"
-          onMouseEnter={() => handleDropdownContentEnter(label)}
-          onMouseLeave={() => handleDropdownContentLeave(label)}
+          onMouseEnter={() => handleDropdownContentEnter()}
+          onMouseLeave={() => handleDropdownContentLeave()}
         >
           {children}
         </div>
@@ -188,7 +206,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               {activeCharacter ? (
                 <div className="relative" ref={dropdownRef}>
                   <button 
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    onClick={handleUserDropdownClick}
                     className="flex items-center space-x-2 bg-white/35 px-3 py-1 hover:bg-white/50 transition-colors border border-white/20"
                   >
                     {activeCharacter.imageUrl && activeCharacter.imageUrl.trim() !== '' && !activeCharacter.imageUrl.includes('via.placeholder') ? (
