@@ -68,6 +68,7 @@ export interface Character {
   instagram?: string;
   discord?: string;
   spiritSymbol?: string;
+  profileImages?: string[]; // Up to 4 profile images
 }
 
 export interface ForumSubarea {

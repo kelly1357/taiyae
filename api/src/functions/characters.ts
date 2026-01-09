@@ -73,6 +73,10 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.Siblings as siblings,
                     c.Pups as pups,
                     c.SpiritSymbol as spiritSymbol,
+                    c.ProfileImage1 as profileImage1,
+                    c.ProfileImage2 as profileImage2,
+                    c.ProfileImage3 as profileImage3,
+                    c.ProfileImage4 as profileImage4,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -108,9 +112,11 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
             const months = c.monthsAge % 12;
             const yearStr = years === 1 ? 'year' : 'years';
             const monthStr = months === 1 ? 'month' : 'months';
+            const profileImages = [c.profileImage1, c.profileImage2, c.profileImage3, c.profileImage4].filter(Boolean);
             return {
                 ...c,
-                age: `${years} ${yearStr}, ${months} ${monthStr}`
+                age: `${years} ${yearStr}, ${months} ${monthStr}`,
+                profileImages
             };
         });
 
@@ -150,7 +156,11 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
                     c.Physical as physical,
                     c.Knowledge as knowledge,
                     c.Total as totalSkill,
-                    c.SpiritSymbol as spiritSymbol
+                    c.SpiritSymbol as spiritSymbol,
+                    c.ProfileImage1 as profileImage1,
+                    c.ProfileImage2 as profileImage2,
+                    c.ProfileImage3 as profileImage3,
+                    c.ProfileImage4 as profileImage4
                 FROM Character c
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 WHERE c.CharacterID = @id
@@ -165,9 +175,11 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
         const months = c.monthsAge % 12;
         const yearStr = years === 1 ? 'year' : 'years';
         const monthStr = months === 1 ? 'month' : 'months';
+        const profileImages = [c.profileImage1, c.profileImage2, c.profileImage3, c.profileImage4].filter(Boolean);
         const character = {
             ...c,
-            age: `${years} ${yearStr} ${months} ${monthStr}`
+            age: `${years} ${yearStr} ${months} ${monthStr}`,
+            profileImages
         };
 
         return {
@@ -219,7 +231,13 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
     try {
         const body = await request.json() as any;
-        const { name, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol } = body;
+        const { name, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol, profileImages } = body;
+
+        // Extract profile images from array
+        const profileImage1 = profileImages?.[0] || null;
+        const profileImage2 = profileImages?.[1] || null;
+        const profileImage3 = profileImages?.[2] || null;
+        const profileImage4 = profileImages?.[3] || null;
 
         const pool = await getPool();
         
@@ -239,9 +257,13 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
             .input('siblings', sql.NVarChar, siblings || null)
             .input('pups', sql.NVarChar, pups || null)
             .input('spiritSymbol', sql.NVarChar, spiritSymbol || null)
+            .input('profileImage1', sql.NVarChar, profileImage1)
+            .input('profileImage2', sql.NVarChar, profileImage2)
+            .input('profileImage3', sql.NVarChar, profileImage3)
+            .input('profileImage4', sql.NVarChar, profileImage4)
             .query(`
                 UPDATE Character 
-                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol
+                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4
                 WHERE CharacterID = @id
             `);
             

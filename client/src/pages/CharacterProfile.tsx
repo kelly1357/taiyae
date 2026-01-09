@@ -10,10 +10,12 @@ const CharacterProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'character' | 'player' | 'threadlog'>('character');
   const [imageError, setImageError] = useState(false);
+  const [activeProfileImage, setActiveProfileImage] = useState(0);
 
   // Reset imageError when character changes
   useEffect(() => {
     setImageError(false);
+    setActiveProfileImage(0);
   }, [characterId]);
 
   useEffect(() => {
@@ -126,14 +128,42 @@ const CharacterProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Right column: Placeholder Image */}
+            {/* Right column: Profile Images */}
             <div className="flex-grow">
-              <div 
-                className="w-full bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-500"
-                style={{ aspectRatio: '790/661' }}
-              >
-                <span className="text-sm uppercase tracking-wide">Character Image Placeholder</span>
-              </div>
+              {character.profileImages && character.profileImages.length > 0 ? (
+                <div className="relative">
+                  <img
+                    src={character.profileImages[activeProfileImage]}
+                    alt={`${character.name} profile ${activeProfileImage + 1}`}
+                    className="w-full object-cover border border-gray-300"
+                    style={{ aspectRatio: '790/661' }}
+                  />
+                  {character.profileImages.length > 1 && (
+                    <div className="absolute bottom-2 right-2 flex gap-1">
+                      {character.profileImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setActiveProfileImage(index)}
+                          className={`w-6 h-6 text-xs font-bold rounded ${
+                            activeProfileImage === index
+                              ? 'bg-white text-gray-900 shadow'
+                              : 'bg-black/50 text-white hover:bg-black/70'
+                          }`}
+                        >
+                          {index + 1}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div 
+                  className="w-full bg-gray-200 border border-gray-300 flex items-center justify-center text-gray-500"
+                  style={{ aspectRatio: '790/661' }}
+                >
+                  <span className="text-sm uppercase tracking-wide">Character Image Placeholder</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

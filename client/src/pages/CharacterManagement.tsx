@@ -21,6 +21,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   const [currentCharacter, setCurrentCharacter] = useState<Partial<Character>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingProfileImage, setUploadingProfileImage] = useState<number | null>(null);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
@@ -224,6 +225,46 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     }
   };
 
+  const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setUploadingProfileImage(index);
+
+    try {
+      const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        body: file
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentCharacter(prev => {
+          const images = [...(prev.profileImages || [])];
+          images[index] = data.url;
+          return { ...prev, profileImages: images };
+        });
+      } else {
+        const errorText = await response.text();
+        console.error('Upload failed:', errorText);
+        alert(`Image upload failed: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error uploading image', error);
+      alert(`Image upload failed: ${error}`);
+    } finally {
+      setUploadingProfileImage(null);
+    }
+  };
+
+  const handleRemoveProfileImage = (index: number) => {
+    setCurrentCharacter(prev => {
+      const images = [...(prev.profileImages || [])];
+      images.splice(index, 1);
+      return { ...prev, profileImages: images };
+    });
+  };
+
   return (
     <div className="space-y-8">
       <section className="border border-gray-300 bg-white">
@@ -402,6 +443,58 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                           {uploading && <span className="text-sm text-yellow-600">Uploading...</span>}
                         </div>
                       </div>
+                    </div>
+
+                    {/* Profile Images Section */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700">Profile Images (up to 4)</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {[0, 1, 2, 3].map((index) => {
+                          const imageUrl = currentCharacter.profileImages?.[index];
+                          return (
+                            <div key={index} className="relative group">
+                              {imageUrl ? (
+                                <div className="relative">
+                                  <img 
+                                    src={imageUrl} 
+                                    alt={`Profile ${index + 1}`}
+                                    className="w-full h-24 object-cover border border-gray-300 rounded"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveProfileImage(index)}
+                                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    title="Remove image"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ) : (
+                                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-colors">
+                                  {uploadingProfileImage === index ? (
+                                    <span className="text-sm text-yellow-600">Uploading...</span>
+                                  ) : (
+                                    <>
+                                      <svg className="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                                      </svg>
+                                      <span className="text-xs text-gray-500">Add Image</span>
+                                    </>
+                                  )}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleProfileImageUpload(e, currentCharacter.profileImages?.length || 0)}
+                                    className="hidden"
+                                    disabled={uploadingProfileImage !== null}
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Click to upload or drag images. These will be displayed on your character's profile page.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
