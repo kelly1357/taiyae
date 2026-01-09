@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import type { Character, User } from '../types';
 
 type SortField = 'name' | 'sex' | 'packName' | 'age' | 'totalSkill';
@@ -335,7 +336,9 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-700">Spirit Symbol</label>
+                      <label className="block text-sm font-medium mb-1 text-gray-700">
+                        Spirit Symbol <Link to="/wiki/spirit-symbols" className="text-gray-400 hover:text-gray-600">(?)</Link>
+                      </label>
                       <select 
                         value={currentCharacter.spiritSymbol || ''} 
                         onChange={e => setCurrentCharacter({...currentCharacter, spiritSymbol: e.target.value})}
