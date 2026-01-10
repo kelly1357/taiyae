@@ -14,6 +14,7 @@ import Characters from './pages/Characters';
 import UserManagement from './pages/UserManagement';
 import Login from './pages/Login';
 import SpiritSymbolQuiz from './pages/SpiritSymbolQuiz';
+import Weather from './pages/Weather';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -172,6 +173,7 @@ const App: React.FC = () => {
         <Route path="character/:characterId" element={<CharacterProfile />} />
         <Route path="my-characters" element={<CharacterManagement user={user} />} />
         <Route path="account" element={<UserManagement user={user} onUpdateUser={handleUpdateUser} />} />
+        <Route path="weather" element={<Weather />} />
         
         {/* Wiki Routes */}
         <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />

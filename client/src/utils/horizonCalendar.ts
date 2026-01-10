@@ -90,8 +90,8 @@ export function getHorizonDate(realDate: Date = new Date()): HorizonDate {
   const phaseIndex = Math.floor(dayInYear / DAYS_PER_PHASE);
   const dayInPhase = (dayInYear % DAYS_PER_PHASE) + 1; // 1-indexed
   
-  // Calculate days until next phase
-  const daysUntilNextPhase = DAYS_PER_PHASE - dayInPhase + 1;
+  // Calculate days until next phase (days remaining after today)
+  const daysUntilNextPhase = DAYS_PER_PHASE - dayInPhase;
   
   // Get next phase (wraps around)
   const nextPhaseIndex = (phaseIndex + 1) % PHASES_PER_YEAR;

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { ForumRegion, OOCForum } from '../types';
-import { getHorizonDate, formatHorizonYear, getWeatherIcon } from '../utils/horizonCalendar';
+import { getHorizonDate, formatHorizonYear } from '../utils/horizonCalendar';
+import { getWeatherHistory } from '../utils/weatherGenerator';
 
 interface RegionStats {
   activeThreads: number;
@@ -348,7 +349,10 @@ const Home: React.FC = () => {
                 <div className="px-4 py-4 text-sm text-gray-800">
                   {(() => {
                     const horizonDate = getHorizonDate();
-                    const weatherIcon = getWeatherIcon(horizonDate.phase.weather);
+                    // Get today's actual weather
+                    const currentWeek = getWeatherHistory(0)[0];
+                    const today = new Date();
+                    const todayWeather = currentWeek.days.find(d => d.date.toDateString() === today.toDateString()) || currentWeek.days[0];
                     return (
                       <>
                         <img 
@@ -358,35 +362,12 @@ const Home: React.FC = () => {
                         />
                         <div className="font-semibold">{horizonDate.phase.name}, {formatHorizonYear(horizonDate.year)}</div>
                         <div className="text-gray-600 flex items-center gap-1 mt-2 text-xs">
-                          {weatherIcon === 'sun' && (
-                            <svg className="w-4 h-4 text-yellow-500" viewBox="0 0 24 24" fill="currentColor">
-                              <circle cx="12" cy="12" r="5" />
-                              <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-                            </svg>
-                          )}
-                          {weatherIcon === 'snow' && (
-                            <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-                            </svg>
-                          )}
-                          {weatherIcon === 'wind' && (
-                            <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                          {weatherIcon === 'cloud' && (
-                            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-                            </svg>
-                          )}
-                          {weatherIcon === 'leaf' && (
-                            <svg className="w-4 h-4 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
-                              <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke="currentColor" strokeWidth="2" fill="none" />
-                            </svg>
-                          )}
-                          {horizonDate.phase.weather} · {horizonDate.phase.temperature}
+                          <span className="text-lg">{todayWeather.condition.icon}</span>
+                          {todayWeather.condition.description} · {todayWeather.highTemp}°F / {todayWeather.lowTemp}°F
                         </div>
+                        <Link to="/weather" className="text-xs text-gray-500 hover:text-gray-700 mt-1 inline-block font-bold">
+                          [view full forecast]
+                        </Link>
                         <div className="text-gray-700 text-sm mt-8">
                           {horizonDate.daysUntilNextPhase} {horizonDate.daysUntilNextPhase === 1 ? 'day' : 'days'} until {horizonDate.nextPhase.name}
                         </div>
