@@ -23,6 +23,8 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadingProfileImage, setUploadingProfileImage] = useState<number | null>(null);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [ageYears, setAgeYears] = useState(0);
+  const [ageMonths, setAgeMonths] = useState(0);
 
   useEffect(() => {
     fetchCharacters();
@@ -132,6 +134,8 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
   const handleCreate = () => {
     setMessage({ type: '', text: '' });
+    setAgeYears(0);
+    setAgeMonths(0);
     setCurrentCharacter({
       userId: String(user.id),
       sex: 'Male',
@@ -166,7 +170,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
       const body = {
         ...currentCharacter,
         userId: user.id,
-        monthsAge: currentCharacter.monthsAge || 0,
+        monthsAge: currentCharacter.id ? currentCharacter.monthsAge : (ageYears * 12) + ageMonths,
         healthStatusId: currentCharacter.healthStatusId || 1
       };
 
@@ -299,7 +303,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             <div>
               <h4 className="uppercase text-sm font-normal tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 pt-4">Basic Profile</h4>
               <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className={`grid gap-4 ${currentCharacter.id ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700">First Name</label>
                   {currentCharacter.id ? (
@@ -315,19 +319,22 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                       value={currentCharacter.name || ''} 
                       onChange={e => setCurrentCharacter({...currentCharacter, name: e.target.value})}
                       className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                      placeholder="Do not include surname in this field"
                       required
                     />
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Last Name</label>
-                  <input 
-                    type="text" 
-                    value={currentCharacter.surname || ''} 
-                    onChange={e => setCurrentCharacter({...currentCharacter, surname: e.target.value})}
-                    className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                  />
-                </div>
+                {currentCharacter.id && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Last Name</label>
+                    <input 
+                      type="text" 
+                      value={currentCharacter.surname || ''} 
+                      onChange={e => setCurrentCharacter({...currentCharacter, surname: e.target.value})}
+                      className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                    />
+                  </div>
+                )}
               </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -352,7 +359,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700">{currentCharacter.id ? 'Age' : 'Age (In Months)'}</label>
+                    <label className="block text-sm font-medium mb-1 text-gray-700">Age</label>
                     {currentCharacter.id ? (
                       <>
                         <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
@@ -361,14 +368,30 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                         <p className="text-xs text-gray-500 mt-1">Age cannot be changed.</p>
                       </>
                     ) : (
-                      <input 
-                        type="number" 
-                        value={currentCharacter.monthsAge || ''} 
-                        onChange={e => setCurrentCharacter({...currentCharacter, monthsAge: parseInt(e.target.value)})}
-                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
-                        placeholder="e.g. 36"
-                        required
-                      />
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <select
+                            value={ageYears}
+                            onChange={e => setAgeYears(parseInt(e.target.value))}
+                            className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                          >
+                            {[...Array(16)].map((_, i) => (
+                              <option key={i} value={i}>{i} {i === 1 ? 'year' : 'years'}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <select
+                            value={ageMonths}
+                            onChange={e => setAgeMonths(parseInt(e.target.value))}
+                            className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                          >
+                            {[...Array(12)].map((_, i) => (
+                              <option key={i} value={i}>{i} {i === 1 ? 'month' : 'months'}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
