@@ -92,7 +92,7 @@ const CharacterProfile: React.FC = () => {
                       <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 w-1/2">Pack</td>
                     </tr>
                     <tr className="border-b border-gray-300">
-                      <td className="px-2 py-2 text-gray-700 border-r border-gray-300">{character.name}</td>
+                      <td className="px-2 py-2 text-gray-700 border-r border-gray-300">{character.name}{character.surname ? ` ${character.surname}` : ''}</td>
                       <td className="px-2 py-2">
                         {character.packName ? (
                           <span className="text-gray-700">{character.packName}</span>

@@ -35,6 +35,7 @@ export interface Character {
   username?: string;
   userCreatedAt?: string;
   name: string;
+  surname?: string;
   sex: 'Male' | 'Female' | 'Other';
   age: string; // e.g., "3 years"
   healthStatus: string; // e.g., "100%", "Injured"

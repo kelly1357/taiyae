@@ -51,6 +51,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     u.Instagram as instagram,
                     u.Discord as discord,
                     c.CharacterName as name, 
+                    c.Surname as surname,
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
                     c.AvatarImage as imageUrl, 
@@ -145,6 +146,7 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
                     c.CharacterID as id, 
                     c.UserID as userId, 
                     c.CharacterName as name, 
+                    c.Surname as surname,
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
                     c.AvatarImage as imageUrl, 
@@ -231,7 +233,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
     try {
         const body = await request.json() as any;
-        const { name, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol, profileImages } = body;
+        const { name, surname, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol, profileImages } = body;
 
         // Extract profile images from array
         const profileImage1 = profileImages?.[0] || null;
@@ -244,6 +246,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
         await pool.request()
             .input('id', sql.Int, parseInt(id))
             .input('name', sql.NVarChar, name)
+            .input('surname', sql.NVarChar, surname || null)
             .input('sex', sql.NVarChar, sex)
             .input('monthsAge', sql.Int, monthsAge)
             .input('imageUrl', sql.NVarChar, imageUrl)
@@ -263,7 +266,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
             .input('profileImage4', sql.NVarChar, profileImage4)
             .query(`
                 UPDATE Character 
-                SET CharacterName = @name, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4
+                SET CharacterName = @name, Surname = @surname, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4
                 WHERE CharacterID = @id
             `);
             

@@ -9,6 +9,7 @@ import type { Character, ForumRegion } from '../types';
 interface PostAuthor {
   id: string;
   name: string;
+  surname?: string;
   imageUrl: string;
   packName?: string;
   primaryColor?: string;
@@ -123,7 +124,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
           <tr className="border-b border-gray-300">
             <td className="px-2 py-2 border-r border-gray-300">
               <Link to={`/character/${author.id}`} className="text-gray-900 hover:underline font-medium">
-                {author.name}
+                {author.name}{author.surname ? ` ${author.surname}` : ''}
               </Link>
               {author.isOnline && (
                 <span className="ml-1 w-2 h-2 bg-green-500 rounded-full inline-block" title="Online Now"></span>
@@ -298,6 +299,7 @@ const ThreadView: React.FC = () => {
   const mainAuthor: PostAuthor = {
     id: thread.authorId,
     name: thread.authorName,
+    surname: thread.authorSurname,
     imageUrl: thread.authorImage,
     packName: thread.packName,
     primaryColor: thread.primaryColor,
@@ -421,6 +423,7 @@ const ThreadView: React.FC = () => {
             const replyAuthor: PostAuthor = {
                 id: reply.authorId,
                 name: reply.authorName,
+                surname: reply.authorSurname,
                 imageUrl: reply.authorImage,
                 packName: reply.packName,
                 primaryColor: reply.primaryColor,

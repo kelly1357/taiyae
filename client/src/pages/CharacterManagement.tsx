@@ -299,14 +299,15 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             <div>
               <h4 className="uppercase text-sm font-normal tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 pt-4">Basic Profile</h4>
               <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Name</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">First Name</label>
                   {currentCharacter.id ? (
                     <>
                       <div className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-gray-900">
                         {currentCharacter.name}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Name cannot be changed.</p>
+                      <p className="text-xs text-gray-500 mt-1">First name cannot be changed.</p>
                     </>
                   ) : (
                     <input 
@@ -318,6 +319,16 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                     />
                   )}
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Last Name</label>
+                  <input 
+                    type="text" 
+                    value={currentCharacter.surname || ''} 
+                    onChange={e => setCurrentCharacter({...currentCharacter, surname: e.target.value})}
+                    className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:border-[#2f3a2f]"
+                  />
+                </div>
+              </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
