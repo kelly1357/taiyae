@@ -72,7 +72,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [ ] Character Status: Active, Inactive, Joining (cannot post), Dead (cannot post)
 
-[ ] Weather update system (manual or somehow automated based on season?)
+✅  Weather update system (manual or somehow automated based on season?)
 
 ✅ Automated calendar system that ages wolves by a month and changes the season every 28 days
 
