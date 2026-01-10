@@ -20,6 +20,7 @@
     "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
   },
   "mimeTypes": {
-    ".json": "application/json"
-  }
+  ".js": "application/javascript",
+  ".json": "application/json"
+}
 }
