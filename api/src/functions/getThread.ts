@@ -30,8 +30,10 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                     mc.CharacterName as modifiedByName,
                     t.RegionID as regionId,
                     t.OOCForumID as oocForumId,
-                    r.RegionName as regionName,
-                    r.ImageURL as regionImage,
+                    t.IsArchived as isArchived,
+                    t.OriginalRegionId as originalRegionId,
+                    COALESCE(r.RegionName, origR.RegionName) as regionName,
+                    COALESCE(r.ImageURL, origR.ImageURL) as regionImage,
                     COALESCE(u.Username, oocUser.Username) as playerName,
                     COALESCE(u.UserID, oocUser.UserID) as userId,
                     CASE 
@@ -41,6 +43,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                 FROM Post p
                 LEFT JOIN Thread t ON p.ThreadID = t.ThreadID
                 LEFT JOIN Region r ON t.RegionID = r.RegionID
+                LEFT JOIN Region origR ON t.OriginalRegionId = origR.RegionID
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN [User] oocUser ON p.UserID = oocUser.UserID
@@ -105,6 +108,8 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             oocForumId: op.oocForumId,
             regionName: op.regionName,
             regionImage: op.regionImage,
+            isArchived: op.isArchived === true || op.isArchived === 1,
+            originalRegionId: op.originalRegionId,
             replies: replies
         };
 

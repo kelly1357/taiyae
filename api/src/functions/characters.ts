@@ -323,7 +323,7 @@ export async function getCharacterThreadlog(request: HttpRequest, context: Invoc
                     SELECT DISTINCT ThreadID
                     FROM Post
                     WHERE CharacterID = @characterId
-                    AND ThreadID IN (SELECT ThreadID FROM Thread WHERE OOCForumID IS NULL)
+                    AND ThreadID IN (SELECT ThreadID FROM Thread WHERE OOCForumID IS NULL OR OriginalRegionId IS NOT NULL)
                 ),
                 ThreadInfo AS (
                     SELECT 

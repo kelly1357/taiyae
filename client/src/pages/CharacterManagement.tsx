@@ -582,6 +582,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                         value={currentCharacter.bio || ''} 
                         onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
                         className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 h-32 focus:outline-none focus:border-[#2f3a2f]"
+                        placeholder="Not sure where to start? Consider including sections for Appearance, Personality, and History."
                       />
                     </div>
                   </div>

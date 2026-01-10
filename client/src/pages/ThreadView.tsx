@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import { useBackground } from '../contexts/BackgroundContext';
-import type { Character, ForumRegion } from '../types';
+import type { Character, ForumRegion, User } from '../types';
 
 // Helper type for the API response which flattens character/pack info
 interface PostAuthor {
@@ -176,7 +176,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
 
 const ThreadView: React.FC = () => {
   const { threadId } = useParams<{ threadId: string }>();
-  const { activeCharacter } = useOutletContext<{ activeCharacter?: Character }>();
+  const { activeCharacter, user } = useOutletContext<{ activeCharacter?: Character; user?: User }>();
   const location = useLocation();
   const passedRegion = (location.state as { region?: ForumRegion })?.region;
   const { setBackgroundUrl, resetBackground } = useBackground();
@@ -188,6 +188,8 @@ const ThreadView: React.FC = () => {
   const [editingPostId, setEditingPostId] = useState<string | number | null>(null);
   const [editContent, setEditContent] = useState('');
   const [showPhotoMode, setShowPhotoMode] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   // Set background immediately if we have region data from navigation state
   useLayoutEffect(() => {
@@ -289,6 +291,32 @@ const ThreadView: React.FC = () => {
     }
   };
 
+  const handleArchive = async () => {
+    if (!threadId || !user) return;
+    
+    setIsArchiving(true);
+    try {
+      const response = await fetch(`/api/threads/${threadId}/archive`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      
+      if (response.ok) {
+        setShowArchiveConfirm(false);
+        fetchThread();
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to archive thread');
+      }
+    } catch (error) {
+      console.error('Error archiving thread:', error);
+      alert('Failed to archive thread');
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (!thread) return <div>Thread not found</div>;
 
@@ -352,17 +380,54 @@ const ThreadView: React.FC = () => {
         <div className="px-4 py-4">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h3 className="text-base font-semibold text-gray-900 mb-1">{thread.title}</h3>
-              <p className="text-sm text-gray-600">Started {new Date(thread.createdAt).toLocaleDateString()}</p>
+              {/* Archive button - only show if user is the thread creator and thread is not archived */}
+              {user && thread.userId === user.id && !thread.isArchived && (
+                <button
+                  onClick={() => setShowArchiveConfirm(true)}
+                  className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300 mb-1"
+                >
+                  Archive
+                </button>
+              )}
+              <h3 className="text-lg font-semibold text-gray-900">
+                {thread.title}
+                {thread.isArchived && <span className="text-gray-500 font-normal ml-2">(closed)</span>}
+              </h3>
             </div>
             <Link 
-              to={`/region/${thread.regionId}`}
+              to={thread.originalRegionId ? `/region/${thread.originalRegionId}` : `/region/${thread.regionId}`}
               style={{ color: '#111827' }}
               className="hover:underline text-sm"
             >
               ← Back to {thread.regionName}
             </Link>
           </div>
+
+          {/* Archive Confirmation Modal */}
+          {showArchiveConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg max-w-md">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900">Archive Thread</h4>
+                <p className="text-gray-700 mb-4">Are you sure you want to archive this thread? It will be moved to the archive forum and no one will be able to post in it anymore.</p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowArchiveConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    disabled={isArchiving}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleArchive}
+                    className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700"
+                    disabled={isArchiving}
+                  >
+                    {isArchiving ? 'Archiving...' : 'Yes, Archive'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Original Post - avatar on RIGHT */}
           <div className="border border-gray-300 mx-0.5 mb-4">
@@ -494,30 +559,36 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form */}
-          <div className="border border-gray-300 mx-0.5">
-            <div className="bg-gray-200 px-4 py-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
-            </div>
-            <div className="p-4 bg-white">
-              <div className="border border-gray-300">
-                <RichTextEditor 
-                    value={replyContent} 
-                    onChange={setReplyContent} 
-                    placeholder="Write your reply here..."
-                />
+          {/* Reply Form - only show if thread is not archived */}
+          {!thread.isArchived ? (
+            <div className="border border-gray-300 mx-0.5">
+              <div className="bg-gray-200 px-4 py-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
               </div>
-              <div className="mt-4 flex justify-end">
-                <button 
-                  onClick={handlePostReply}
-                  disabled={isPosting}
-                  className={`bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 font-bold text-sm uppercase tracking-wide ${isPosting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isPosting ? 'Posting...' : 'Post Reply'}
-                </button>
+              <div className="p-4 bg-white">
+                <div className="border border-gray-300">
+                  <RichTextEditor 
+                      value={replyContent} 
+                      onChange={setReplyContent} 
+                      placeholder="Write your reply here..."
+                  />
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <button 
+                    onClick={handlePostReply}
+                    disabled={isPosting}
+                    className={`bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 font-bold text-sm uppercase tracking-wide ${isPosting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isPosting ? 'Posting...' : 'Post Reply'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
+              This thread has been archived and is closed for new replies.
+            </div>
+          )}
         </div>
       </section>
     </>

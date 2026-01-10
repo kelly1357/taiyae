@@ -186,11 +186,16 @@ export async function createReply(request: HttpRequest, context: InvocationConte
         
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
-            .query("SELECT RegionId, OOCForumID FROM Thread WHERE ThreadID = @threadId");
+            .query("SELECT RegionId, OOCForumID, IsArchived FROM Thread WHERE ThreadID = @threadId");
             
         const thread = threadResult.recordset[0];
         if (!thread) {
              return { status: 404, body: "Thread not found" };
+        }
+
+        // Check if thread is archived
+        if (thread.IsArchived) {
+            return { status: 403, body: "This thread has been archived and is closed for new replies" };
         }
 
         const req = pool.request()
@@ -334,4 +339,88 @@ app.http('getLatestPosts', {
     authLevel: 'anonymous',
     handler: getLatestPosts,
     route: 'latest-posts'
+});
+
+export async function archiveThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const threadId = request.params.threadId;
+    
+    if (!threadId) {
+        return { status: 400, body: "threadId is required" };
+    }
+
+    try {
+        const body = await request.json() as any;
+        const { userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "userId is required" };
+        }
+
+        const pool = await getPool();
+        
+        // Get the thread and verify the user is the creator
+        const threadResult = await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query(`
+                SELECT t.ThreadID, t.RegionId, t.OOCForumID, t.IsArchived,
+                       COALESCE(c.UserID, p.UserID) as creatorUserId
+                FROM Thread t
+                CROSS APPLY (
+                    SELECT TOP 1 CharacterID, UserID
+                    FROM Post 
+                    WHERE ThreadID = t.ThreadID 
+                    ORDER BY Created ASC
+                ) p
+                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                WHERE t.ThreadID = @threadId
+            `);
+
+        if (threadResult.recordset.length === 0) {
+            return { status: 404, body: "Thread not found" };
+        }
+
+        const thread = threadResult.recordset[0];
+
+        // Check if user is the creator
+        if (thread.creatorUserId !== parseInt(userId)) {
+            return { status: 403, body: "You can only archive your own threads" };
+        }
+
+        // Check if already archived
+        if (thread.IsArchived) {
+            return { status: 400, body: "Thread is already archived" };
+        }
+
+        // Archive the thread: store original location, move to OOC Forum 7, set IsArchived
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .input('originalRegionId', sql.Int, thread.RegionId)
+            .input('originalOOCForumID', sql.Int, thread.OOCForumID)
+            .query(`
+                UPDATE Thread 
+                SET IsArchived = 1,
+                    OriginalRegionId = @originalRegionId,
+                    OriginalOOCForumID = @originalOOCForumID,
+                    RegionId = NULL,
+                    OOCForumID = 7,
+                    Modified = GETDATE()
+                WHERE ThreadID = @threadId
+            `);
+
+        return {
+            status: 200,
+            jsonBody: { message: "Thread archived successfully" }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('archiveThread', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    handler: archiveThread,
+    route: 'threads/{threadId}/archive'
 });
