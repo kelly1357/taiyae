@@ -209,7 +209,7 @@ const ThreadView: React.FC = () => {
   const { activeCharacter, user } = useOutletContext<{ activeCharacter?: Character; user?: User }>();
   const location = useLocation();
   const passedRegion = (location.state as { region?: ForumRegion })?.region;
-  const { setBackgroundUrl, resetBackground } = useBackground();
+  const { setBackgroundUrl, resetBackground, setGrayscale } = useBackground();
   
   const [thread, setThread] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -228,8 +228,9 @@ const ThreadView: React.FC = () => {
     }
     return () => {
       resetBackground();
+      setGrayscale(false);
     };
-  }, [passedRegion, setBackgroundUrl, resetBackground]);
+  }, [passedRegion, setBackgroundUrl, resetBackground, setGrayscale]);
 
   const fetchThread = () => {
     if (!threadId) return;
@@ -241,6 +242,10 @@ const ThreadView: React.FC = () => {
         // Set background from thread data if we didn't get it from navigation
         if (!passedRegion && data.regionImage) {
           setBackgroundUrl(data.regionImage);
+        }
+        // Set grayscale for archived threads (IC Archives)
+        if (data.isArchived) {
+          setGrayscale(true);
         }
         setLoading(false);
       })
