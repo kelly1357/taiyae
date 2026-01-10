@@ -4,7 +4,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 export async function uploadImage(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     context.log('Upload image request received');
     try {
-        const connectionString = process.env.BlobStorageConnectionString || process.env.AzureWebJobsStorage;
+        const connectionString = process.env.BlobStorageConnectionString || process.env.BlobStorageKey;
         if (!connectionString) {
             context.error('Storage connection string not configured');
             return { status: 500, body: "Storage connection string not configured" };

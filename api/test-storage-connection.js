@@ -1,6 +1,6 @@
 const { BlobServiceClient } = require("@azure/storage-blob");
 
-const connectionString = process.env.AzureWebJobsStorage || "UseDevelopmentStorage=true";
+const connectionString = process.env.BlobStorageKey || "UseDevelopmentStorage=true";
 
 async function testConnection() {
     console.log("Testing Azure Blob Storage connection...");

@@ -28,6 +28,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### local-settings file
 - Add a `local-settings.json` file which contains API keys for local development to `/api`.
+- Make sure local-settings values match the Azure App Settings (https://portal.azure.com/#@sweettexanbabeyyahoo.onmicrosoft.com/resource/subscriptions/2b584cf2-c394-4453-83b6-b64223f06aa4/resourceGroups/taiyae/providers/Microsoft.Web/staticSites/taiyae/environmentVariables) 
 
 ### Common terminal commands
 - Create new terminal with ``ctrl + shift + ` ``
