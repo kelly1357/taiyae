@@ -22,7 +22,7 @@ const Layout: React.FC<LayoutProps> = ({
   onCharacterSelect,
 }) => {
   const onlineList = onlineCharacters ?? [];
-  const { backgroundUrl } = useBackground();
+  const { backgroundUrl, isGrayscale } = useBackground();
   const [imageError, setImageError] = useState(false);
 
   // Reset imageError when active character changes
@@ -41,6 +41,7 @@ const Layout: React.FC<LayoutProps> = ({
           backgroundPosition: 'center top',
           backgroundRepeat: 'no-repeat',
           zIndex: -1,
+          filter: isGrayscale ? 'grayscale(100%)' : 'none',
         }}
       />
 
