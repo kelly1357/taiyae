@@ -30,6 +30,27 @@ const Layout: React.FC<LayoutProps> = ({
     setImageError(false);
   }, [activeCharacter?.id]);
 
+  // Send activity heartbeat every 5 minutes to keep character marked as online
+  useEffect(() => {
+    if (!activeCharacter?.id) return;
+
+    const sendHeartbeat = () => {
+      fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ characterId: activeCharacter.id }),
+      }).catch(err => console.error('Activity heartbeat failed:', err));
+    };
+
+    // Send immediately on mount/character change
+    sendHeartbeat();
+
+    // Then send every 5 minutes
+    const interval = setInterval(sendHeartbeat, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [activeCharacter?.id]);
+
   return (
     <div className="min-h-screen text-gray-100 font-sans flex flex-col relative">
       {/* Full-page background */}
@@ -115,15 +136,21 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
               <div className="px-4 py-4 text-sm text-gray-800 space-y-2">
                 {onlineList.length ? (
-                  <div className="flex flex-wrap gap-x-3 gap-y-2">
-                    {onlineList.map((character) => (
-                      <span key={character.id} className="hover:text-gray-600 cursor-pointer">
-                        {character.name}
+                  <div className="flex flex-wrap items-center">
+                    {onlineList.map((character, index) => (
+                      <span key={character.id}>
+                        <Link 
+                          to={`/character/${character.id}`}
+                          className="hover:text-gray-600"
+                        >
+                          {character.name}
+                        </Link>
+                        {index < onlineList.length - 1 && <span className="mx-1 text-gray-400">·</span>}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500">No characters online.</p>
+                  <p className="text-gray-500 italic">No characters online.</p>
                 )}
                 <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center">
                   <div className="flex items-center justify-center gap-2">

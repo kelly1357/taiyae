@@ -95,11 +95,20 @@ const App: React.FC = () => {
     }
   }, [user?.id]);
 
+  // Fetch all characters and refresh periodically to update online status
   useEffect(() => {
-    fetch('/api/characters')
-      .then(res => res.json())
-      .then(data => setAllCharacters(Array.isArray(data) ? data : []))
-      .catch(err => console.error('Failed to fetch characters list', err));
+    const fetchCharacters = () => {
+      fetch('/api/characters')
+        .then(res => res.json())
+        .then(data => setAllCharacters(Array.isArray(data) ? data : []))
+        .catch(err => console.error('Failed to fetch characters list', err));
+    };
+
+    fetchCharacters();
+    
+    // Refresh every 2 minutes to update online status
+    const interval = setInterval(fetchCharacters, 2 * 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogin = (userData: User) => {
@@ -150,6 +159,22 @@ const App: React.FC = () => {
      // For now, just passing the derived activeCharacter is enough for display.
   }
 
+  // Get online characters, but only show one per player (the most recent)
+  const onlineCharacters = (() => {
+    const online = allCharacters.filter(c => c.isOnline);
+    const byUser: Record<number, Character> = {};
+    
+    // Group by user and keep only the first (they're ordered by name, but we want most recent activity)
+    // Since isOnline means active in last 15 min, just pick one per user
+    for (const char of online) {
+      if (char.odUserId && !byUser[char.odUserId]) {
+        byUser[char.odUserId] = char;
+      }
+    }
+    
+    return Object.values(byUser);
+  })();
+
   return (
     <BackgroundProvider>
     <Routes>
@@ -158,7 +183,7 @@ const App: React.FC = () => {
           user={user} 
           activeCharacter={activeCharacter} 
           userCharacters={userCharacters}
-          onlineCharacters={allCharacters.filter(c => c.isOnline)}
+          onlineCharacters={onlineCharacters}
           onLogout={handleLogout} 
           onCharacterSelect={handleCharacterSelect}
         />

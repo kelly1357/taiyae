@@ -33,6 +33,7 @@ export interface Pack {
 export interface Character {
   id: string;
   userId: string;
+  odUserId?: number;
   username?: string;
   userCreatedAt?: string;
   name: string;
