@@ -70,6 +70,18 @@ const Home: React.FC = () => {
   const [latestPosts, setLatestPosts] = useState<LatestPost[]>([]);
   const [latestPostsLoading, setLatestPostsLoading] = useState(false);
 
+  // Check for season change and age characters if needed (runs once on page load)
+  useEffect(() => {
+    fetch('/api/season-check')
+      .then(res => res.json())
+      .then(data => {
+        if (data.seasonChanged && data.phasesPassed > 0) {
+          console.log(`Season changed to ${data.currentPhaseName}! ${data.charactersAged} characters aged.`);
+        }
+      })
+      .catch(err => console.error('Season check failed:', err));
+  }, []);
+
   useEffect(() => {
     fetch('/api/region')
       .then(res => res.json())
