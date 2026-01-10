@@ -37,9 +37,13 @@ export async function getOOCForums(request: HttpRequest, context: InvocationCont
                 ORDER BY t.Modified DESC
             ) latestThread
             OUTER APPLY (
-                SELECT TOP 1 u.Username, u.UserID
+                SELECT TOP 1 
+                    COALESCE(c.CharacterName, u.Username) as Username,
+                    COALESCE(cu.UserID, u.UserID) as UserID
                 FROM Post p
-                JOIN [User] u ON p.UserID = u.UserID
+                LEFT JOIN [User] u ON p.UserID = u.UserID
+                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                LEFT JOIN [User] cu ON c.UserID = cu.UserID
                 WHERE p.ThreadID = latestThread.ThreadID
                 ORDER BY p.Created DESC
             ) latestThreadAuthor

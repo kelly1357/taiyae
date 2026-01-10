@@ -320,8 +320,9 @@ const ThreadView: React.FC = () => {
   if (loading) return <div>Loading...</div>;
   if (!thread) return <div>Thread not found</div>;
 
-  // Check if this is an OOC thread
-  const isOOCThread = !!thread.oocForumId;
+  // Check if this is an OOC thread (not an archived IC thread)
+  // Archived IC threads have originalRegionId set, so they should still show character info
+  const isOOCThread = !!thread.oocForumId && !thread.originalRegionId;
 
   // Construct author object for the main post from thread data
   const mainAuthor: PostAuthor = {
