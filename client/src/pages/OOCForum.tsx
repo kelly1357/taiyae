@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useOutletContext } from 'react-router-dom';
-import { createPortal } from 'react-dom';
+// import { createPortal } from 'react-dom';
 import type { OOCForum, Thread, User } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
@@ -24,7 +24,7 @@ const OOCForumPage: React.FC = () => {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [loading, setLoading] = useState(!passedForum);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { setBackgroundUrl, resetBackground } = useBackground();
+  const { resetBackground } = useBackground();
 
   // Reset background on unmount (or set specific one if desired)
   useEffect(() => {
