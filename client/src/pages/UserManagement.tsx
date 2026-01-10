@@ -12,6 +12,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
   const [facebook, setFacebook] = useState(user.facebook || '');
   const [instagram, setInstagram] = useState(user.instagram || '');
   const [discord, setDiscord] = useState(user.discord || '');
+  const [imageUrl, setImageUrl] = useState(user.imageUrl || '');
+  const [uploading, setUploading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,6 +27,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
     setFacebook(user.facebook || '');
     setInstagram(user.instagram || '');
     setDiscord(user.discord || '');
+    setImageUrl(user.imageUrl || '');
   }, [user]);
 
   const updateUserData = async (payload: any) => {
@@ -84,7 +87,31 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateUserData({ username, playerInfo, facebook, instagram, discord });
+    await updateUserData({ username, playerInfo, facebook, instagram, discord, imageUrl });
+  };
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setUploading(true);
+    try {
+      const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        body: file
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setImageUrl(data.url);
+      } else {
+        const errorText = await response.text();
+        alert(`Image upload failed: ${errorText}`);
+      }
+    } catch (error) {
+      alert(`Image upload failed: ${error}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -134,6 +161,26 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
         )}
 
         <form onSubmit={handleUpdateProfile} className="space-y-6">
+          {/* Avatar Upload */}
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Avatar Image</label>
+            <div className="flex items-center gap-4">
+              {imageUrl ? (
+                <img src={imageUrl} alt="User Avatar" className="w-20 h-20 object-cover rounded-full border border-gray-300" />
+              ) : (
+                <div className="w-20 h-20 bg-gray-100 border border-gray-300 rounded-full flex items-center justify-center text-gray-400">No Image</div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+              />
+              {uploading && <span className="text-xs text-gray-500">Uploading...</span>}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Recommended: square image, max 1MB.</p>
+          </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Email</label>
             <input

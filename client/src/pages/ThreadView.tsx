@@ -25,6 +25,8 @@ interface PostAuthor {
 }
 
 // OOC Player info panel component
+import { fetchUserById } from '../data/fetchUserById';
+
 const OOCPlayerInfoPanel: React.FC<{ 
   playerName: string; 
   userId: number; 
@@ -32,6 +34,19 @@ const OOCPlayerInfoPanel: React.FC<{
 }> = ({ playerName, userId, isOriginalPost }) => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    setUserLoading(true);
+    fetchUserById(userId)
+      .then(u => {
+        setUser(u);
+        setUserLoading(false);
+      })
+      .catch(() => setUserLoading(false));
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
@@ -49,16 +64,31 @@ const OOCPlayerInfoPanel: React.FC<{
   return (
     <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
       {/* Player section */}
-      <table className="w-full text-xs border border-gray-300 mb-2">
-        <tbody>
-          <tr>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
-          </tr>
-          <tr>
-            <td className="px-2 py-2 text-gray-700 text-center">{playerName || 'Unknown'}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="flex flex-col items-center mb-2">
+        {userLoading ? (
+          <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse mb-2" />
+        ) : user && user.imageUrl ? (
+          <img
+            src={user.imageUrl}
+            alt={user.username || playerName || 'User Avatar'}
+            className="w-16 h-16 rounded-full object-cover border border-gray-300 mb-2"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-400 mb-2">
+            <span className="text-xs">No Image</span>
+          </div>
+        )}
+        <table className="w-full text-xs border border-gray-300">
+          <tbody>
+            <tr>
+              <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
+            </tr>
+            <tr>
+              <td className="px-2 py-2 text-gray-700 text-center">{playerName || 'Unknown'}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       {/* Characters section */}
       <table className="w-full text-xs border border-gray-300">

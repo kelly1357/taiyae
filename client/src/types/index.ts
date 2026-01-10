@@ -2,6 +2,7 @@ export interface User {
   id: number | string;
   username: string;
   email: string;
+  imageUrl?: string; // Avatar image URL
   authProvider?: string;
   characters?: string[]; // List of Character IDs
   activeCharacterId?: string | number; // Currently selected character for posting
