@@ -288,6 +288,83 @@ app.http('updatePost', {
     route: 'posts/{postId}'
 });
 
+export async function deletePost(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const postId = request.params.postId;
+    
+    if (!postId) {
+        return { status: 400, body: "postId is required" };
+    }
+
+    try {
+        const body = await request.json() as any;
+        const { characterId, userId } = body;
+
+        if (!characterId && !userId) {
+            return { status: 400, body: "characterId or userId is required" };
+        }
+
+        const pool = await getPool();
+        
+        // Get the post to verify ownership
+        const postResult = await pool.request()
+            .input('postId', sql.Int, parseInt(postId))
+            .query(`
+                SELECT p.PostID, p.ThreadID, p.CharacterID, p.UserID,
+                       c.UserID as characterOwnerUserId,
+                       (SELECT COUNT(*) FROM Post WHERE ThreadID = p.ThreadID) as postCount,
+                       (SELECT MIN(PostID) FROM Post WHERE ThreadID = p.ThreadID) as firstPostId
+                FROM Post p
+                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                WHERE p.PostID = @postId
+            `);
+
+        if (postResult.recordset.length === 0) {
+            return { status: 404, body: "Post not found" };
+        }
+
+        const post = postResult.recordset[0];
+
+        // Verify the user owns this post
+        const isOwner = (characterId && post.CharacterID === parseInt(characterId)) ||
+                       (userId && (post.UserID === parseInt(userId) || post.characterOwnerUserId === parseInt(userId)));
+
+        if (!isOwner) {
+            return { status: 403, body: "You can only delete your own posts" };
+        }
+
+        // Don't allow deleting the first post (thread starter) - use archive instead
+        if (post.PostID === post.firstPostId) {
+            return { status: 400, body: "Cannot delete the first post. Use archive thread instead." };
+        }
+
+        // Delete the post
+        await pool.request()
+            .input('postId', sql.Int, parseInt(postId))
+            .query('DELETE FROM Post WHERE PostID = @postId');
+
+        // Update the thread's modified date
+        await pool.request()
+            .input('threadId', sql.Int, post.ThreadID)
+            .query('UPDATE Thread SET Modified = GETDATE() WHERE ThreadID = @threadId');
+
+        return {
+            status: 200,
+            jsonBody: { message: "Post deleted successfully" }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('deletePost', {
+    methods: ['DELETE'],
+    authLevel: 'anonymous',
+    handler: deletePost,
+    route: 'posts/{postId}'
+});
+
 export async function getLatestPosts(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const pool = await getPool();

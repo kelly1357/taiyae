@@ -229,6 +229,8 @@ const ThreadView: React.FC = () => {
   const [showPhotoMode, setShowPhotoMode] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Set background immediately if we have region data from navigation state
   useLayoutEffect(() => {
@@ -344,6 +346,35 @@ const ThreadView: React.FC = () => {
       }
     } catch (error) {
       console.error("Error updating post:", error);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (!showDeleteConfirm || (!activeCharacter && !user)) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/posts/${showDeleteConfirm}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterId: activeCharacter?.id,
+          userId: user?.id
+        })
+      });
+
+      if (response.ok) {
+        setShowDeleteConfirm(null);
+        fetchThread();
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to delete post');
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert('Failed to delete post');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -486,6 +517,32 @@ const ThreadView: React.FC = () => {
             </div>
           )}
 
+          {/* Delete Confirmation Modal */}
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg max-w-md">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900">Delete Post</h4>
+                <p className="text-gray-700 mb-4">Are you sure you want to delete this post? This action cannot be undone.</p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowDeleteConfirm(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeletePost}
+                    className="px-4 py-2 bg-red-600 text-white hover:bg-red-700"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Original Post - avatar on RIGHT */}
           <div className="border border-gray-300 mx-0.5 mb-4">
             {/* Post header with date */}
@@ -579,14 +636,22 @@ const ThreadView: React.FC = () => {
                   )}
                   {/* Content on RIGHT */}
                   <div className="flex-grow p-4 relative bg-white">
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 flex gap-1">
                       {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
+                        <>
                           <button 
                               onClick={() => handleEditClick(reply.id, reply.content)}
                               className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300"
                           >
                               Edit
                           </button>
+                          <button 
+                              onClick={() => setShowDeleteConfirm(reply.id)}
+                              className="text-gray-500 hover:text-red-600 text-xs bg-gray-100 hover:bg-red-50 px-2 py-1 border border-gray-300"
+                          >
+                              Delete
+                          </button>
+                        </>
                       )}
                     </div>
 

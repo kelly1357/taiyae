@@ -199,7 +199,7 @@ const Characters: React.FC = () => {
                       )}
                     </Link>
                     <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
-                      {char.name}
+                      {char.name}{char.surname ? ` ${char.surname}` : ''}
                       {!!char.isOnline && (
                         <span className="ml-1 w-2 h-2 bg-green-500 rounded-full inline-block border border-white" title="Online Now"></span>
                       )}

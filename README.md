@@ -58,7 +58,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Editable character fields
 
-[ ] Display online characters on sidebar
+✅ Display online characters on sidebar
 
 ✅  Avatar upload option for Player Accounts
 
