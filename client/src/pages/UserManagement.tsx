@@ -68,6 +68,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
             facebook: data.user.Facebook || data.user.facebook || '',
             instagram: data.user.Instagram || data.user.instagram || '',
             discord: data.user.Discord || data.user.discord || '',
+            imageUrl: data.user.ImageURL || data.user.imageUrl || '',
         };
         
         onUpdateUser(normalizedUser);
@@ -164,22 +165,36 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
           {/* Avatar Upload */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Avatar Image</label>
-            <div className="flex items-center gap-4">
-              {imageUrl ? (
-                <img src={imageUrl} alt="User Avatar" className="w-20 h-20 object-cover rounded-full border border-gray-300" />
-              ) : (
-                <div className="w-20 h-20 bg-gray-100 border border-gray-300 rounded-full flex items-center justify-center text-gray-400">No Image</div>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarUpload}
-                disabled={uploading}
-                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
-              />
-              {uploading && <span className="text-xs text-gray-500">Uploading...</span>}
+            <div className="flex items-start space-x-4">
+              <div className="w-64 flex-shrink-0">
+                {imageUrl ? (
+                  <img 
+                    src={imageUrl} 
+                    alt="User Avatar" 
+                    className="w-full object-cover border border-gray-300"
+                    style={{ aspectRatio: '16/9' }}
+                  />
+                ) : (
+                  <div 
+                    className="w-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center"
+                    style={{ aspectRatio: '16/9' }}
+                  >
+                    <span className="text-gray-400 text-sm">No Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col space-y-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  disabled={uploading}
+                  className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                />
+                {uploading && <span className="text-xs text-gray-500">Uploading...</span>}
+                <p className="text-xs text-gray-500">Max file size: 1MB.</p>
+              </div>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Recommended: square image, max 1MB.</p>
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Email</label>

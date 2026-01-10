@@ -63,32 +63,41 @@ const OOCPlayerInfoPanel: React.FC<{
 
   return (
     <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
-      {/* Player section */}
-      <div className="flex flex-col items-center mb-2">
+      {/* Avatar - same width as table, rectangular like character panel */}
+      <div className="mb-2 w-full">
         {userLoading ? (
-          <div className="w-16 h-16 rounded-full bg-gray-200 animate-pulse mb-2" />
+          <div 
+            className="w-full bg-gray-200 animate-pulse border border-gray-300"
+            style={{ aspectRatio: '526/364' }}
+          />
         ) : user && user.imageUrl ? (
           <img
             src={user.imageUrl}
             alt={user.username || playerName || 'User Avatar'}
-            className="w-16 h-16 rounded-full object-cover border border-gray-300 mb-2"
+            className="w-full object-cover border-2 border-gray-300"
+            style={{ aspectRatio: '526/364' }}
           />
         ) : (
-          <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-300 flex items-center justify-center text-gray-400 mb-2">
-            <span className="text-xs">No Image</span>
+          <div 
+            className="w-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center"
+            style={{ aspectRatio: '526/364' }}
+          >
+            <span className="text-gray-400 text-sm">No Image</span>
           </div>
         )}
-        <table className="w-full text-xs border border-gray-300">
-          <tbody>
-            <tr>
-              <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
-            </tr>
-            <tr>
-              <td className="px-2 py-2 text-gray-700 text-center">{playerName || 'Unknown'}</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
+
+      {/* Player section */}
+      <table className="w-full text-xs border border-gray-300 mb-2">
+        <tbody>
+          <tr>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
+          </tr>
+          <tr>
+            <td className="px-2 py-2 text-gray-700 text-center">{playerName || 'Unknown'}</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Characters section */}
       <table className="w-full text-xs border border-gray-300">
@@ -262,9 +271,21 @@ const ThreadView: React.FC = () => {
   const handlePostReply = async () => {
     if (!replyContent.trim() || !threadId) return;
     
-    if (!activeCharacter) {
+    // For OOC threads, we need the user ID; for IC threads, we need the character ID
+    const isOOC = !!thread?.oocForumId && !thread?.originalRegionId;
+    
+    if (isOOC) {
+      // OOC posts use user ID
+      if (!user) {
+        alert("Please log in to post.");
+        return;
+      }
+    } else {
+      // IC posts use character ID
+      if (!activeCharacter) {
         alert("Please select a character to post.");
         return;
+      }
     }
 
     setIsPosting(true);
@@ -274,7 +295,7 @@ const ThreadView: React.FC = () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 content: replyContent,
-                authorId: activeCharacter.id
+                authorId: isOOC ? user!.id : activeCharacter!.id
             })
         });
         

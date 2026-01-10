@@ -52,7 +52,29 @@ const App: React.FC = () => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        
+        // Refresh user data from API to get latest fields like imageUrl
+        if (parsedUser.id) {
+          fetch(`/api/users/${parsedUser.id}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+              if (data) {
+                const refreshedUser = {
+                  ...parsedUser,
+                  imageUrl: data.ImageURL || data.imageUrl || parsedUser.imageUrl || '',
+                  playerInfo: data.Description || data.playerInfo || parsedUser.playerInfo || '',
+                  facebook: data.Facebook || data.facebook || parsedUser.facebook || '',
+                  instagram: data.Instagram || data.instagram || parsedUser.instagram || '',
+                  discord: data.Discord || data.discord || parsedUser.discord || '',
+                };
+                setUser(refreshedUser);
+                localStorage.setItem('user', JSON.stringify(refreshedUser));
+              }
+            })
+            .catch(err => console.error("Failed to refresh user data", err));
+        }
       } catch (e) {
         console.error("Failed to parse user from local storage");
         localStorage.removeItem('user');

@@ -83,7 +83,11 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                         ELSE 0 
                     END as isOnline,
                     (SELECT COUNT(*) FROM Post WHERE CharacterID = c.CharacterID) as icPostCount,
-                    (SELECT COUNT(*) FROM OOCPost WHERE UserID = c.UserID) as oocPostCount
+                    (SELECT COUNT(*) FROM Post p2 
+                     JOIN Thread t2 ON p2.ThreadID = t2.ThreadID 
+                     WHERE p2.UserID = c.UserID 
+                       AND t2.OOCForumID IS NOT NULL 
+                       AND t2.OriginalRegionId IS NULL) as oocPostCount
                 FROM Character c
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID

@@ -71,6 +71,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             facebook: data.user.Facebook || data.user.facebook || '',
             instagram: data.user.Instagram || data.user.instagram || '',
             discord: data.user.Discord || data.user.discord || '',
+            imageUrl: data.user.ImageURL || data.user.imageUrl || '',
         };
         onLogin(normalizedUser);
         navigate('/');
@@ -112,6 +113,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             facebook: data.user.Facebook || data.user.facebook || '',
             instagram: data.user.Instagram || data.user.instagram || '',
             discord: data.user.Discord || data.user.discord || '',
+            imageUrl: data.user.ImageURL || data.user.imageUrl || '',
         };
         onLogin(normalizedUser);
         navigate('/');
