@@ -13,7 +13,6 @@ import CharacterManagement from './pages/CharacterManagement';
 import CharacterProfile from './pages/CharacterProfile';
 import Characters from './pages/Characters';
 import UserManagement from './pages/UserManagement';
-import Login from './pages/Login';
 import SpiritSymbolQuiz from './pages/SpiritSymbolQuiz';
 import Weather from './pages/Weather';
 import type { User, Character } from './types';
