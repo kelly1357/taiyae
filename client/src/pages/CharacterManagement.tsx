@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { Character, User } from '../types';
 
 type SortField = 'name' | 'sex' | 'packName' | 'age' | 'totalSkill';
@@ -10,6 +10,7 @@ interface CharacterManagementProps {
 }
 
 const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [characters, setCharacters] = useState<Character[]>([]);
   const [healthStatuses, setHealthStatuses] = useState<{id: number, name: string}[]>([]);
   const [heights, setHeights] = useState<{id: number, name: string}[]>([]);
@@ -32,6 +33,15 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     fetchHeights();
     fetchBuilds();
   }, [user.id]);
+
+  // Check for ?new=true query param to open create form
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      handleCreate();
+      // Remove the query param from URL
+      setSearchParams({});
+    }
+  }, [searchParams]);
 
   const fetchHealthStatuses = async () => {
     try {

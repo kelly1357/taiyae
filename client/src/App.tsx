@@ -62,6 +62,8 @@ const App: React.FC = () => {
             .then(res => res.ok ? res.json() : null)
             .then(data => {
               if (data) {
+                const isModerator = data.Is_Moderator === true || data.Is_Moderator === 1 || data.isModerator === true;
+                const isAdmin = data.Is_Admin === true || data.Is_Admin === 1 || data.isAdmin === true;
                 const refreshedUser = {
                   ...parsedUser,
                   imageUrl: data.ImageURL || data.imageUrl || parsedUser.imageUrl || '',
@@ -69,6 +71,9 @@ const App: React.FC = () => {
                   facebook: data.Facebook || data.facebook || parsedUser.facebook || '',
                   instagram: data.Instagram || data.instagram || parsedUser.instagram || '',
                   discord: data.Discord || data.discord || parsedUser.discord || '',
+                  isModerator,
+                  isAdmin,
+                  role: isModerator ? 'moderator' : 'member',
                 };
                 setUser(refreshedUser);
                 localStorage.setItem('user', JSON.stringify(refreshedUser));

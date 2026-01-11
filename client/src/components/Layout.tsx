@@ -106,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({
               </section>
             )}
 
-            {!activeCharacter && (
+            {!activeCharacter && !user && (
               <section className="bg-white border border-gray-300 shadow">
                 <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                   Member Login
@@ -126,6 +126,28 @@ const Layout: React.FC<LayoutProps> = ({
                     Log In
                   </button>
                   <div className="text-xs text-gray-500 text-center">New here? Join Horizon</div>
+                </div>
+              </section>
+            )}
+
+            {!activeCharacter && user && userCharacters?.length === 0 && (
+              <section className="bg-white border border-gray-300 shadow">
+                <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                  Create a Character!
+                </div>
+                <div className="px-4 py-4 space-y-3 text-gray-800">
+                  <p className="text-sm text-gray-700">
+                    Welcome to Horizon, <span className="font-semibold">{user.username}</span>! You're almost ready to start roleplaying.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Create your first character to join the adventure and start posting in roleplay areas.
+                  </p>
+                  <Link 
+                    to="/my-characters?new=true" 
+                    className="block w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 text-sm uppercase tracking-wide text-center transition-colors"
+                  >
+                    Get Started →
+                  </Link>
                 </div>
               </section>
             )}

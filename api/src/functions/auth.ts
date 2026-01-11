@@ -96,9 +96,14 @@ export async function login(request: HttpRequest, context: InvocationContext): P
         // Remove sensitive data
         delete user.PasswordHash;
 
+        // Add isModerator and isAdmin fields based on database columns
+        const isModerator = user.Is_Moderator === true || user.Is_Moderator === 1;
+        const isAdmin = user.Is_Admin === true || user.Is_Admin === 1;
+        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member' };
+
         return {
             status: 200,
-            jsonBody: { user, token }
+            jsonBody: { user: userWithRole, token }
         };
     } catch (error) {
         context.error("Login error:", error);
@@ -177,9 +182,14 @@ export async function googleLogin(request: HttpRequest, context: InvocationConte
         const token = generateToken(user);
         if (user.PasswordHash) delete user.PasswordHash;
 
+        // Add isModerator and isAdmin fields based on database columns
+        const isModerator = user.Is_Moderator === true || user.Is_Moderator === 1;
+        const isAdmin = user.Is_Admin === true || user.Is_Admin === 1;
+        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member' };
+
         return {
             status: 200,
-            jsonBody: { user, token }
+            jsonBody: { user: userWithRole, token }
         };
 
     } catch (error) {

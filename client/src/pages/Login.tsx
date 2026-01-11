@@ -62,6 +62,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
+        const isModerator = data.user.Is_Moderator === true || data.user.Is_Moderator === 1 || data.user.isModerator === true;
+        const isAdmin = data.user.Is_Admin === true || data.user.Is_Admin === 1 || data.user.isAdmin === true;
         const normalizedUser = {
             id: data.user.UserID || data.user.id,
             username: data.user.Username || data.user.username,
@@ -72,6 +74,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             instagram: data.user.Instagram || data.user.instagram || '',
             discord: data.user.Discord || data.user.discord || '',
             imageUrl: data.user.ImageURL || data.user.imageUrl || '',
+            isModerator,
+            isAdmin,
+            role: isModerator ? 'moderator' : 'member',
         };
         onLogin(normalizedUser);
         navigate('/');
@@ -104,6 +109,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
+        const isModerator = data.user.Is_Moderator === true || data.user.Is_Moderator === 1 || data.user.isModerator === true;
+        const isAdmin = data.user.Is_Admin === true || data.user.Is_Admin === 1 || data.user.isAdmin === true;
         const normalizedUser = {
             id: data.user.UserID || data.user.id,
             username: data.user.Username || data.user.username,
@@ -114,6 +121,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             instagram: data.user.Instagram || data.user.instagram || '',
             discord: data.user.Discord || data.user.discord || '',
             imageUrl: data.user.ImageURL || data.user.imageUrl || '',
+            isModerator,
+            isAdmin,
+            role: isModerator ? 'moderator' : 'member',
         };
         onLogin(normalizedUser);
         navigate('/');

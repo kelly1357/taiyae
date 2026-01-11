@@ -11,6 +11,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters = [], onLogout, onCharacterSelect }) => {
+  const isModerator = user?.isModerator ?? false;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -201,6 +202,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
+          {isModerator && (
+            <NavDropdown label="Admin">
+              <DropdownLink to="/admin/achievements">Achievements</DropdownLink>
+              <DropdownLink to="/admin/skill-points">Skill Points</DropdownLink>
+              <DropdownLink to="/admin/inactive-characters">Inactive Characters</DropdownLink>
+            </NavDropdown>
+          )}
           {user ? (
             <div className="flex items-center space-x-4">
               {activeCharacter ? (
@@ -285,7 +293,45 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                     </div>
                   )}
                 </div>
-              ) : null}
+              ) : (
+                <div className="relative" ref={dropdownRef}>
+                  <button 
+                    onClick={handleUserDropdownClick}
+                    className="flex items-center space-x-2 bg-white/35 px-3 py-1 hover:bg-white/50 transition-colors border border-white/20"
+                  >
+                    <div className="w-8 h-8 bg-gray-200 border border-gray-300 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{user.username}</span>
+                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 shadow-lg z-50">
+                      <div className="py-1">
+                        <Link 
+                          to="/my-characters" 
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          Manage Characters
+                        </Link>
+                        <Link 
+                          to="/account" 
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          Manage Account
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <button onClick={onLogout} className="text-xs uppercase tracking-wide font-bold hover:text-white" style={{ color: 'black' }}>Logout</button>
             </div>
@@ -327,10 +373,17 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/ooc-forum/7">IC Archives</MobileDropdownLink>
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
+          {isModerator && (
+            <MobileNavSection label="Admin">
+              <MobileDropdownLink to="/admin/achievements">Achievements</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/skill-points">Skill Points</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/inactive-characters">Inactive Characters</MobileDropdownLink>
+            </MobileNavSection>
+          )}
           
           {user ? (
             <div className="border-b border-gray-200">
-              {activeCharacter && (
+              {activeCharacter ? (
                 <div className="px-4 py-3 border-b border-gray-200">
                   <div className="flex items-center space-x-3">
                     {activeCharacter.imageUrl && activeCharacter.imageUrl.trim() !== '' && !activeCharacter.imageUrl.includes('via.placeholder') ? (
@@ -349,6 +402,17 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                       </div>
                     )}
                     <span className="text-sm font-semibold text-gray-900">{activeCharacter.name}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-200 border border-gray-300 flex items-center justify-center">
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-semibold text-gray-900">{user.username}</span>
                   </div>
                 </div>
               )}
