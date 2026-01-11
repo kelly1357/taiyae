@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import type { ForumRegion, OOCForum } from '../types';
+import { Link, useOutletContext } from 'react-router-dom';
+import type { ForumRegion, OOCForum, User } from '../types';
 import { getHorizonDate, formatHorizonYear } from '../utils/horizonCalendar';
 import { getWeatherHistory } from '../utils/weatherGenerator';
 
@@ -73,7 +73,17 @@ type ViewMode = 'areas' | 'active' | 'lonely' | 'latest';
 type ThreadSortField = 'title' | 'date' | 'area';
 type SortDirection = 'asc' | 'desc';
 
+interface PlotNewsItem {
+  PlotNewsID: number;
+  PackName: string;
+  NewsText: string;
+  ThreadURL?: string;
+  ThreadTitle?: string;
+  ApprovedAt?: string;
+}
+
 const Home: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
   const [regions, setRegions] = useState<ForumRegion[]>([]);
   const [oocForums, setOocForums] = useState<OOCForum[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,6 +97,18 @@ const Home: React.FC = () => {
   const [threadSortDirection, setThreadSortDirection] = useState<SortDirection>('desc');
   const [latestPosts, setLatestPosts] = useState<LatestPost[]>([]);
   const [latestPostsLoading, setLatestPostsLoading] = useState(false);
+  
+  // Plot News state
+  const [plotNews, setPlotNews] = useState<PlotNewsItem[]>([]);
+  const [showPlotNewsModal, setShowPlotNewsModal] = useState(false);
+  const [plotNewsForm, setPlotNewsForm] = useState({
+    packName: 'Rogue',
+    newsText: '',
+    threadURL: '',
+    threadTitle: ''
+  });
+  const [isSubmittingPlotNews, setIsSubmittingPlotNews] = useState(false);
+  const [plotNewsMessage, setPlotNewsMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Check for season change and age characters if needed (runs once on page load)
   useEffect(() => {
@@ -118,7 +140,56 @@ const Home: React.FC = () => {
         setOocForums(data);
       })
       .catch(err => console.error('Failed to fetch stats:', err));
+
+    // Fetch approved plot news
+    fetch('/api/plot-news')
+      .then(res => res.json())
+      .then(data => {
+        setPlotNews(data);
+      })
+      .catch(err => console.error('Failed to fetch plot news:', err));
   }, []);
+
+  // Handle plot news submission
+  const handleSubmitPlotNews = async () => {
+    if (!plotNewsForm.newsText.trim()) {
+      setPlotNewsMessage({ type: 'error', text: 'Please enter plot news text.' });
+      return;
+    }
+    
+    setIsSubmittingPlotNews(true);
+    setPlotNewsMessage(null);
+    
+    try {
+      const response = await fetch('/api/plot-news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packName: plotNewsForm.packName,
+          newsText: plotNewsForm.newsText.trim(),
+          threadURL: plotNewsForm.threadURL.trim() || null,
+          threadTitle: plotNewsForm.threadTitle.trim() || null,
+          userId: user?.id
+        })
+      });
+      
+      if (response.ok) {
+        setPlotNewsMessage({ type: 'success', text: 'Plot news submitted for review!' });
+        setPlotNewsForm({ packName: 'Rogue', newsText: '', threadURL: '', threadTitle: '' });
+        setTimeout(() => {
+          setShowPlotNewsModal(false);
+          setPlotNewsMessage(null);
+        }, 2000);
+      } else {
+        const error = await response.text();
+        setPlotNewsMessage({ type: 'error', text: error || 'Failed to submit plot news.' });
+      }
+    } catch (error) {
+      setPlotNewsMessage({ type: 'error', text: 'Failed to submit plot news.' });
+    } finally {
+      setIsSubmittingPlotNews(false);
+    }
+  };
 
   // Fetch all threads when switching to active or lonely view
   useEffect(() => {
@@ -351,7 +422,38 @@ const Home: React.FC = () => {
             {/* Plot News */}
             <div className="pl-4 border-l border-gray-300">
               <h3 className="text-base font-semibold text-gray-900 mb-2">Plot News</h3>
-              <p className="text-sm text-gray-600 italic">None.</p>
+              {plotNews.length === 0 ? (
+                <p className="text-sm text-gray-600 italic">None.</p>
+              ) : (
+                <div className="space-y-2">
+                  {plotNews.map((news) => (
+                    <div key={news.PlotNewsID} className="text-sm text-gray-800">
+                      <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
+                        {news.PackName === 'Rogue' ? 'R' : news.PackName.charAt(0).toUpperCase()}
+                      </span>
+                      {news.NewsText}
+                      {news.ThreadURL && (
+                        <span className="text-gray-600">
+                          {' '}
+                          (<a href={news.ThreadURL} className="text-gray-600 hover:text-gray-900 hover:underline" target="_blank" rel="noopener noreferrer">"{news.ThreadTitle || 'thread'}"</a>)
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {user && (
+                <div className="mt-3 text-sm text-gray-500">
+                  <Link to="/plot-news" className="hover:text-gray-700 font-bold">View All</Link>
+                  <span className="mx-1">|</span>
+                  <button
+                    onClick={() => setShowPlotNewsModal(true)}
+                    className="hover:text-gray-700 font-bold"
+                  >
+                    Submit Plot News
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -870,6 +972,95 @@ const Home: React.FC = () => {
             </div>
           )}
         </section>
+
+      {/* Submit Plot News Modal */}
+      {showPlotNewsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white border border-gray-300 shadow-lg w-full max-w-md mx-4">
+            <div className="bg-[#2f3a2f] px-4 py-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-white">Submit Plot News</h3>
+            </div>
+            <div className="p-4 space-y-4">
+              {/* Pack Selection */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Pack(s)</label>
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={plotNewsForm.packName === 'Rogue'}
+                      onChange={(e) => setPlotNewsForm(prev => ({ ...prev, packName: e.target.checked ? 'Rogue' : '' }))}
+                      className="w-4 h-4"
+                    />
+                    <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600">R</span>
+                    <span className="uppercase tracking-wide text-gray-600 text-sm" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogues</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Plot News Text */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Plot News</label>
+                <textarea
+                  value={plotNewsForm.newsText}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 150) {
+                      setPlotNewsForm(prev => ({ ...prev, newsText: e.target.value }));
+                    }
+                  }}
+                  placeholder="Enter your plot news update..."
+                  className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 placeholder:text-gray-400 placeholder:italic"
+                  rows={3}
+                />
+                <div className="text-xs text-gray-500 mt-1 text-right">
+                  {plotNewsForm.newsText.length}/150 characters
+                </div>
+              </div>
+
+              {/* Thread URL */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Thread</label>
+                <input
+                  type="url"
+                  value={plotNewsForm.threadURL}
+                  onChange={(e) => setPlotNewsForm(prev => ({ ...prev, threadURL: e.target.value }))}
+                  placeholder="Thread URL"
+                  className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400 placeholder:text-gray-400 placeholder:italic"
+                />
+              </div>
+
+              {/* Message */}
+              {plotNewsMessage && (
+                <div className={`text-sm ${plotNewsMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                  {plotNewsMessage.text}
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    setShowPlotNewsModal(false);
+                    setPlotNewsMessage(null);
+                    setPlotNewsForm({ packName: 'Rogue', newsText: '', threadURL: '', threadTitle: '' });
+                  }}
+                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                  disabled={isSubmittingPlotNews}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitPlotNews}
+                  disabled={isSubmittingPlotNews || !plotNewsForm.packName || !plotNewsForm.newsText.trim()}
+                  className="px-4 py-2 text-sm bg-[#2f3a2f] text-white hover:bg-[#3a4a3a] disabled:opacity-50"
+                >
+                  {isSubmittingPlotNews ? 'Submitting...' : 'Submit'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -16,6 +16,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingSkillPointsCount, setPendingSkillPointsCount] = useState(0);
+  const [pendingPlotNewsCount, setPendingPlotNewsCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -53,6 +54,28 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         }
       } catch (error) {
         console.error('Error fetching pending skill points count:', error);
+      }
+    };
+    
+    fetchCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, [isModerator]);
+
+  // Fetch pending plot news count for moderators
+  useEffect(() => {
+    if (!isModerator) return;
+    
+    const fetchCount = async () => {
+      try {
+        const response = await fetch('/api/plot-news/pending/count');
+        if (response.ok) {
+          const data = await response.json();
+          setPendingPlotNewsCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending plot news count:', error);
       }
     };
     
@@ -226,8 +249,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {isModerator && (
-            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{pendingSkillPointsCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}</span>}>
+            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount}</span>}</span>}>
               <DropdownLink to="/admin/achievements">Achievements</DropdownLink>
+              <DropdownLink to="/admin/plot-news">
+                <span className="flex items-center justify-between w-full">
+                  Plot News
+                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
+                </span>
+              </DropdownLink>
               <DropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
@@ -401,8 +430,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {isModerator && (
-            <MobileNavSection label={<span className="flex items-center gap-1">Admin{pendingSkillPointsCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}</span>}>
+            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/achievements">Achievements</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/plot-news">
+                <span className="flex items-center justify-between w-full">
+                  Plot News
+                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
+                </span>
+              </MobileDropdownLink>
               <MobileDropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
