@@ -48,33 +48,50 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-      
-      const response = await fetch('/api/user/me', {
+
+      // Get user ID from localStorage (set at login)
+      const storedUser = localStorage.getItem('user');
+      if (!storedUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      const parsedUser = JSON.parse(storedUser);
+      const userId = parsedUser?.id || parsedUser?.UserID;
+      if (!userId) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/users/${userId}`, {
         credentials: 'include',
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
-          // User is not logged in
           setUser(null);
           return;
         }
         throw new Error('Failed to fetch user');
       }
-      
+
       const userData = await response.json();
-      
-      // Determine role based on Is_Moderator column
-      const isModerator = userData.isModerator === true || userData.isModerator === 1;
-      const isAdmin = userData.isAdmin === true || userData.isAdmin === 1;
-      const role: UserRole = isModerator ? 'moderator' : 'member';
-      
-      setUser({
+
+      // Determine role based on Is_Moderator and Is_Admin columns from User table
+      const isModerator = userData.Is_Moderator === true || userData.Is_Moderator === 1;
+      const isAdmin = userData.Is_Admin === true || userData.Is_Admin === 1;
+      const role: UserRole = isAdmin ? ('admin' as UserRole) : isModerator ? ('moderator' as UserRole) : ('member' as UserRole);
+
+      // Extend User type locally to allow role property
+      type UserWithRole = User & { role: UserRole };
+      const userWithRole: UserWithRole = {
         ...userData,
         isModerator,
         isAdmin,
         role,
-      });
+      };
+      setUser(userWithRole);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setUser(null);

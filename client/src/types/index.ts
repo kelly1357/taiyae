@@ -1,4 +1,4 @@
-export type UserRole = 'moderator' | 'member';
+export type UserRole = 'admin' | 'moderator' | 'member';
 
 export interface User {
   id: number | string;
@@ -14,7 +14,7 @@ export interface User {
   discord?: string;
   isModerator?: boolean; // Is_Moderator column - true if user is a moderator
   isAdmin?: boolean; // Is_Admin column - true if user is an admin
-  role?: UserRole; // Derived from isModerator: 'moderator' or 'member'
+  role?: UserRole; // 'admin', 'moderator', or 'member'
 }
 
 export interface Achievement {

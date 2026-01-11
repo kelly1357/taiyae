@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { BackgroundProvider } from './contexts/BackgroundContext';
 import Layout from './components/Layout';
+import { useUser } from './contexts/UserContext';
 import Home from './pages/Home';
 import Region from './pages/Region';
 import OOCForumPage from './pages/OOCForum';
@@ -116,15 +117,24 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const userContext = useUser();
   const handleLogin = (userData: User) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    // Trigger UserContext to refetch from API
+    if (userContext && typeof userContext.refetchUser === 'function') {
+      userContext.refetchUser();
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    // Trigger UserContext to refetch from API
+    if (userContext && typeof userContext.refetchUser === 'function') {
+      userContext.refetchUser();
+    }
   };
 
   const handleCharacterSelect = (characterId: string | number) => {
