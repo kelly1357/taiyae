@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteThread = exports.archiveThread = exports.getLatestPosts = exports.deletePost = exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
+exports.unarchiveThread = exports.deleteThread = exports.archiveThread = exports.getLatestPosts = exports.deletePost = exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
 const functions_1 = require("@azure/functions");
 const db_1 = require("../db");
 const sql = require("mssql");
@@ -541,5 +541,96 @@ functions_1.app.http('deleteThread', {
     authLevel: 'anonymous',
     handler: deleteThread,
     route: 'threads/{threadId}'
+});
+// POST /api/threads/:threadId/unarchive - Unarchive a thread (moderator only)
+// Reverses skill points and deletes all claims, then restores thread to original location
+function unarchiveThread(request, context) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const threadId = request.params.threadId;
+        if (!threadId) {
+            return { status: 400, body: "threadId is required" };
+        }
+        try {
+            const body = yield request.json();
+            const { userId } = body;
+            if (!userId) {
+                return { status: 400, body: "userId is required" };
+            }
+            const pool = yield (0, db_1.getPool)();
+            // Verify the user is a moderator or admin
+            const modCheck = yield pool.request()
+                .input('userId', sql.Int, parseInt(userId))
+                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+            if (modCheck.recordset.length === 0) {
+                return { status: 404, body: "User not found" };
+            }
+            const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+            if (!isModerator) {
+                return { status: 403, body: "Only moderators can unarchive threads" };
+            }
+            // Get the thread and verify it's archived
+            const threadResult = yield pool.request()
+                .input('threadId', sql.Int, parseInt(threadId))
+                .query(`
+                SELECT ThreadID, IsArchived, OriginalRegionId, OriginalOOCForumID
+                FROM Thread 
+                WHERE ThreadID = @threadId
+            `);
+            if (threadResult.recordset.length === 0) {
+                return { status: 404, body: "Thread not found" };
+            }
+            const thread = threadResult.recordset[0];
+            if (!thread.IsArchived) {
+                return { status: 400, body: "Thread is not archived" };
+            }
+            // Step 1: Reverse approved skill points for each character
+            yield pool.request()
+                .input('threadId', sql.Int, parseInt(threadId))
+                .query(`
+                UPDATE c
+                SET c.Experience = c.Experience - ISNULL(sp.E, 0),
+                    c.Physical = c.Physical - ISNULL(sp.P, 0),
+                    c.Knowledge = c.Knowledge - ISNULL(sp.K, 0)
+                FROM Character c
+                JOIN CharacterSkillPointsAssignment a ON c.CharacterID = a.CharacterID
+                JOIN SkillPoints sp ON a.SkillPointID = sp.SkillID
+                WHERE a.ThreadID = @threadId AND a.IsModeratorApproved = 1
+            `);
+            // Step 2: Delete all skill point claims for this thread
+            yield pool.request()
+                .input('threadId', sql.Int, parseInt(threadId))
+                .query('DELETE FROM CharacterSkillPointsAssignment WHERE ThreadID = @threadId');
+            // Step 3: Restore thread to original location
+            yield pool.request()
+                .input('threadId', sql.Int, parseInt(threadId))
+                .input('originalRegionId', sql.Int, thread.OriginalRegionId)
+                .input('originalOOCForumID', sql.Int, thread.OriginalOOCForumID)
+                .query(`
+                UPDATE Thread 
+                SET IsArchived = 0,
+                    RegionId = @originalRegionId,
+                    OOCForumID = @originalOOCForumID,
+                    OriginalRegionId = NULL,
+                    OriginalOOCForumID = NULL,
+                    Modified = GETDATE()
+                WHERE ThreadID = @threadId
+            `);
+            return {
+                status: 200,
+                jsonBody: { message: "Thread unarchived successfully. All skill point claims have been reversed and deleted." }
+            };
+        }
+        catch (error) {
+            context.error(error);
+            return { status: 500, body: "Internal Server Error" };
+        }
+    });
+}
+exports.unarchiveThread = unarchiveThread;
+functions_1.app.http('unarchiveThread', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    handler: unarchiveThread,
+    route: 'threads/{threadId}/unarchive'
 });
 //# sourceMappingURL=threads.js.map
