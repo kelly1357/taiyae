@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.archiveThread = exports.getLatestPosts = exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
+exports.archiveThread = exports.getLatestPosts = exports.deletePost = exports.updatePost = exports.createReply = exports.createThread = exports.getThreads = void 0;
 const functions_1 = require("@azure/functions");
 const db_1 = require("../db");
 const sql = require("mssql");
@@ -40,6 +40,7 @@ function getThreads(request, context) {
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                     0 as views,
                     COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
+                    lastPostAuthor.CharacterID as lastReplyAuthorId,
                     lastPost.Created as lastPostDate,
                     CASE 
                         WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
@@ -265,6 +266,71 @@ functions_1.app.http('updatePost', {
     methods: ['PUT'],
     authLevel: 'anonymous',
     handler: updatePost,
+    route: 'posts/{postId}'
+});
+function deletePost(request, context) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const postId = request.params.postId;
+        if (!postId) {
+            return { status: 400, body: "postId is required" };
+        }
+        try {
+            const body = yield request.json();
+            const { characterId, userId } = body;
+            if (!characterId && !userId) {
+                return { status: 400, body: "characterId or userId is required" };
+            }
+            const pool = yield (0, db_1.getPool)();
+            // Get the post to verify ownership
+            const postResult = yield pool.request()
+                .input('postId', sql.Int, parseInt(postId))
+                .query(`
+                SELECT p.PostID, p.ThreadID, p.CharacterID, p.UserID,
+                       c.UserID as characterOwnerUserId,
+                       (SELECT COUNT(*) FROM Post WHERE ThreadID = p.ThreadID) as postCount,
+                       (SELECT MIN(PostID) FROM Post WHERE ThreadID = p.ThreadID) as firstPostId
+                FROM Post p
+                LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                WHERE p.PostID = @postId
+            `);
+            if (postResult.recordset.length === 0) {
+                return { status: 404, body: "Post not found" };
+            }
+            const post = postResult.recordset[0];
+            // Verify the user owns this post
+            const isOwner = (characterId && post.CharacterID === parseInt(characterId)) ||
+                (userId && (post.UserID === parseInt(userId) || post.characterOwnerUserId === parseInt(userId)));
+            if (!isOwner) {
+                return { status: 403, body: "You can only delete your own posts" };
+            }
+            // Don't allow deleting the first post (thread starter) - use archive instead
+            if (post.PostID === post.firstPostId) {
+                return { status: 400, body: "Cannot delete the first post. Use archive thread instead." };
+            }
+            // Delete the post
+            yield pool.request()
+                .input('postId', sql.Int, parseInt(postId))
+                .query('DELETE FROM Post WHERE PostID = @postId');
+            // Update the thread's modified date
+            yield pool.request()
+                .input('threadId', sql.Int, post.ThreadID)
+                .query('UPDATE Thread SET Modified = GETDATE() WHERE ThreadID = @threadId');
+            return {
+                status: 200,
+                jsonBody: { message: "Post deleted successfully" }
+            };
+        }
+        catch (error) {
+            context.error(error);
+            return { status: 500, body: "Internal Server Error" };
+        }
+    });
+}
+exports.deletePost = deletePost;
+functions_1.app.http('deletePost', {
+    methods: ['DELETE'],
+    authLevel: 'anonymous',
+    handler: deletePost,
     route: 'posts/{postId}'
 });
 function getLatestPosts(request, context) {

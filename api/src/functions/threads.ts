@@ -31,6 +31,7 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                     0 as views,
                     COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
+                    lastPostAuthor.CharacterID as lastReplyAuthorId,
                     lastPost.Created as lastPostDate,
                     CASE 
                         WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 

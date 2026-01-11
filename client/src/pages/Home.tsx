@@ -4,6 +4,22 @@ import type { ForumRegion, OOCForum } from '../types';
 import { getHorizonDate, formatHorizonYear } from '../utils/horizonCalendar';
 import { getWeatherHistory } from '../utils/weatherGenerator';
 
+// Helper function to format relative time
+const getRelativeTime = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return 'just now';
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  return date.toLocaleDateString();
+};
+
 interface RegionStats {
   activeThreads: number;
   totalPosts: number;
@@ -11,6 +27,7 @@ interface RegionStats {
     id: string;
     title: string;
     authorName?: string;
+    authorId?: number;
     updatedAt: string;
     isOnline?: boolean;
   };
@@ -198,6 +215,7 @@ const Home: React.FC = () => {
                   id: latestThread.id,
                   title: latestThread.title,
                   authorName: latestThread.lastReplyAuthorName || latestThread.authorName,
+                  authorId: latestThread.lastReplyAuthorId || latestThread.authorId,
                   updatedAt: latestThread.updatedAt,
                   isOnline: latestThread.lastReplyIsOnline ?? latestThread.isOnline,
                 },
@@ -549,14 +567,17 @@ const Home: React.FC = () => {
                                 >
                                   {stats.latestThread.title}
                                 </Link>
-                                <div className="text-sm text-gray-700 flex items-center gap-1">
-                                  by {stats.latestThread.authorName || 'Unknown'}
-                                  {!!stats.latestThread.isOnline && (
-                                    <span className="w-2 h-2 bg-green-500 rounded-full border border-white shadow-sm" title="Online Now"></span>
+                                <div className="text-sm text-gray-700">
+                                  by {stats.latestThread.authorId ? (
+                                    <Link to={`/character/${stats.latestThread.authorId}`} className="font-bold hover:underline">
+                                      {stats.latestThread.authorName || 'Unknown'}
+                                    </Link>
+                                  ) : (
+                                    <span className="font-bold">{stats.latestThread.authorName || 'Unknown'}</span>
                                   )}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  Updated {new Date(stats.latestThread.updatedAt).toLocaleString()}
+                                  {getRelativeTime(stats.latestThread.updatedAt)}
                                 </div>
                               </div>
                             ) : (
@@ -616,11 +637,8 @@ const Home: React.FC = () => {
                                   >
                                     {forum.latestThreadTitle}
                                   </Link>
-                                  <div className="text-sm text-gray-700 flex items-center gap-1">
-                                    by {forum.latestThreadAuthorName || 'Unknown'}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    Updated {new Date(forum.latestThreadUpdatedAt!).toLocaleString()}
+                                  <div className="text-sm text-gray-600">
+                                    by <span className="font-bold">{forum.latestThreadAuthorName || 'Unknown'}</span>, {getRelativeTime(forum.latestThreadUpdatedAt!)}
                                   </div>
                                 </div>
                               ) : (
