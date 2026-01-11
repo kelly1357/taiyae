@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { BackgroundProvider } from './contexts/BackgroundContext';
 import Layout from './components/Layout';
+import ScrollToTop from './components/ScrollToTop';
 import { useUser } from './contexts/UserContext';
 import Home from './pages/Home';
 import Region from './pages/Region';
@@ -185,6 +186,7 @@ const App: React.FC = () => {
 
   return (
     <BackgroundProvider>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={
         <Layout 
