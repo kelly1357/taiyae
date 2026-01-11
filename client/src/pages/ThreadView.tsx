@@ -683,29 +683,48 @@ const ThreadView: React.FC = () => {
 
           {/* Reply Form - only show if thread is not archived */}
           {!thread.isArchived ? (
-            <div className="border border-gray-300 mx-0.5">
-              <div className="bg-gray-200 px-4 py-2">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
-              </div>
-              <div className="p-4 bg-white">
-                <div className="border border-gray-300">
-                  <RichTextEditor 
-                      value={replyContent} 
-                      onChange={setReplyContent} 
-                      placeholder="Write your reply here..."
-                  />
+            (() => {
+              const isOOC = !!thread?.oocForumId && !thread?.originalRegionId;
+              const canPost = isOOC ? !!user : !!activeCharacter;
+              
+              if (!canPost) {
+                return (
+                  <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
+                    {isOOC ? (
+                      <><Link to="/login" className="text-blue-600 hover:underline">Log in</Link> to post in this forum.</>
+                    ) : (
+                      <><Link to="/my-characters?new=true" className="text-blue-600 hover:underline">Create a character</Link> to post in roleplay areas.</>
+                    )}
+                  </div>
+                );
+              }
+              
+              return (
+                <div className="border border-gray-300 mx-0.5">
+                  <div className="bg-gray-200 px-4 py-2">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
+                  </div>
+                  <div className="p-4 bg-white">
+                    <div className="border border-gray-300">
+                      <RichTextEditor 
+                          value={replyContent} 
+                          onChange={setReplyContent} 
+                          placeholder="Write your reply here..."
+                      />
+                    </div>
+                    <div className="mt-4 flex justify-end">
+                      <button 
+                        onClick={handlePostReply}
+                        disabled={isPosting}
+                        className={`bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 font-bold text-sm uppercase tracking-wide ${isPosting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        {isPosting ? 'Posting...' : 'Post Reply'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-4 flex justify-end">
-                  <button 
-                    onClick={handlePostReply}
-                    disabled={isPosting}
-                    className={`bg-gray-800 hover:bg-gray-700 text-white px-6 py-2 font-bold text-sm uppercase tracking-wide ${isPosting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {isPosting ? 'Posting...' : 'Post Reply'}
-                  </button>
-                </div>
-              </div>
-            </div>
+              );
+            })()
           ) : (
             <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
               This thread has been archived and is closed for new replies.

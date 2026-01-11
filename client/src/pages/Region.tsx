@@ -113,12 +113,18 @@ const Region: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
               <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: region.description }} />
             </div>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
-            >
-              New Thread
-            </button>
+            {activeCharacter ? (
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
+              >
+                New Thread
+              </button>
+            ) : (
+              <div className="text-xs text-gray-500 italic text-right">
+                <Link to="/my-characters?new=true" className="text-blue-600 hover:underline">Create a character</Link> to post in roleplay areas.
+              </div>
+            )}
           </div>
 
           <div className="border border-gray-300 mx-0.5">
@@ -167,7 +173,7 @@ const Region: React.FC = () => {
         </div>
       </section>
 
-      {!showPhotoMode && (
+      {!showPhotoMode && activeCharacter && (
         <NewThreadModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
