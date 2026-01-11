@@ -466,27 +466,27 @@ const ThreadView: React.FC = () => {
       )}
 
       <section className={`bg-white border border-gray-300 shadow ${showPhotoMode ? 'invisible' : ''}`}>
-        <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+        <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex justify-between items-center">
           <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
             <Link to={`/region/${thread.regionId}`} className="hover:text-white">
               {thread.regionName || 'Thread'}
             </Link>
             {' › '}{thread.title}
           </h2>
+          {/* Archive button - only show if user is the thread creator and thread is not archived */}
+          {user && thread.userId === user.id && !thread.isArchived && (
+            <button
+              onClick={() => setShowArchiveConfirm(true)}
+              className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
+            >
+              Archive
+            </button>
+          )}
         </div>
 
         <div className="px-4 py-4">
           <div className="flex justify-between items-start mb-4">
             <div>
-              {/* Archive button - only show if user is the thread creator and thread is not archived */}
-              {user && thread.userId === user.id && !thread.isArchived && (
-                <button
-                  onClick={() => setShowArchiveConfirm(true)}
-                  className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300 mb-1"
-                >
-                  Archive
-                </button>
-              )}
               <h3 className="text-lg font-semibold text-gray-900">
                 {thread.title}
                 {thread.isArchived && <span className="text-gray-500 font-normal ml-2">(closed)</span>}
@@ -691,8 +691,8 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form - only show if thread is not archived and not guest */}
-          {!thread.isArchived && !isGuest && (
+          {/* Reply Form - only show if thread is not archived */}
+          {!thread.isArchived ? (
             <div className="border border-gray-300 mx-0.5">
               <div className="bg-gray-200 px-4 py-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
@@ -716,10 +716,7 @@ const ThreadView: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
-          {/* End Reply Form */}
-          {/* Archived thread message */}
-          {thread.isArchived && (
+          ) : (
             <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
               This thread has been archived and is closed for new replies.
             </div>

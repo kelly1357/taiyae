@@ -44,7 +44,7 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
           oocForumId,
           title,
           content,
-          authorId: authorId || 1, 
+          authorId,
         }),
       });
 

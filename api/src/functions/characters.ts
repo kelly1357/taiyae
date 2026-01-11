@@ -388,6 +388,91 @@ export async function getCharacterThreadlog(request: HttpRequest, context: Invoc
     }
 }
 
+export async function getThreadSummaries(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const characterId = request.params.id;
+    
+    if (!characterId) {
+        return { status: 400, body: "Please provide a character id" };
+    }
+
+    try {
+        const pool = await getPool();
+        
+        const result = await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .query(`
+                SELECT ThreadID as threadId, Summary as summary
+                FROM CharacterThreadSummary
+                WHERE CharacterID = @characterId
+            `);
+        
+        // Convert to a record object for easier frontend use
+        const summaries: Record<number, string> = {};
+        for (const row of result.recordset) {
+            summaries[row.threadId] = row.summary;
+        }
+        
+        return {
+            jsonBody: summaries
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+export async function updateThreadSummary(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const characterId = request.params.id;
+    const threadId = request.params.threadId;
+    
+    if (!characterId || !threadId) {
+        return { status: 400, body: "Please provide character id and thread id" };
+    }
+
+    try {
+        const body: any = await request.json();
+        const { summary } = body;
+        
+        if (summary === undefined) {
+            return { status: 400, body: "Summary is required" };
+        }
+
+        const pool = await getPool();
+        
+        // Verify the user owns this character (get character's userId)
+        const charResult = await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .query('SELECT UserID FROM Character WHERE CharacterID = @characterId');
+        
+        if (charResult.recordset.length === 0) {
+            return { status: 404, body: "Character not found" };
+        }
+        
+        // Use MERGE to insert or update
+        await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .input('threadId', sql.Int, parseInt(threadId))
+            .input('summary', sql.NVarChar(sql.MAX), summary)
+            .query(`
+                MERGE CharacterThreadSummary AS target
+                USING (SELECT @characterId AS CharacterID, @threadId AS ThreadID) AS source
+                ON target.CharacterID = source.CharacterID AND target.ThreadID = source.ThreadID
+                WHEN MATCHED THEN
+                    UPDATE SET Summary = @summary, Modified = GETDATE()
+                WHEN NOT MATCHED THEN
+                    INSERT (CharacterID, ThreadID, Summary, Created, Modified)
+                    VALUES (@characterId, @threadId, @summary, GETDATE(), GETDATE());
+            `);
+        
+        return {
+            jsonBody: { success: true }
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 app.http('getHealthStatuses', {
     methods: ['GET'],
     authLevel: 'anonymous',
@@ -450,4 +535,18 @@ app.http('getCharacterThreadlog', {
     authLevel: 'anonymous',
     route: 'characters/{id}/threadlog',
     handler: getCharacterThreadlog
+});
+
+app.http('getThreadSummaries', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'characters/{id}/thread-summaries',
+    handler: getThreadSummaries
+});
+
+app.http('updateThreadSummary', {
+    methods: ['PUT'],
+    authLevel: 'anonymous',
+    route: 'characters/{id}/thread-summaries/{threadId}',
+    handler: updateThreadSummary
 });

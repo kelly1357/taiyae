@@ -123,14 +123,12 @@ const Region: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
               <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: region.description }} />
             </div>
-            {!isGuest ? (
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
-              >
-                New Thread
-              </button>
-            ) : null}
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
+            >
+              New Thread
+            </button>
           </div>
 
           <div className="border border-gray-300 mx-0.5">
@@ -179,7 +177,7 @@ const Region: React.FC = () => {
         </div>
       </section>
 
-      {!showPhotoMode && (
+      {!showPhotoMode && activeCharacter && (
         <NewThreadModal 
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}

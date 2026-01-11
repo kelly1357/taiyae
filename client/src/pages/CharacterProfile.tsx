@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import type { Character, ThreadlogEntry } from '../types';
+import { useParams, Link, useOutletContext } from 'react-router-dom';
+import type { Character, ThreadlogEntry, User } from '../types';
+
+interface LayoutContext {
+  user?: User;
+  activeCharacter?: Character;
+}
 
 const CharacterProfile: React.FC = () => {
   const { characterId } = useParams<{ characterId: string }>();
+  const { user } = useOutletContext<LayoutContext>();
   const [character, setCharacter] = useState<Character | null>(null);
   const [userCharacters, setUserCharacters] = useState<Character[]>([]);
   const [threadlog, setThreadlog] = useState<ThreadlogEntry[]>([]);
@@ -11,6 +17,64 @@ const CharacterProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'character' | 'player' | 'threadlog'>('character');
   const [imageError, setImageError] = useState(false);
   const [activeProfileImage, setActiveProfileImage] = useState(0);
+  const [expandedThreads, setExpandedThreads] = useState<Set<string | number>>(new Set());
+  const [threadSummaries, setThreadSummaries] = useState<Record<number, string>>({});
+  const [editingThreadId, setEditingThreadId] = useState<number | null>(null);
+  const [editingSummary, setEditingSummary] = useState<string>('');
+
+  // Check if logged-in user owns this character
+  const isOwner = user && character && (
+    Number(user.id) === Number((character as any).odUserId)
+  );
+
+  // Debug log
+  console.log('isOwner check:', { userId: user?.id, charOdUserId: (character as any)?.odUserId, isOwner });
+
+  const toggleThreadExpanded = (threadId: string | number) => {
+    setExpandedThreads(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(threadId)) {
+        newSet.delete(threadId);
+      } else {
+        newSet.add(threadId);
+      }
+      return newSet;
+    });
+  };
+
+  const startEditingSummary = (threadId: number) => {
+    setEditingThreadId(threadId);
+    setEditingSummary(threadSummaries[threadId] || '');
+  };
+
+  const saveSummary = async (threadId: number) => {
+    const summaryText = editingSummary.trim();
+    
+    try {
+      const response = await fetch(`/api/characters/${characterId}/thread-summaries/${threadId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ summary: summaryText })
+      });
+      
+      if (response.ok) {
+        setThreadSummaries(prev => ({
+          ...prev,
+          [threadId]: summaryText
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to save summary:', error);
+    }
+    
+    setEditingThreadId(null);
+    setEditingSummary('');
+  };
+
+  const cancelEditingSummary = () => {
+    setEditingThreadId(null);
+    setEditingSummary('');
+  };
 
   // Reset imageError when character changes
   useEffect(() => {
@@ -41,6 +105,14 @@ const CharacterProfile: React.FC = () => {
       .then(res => res.json())
       .then((data: ThreadlogEntry[]) => {
         setThreadlog(data);
+      })
+      .catch(() => {});
+    
+    // Fetch thread summaries
+    fetch(`/api/characters/${characterId}/thread-summaries`)
+      .then(res => res.json())
+      .then((data: Record<number, string>) => {
+        setThreadSummaries(data);
       })
       .catch(() => {});
   }, [characterId]);
@@ -576,11 +648,11 @@ const CharacterProfile: React.FC = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
-                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-gray-300">Thread</th>
-                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-gray-300">Participants</th>
-                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-gray-300">Replies</th>
-                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-gray-300">Last Post</th>
-                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-gray-300">Details</th>
+                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-black/40">Thread</th>
+                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-black/40">Participants</th>
+                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-black/40">Replies</th>
+                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-black/40">Last Post</th>
+                      <th className="text-left text-xs text-gray-500 uppercase tracking-wide font-normal pb-1 border-b border-black/40">Details</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -594,41 +666,128 @@ const CharacterProfile: React.FC = () => {
                         // Parse participants and their IDs for linking
                         const participantNames = entry.participants ? entry.participants.split(', ') : [];
                         const participantIds = entry.participantIds ? entry.participantIds.split(', ') : [];
+                        const isExpanded = expandedThreads.has(entry.threadId);
                         
                         return (
-                          <tr key={entry.threadId} className="border-b border-gray-200">
-                            <td className="py-2 pr-4 text-gray-700">
-                              <Link to={`/thread/${entry.threadId}`} className="hover:underline text-gray-800 font-bold">
-                                {entry.threadTitle || 'Untitled Thread'}
-                              </Link>
-                            </td>
-                            <td className="py-2 pr-4 text-gray-600">
-                              {participantNames.map((name, idx) => (
-                                <span key={idx}>
-                                  {idx > 0 && ', '}
+                          <React.Fragment key={entry.threadId}>
+                            <tr className={`${isExpanded ? '' : 'border-b border-black/40'}`}>
+                              <td className="py-2 pr-4 text-gray-700">
+                                <Link to={`/thread/${entry.threadId}`} className="hover:underline text-gray-800 font-bold">
+                                  {entry.threadTitle || 'Untitled Thread'}
+                                </Link>
+                              </td>
+                              <td className="py-2 pr-4 text-gray-600">
+                                {participantNames.map((name, idx) => (
+                                  <span key={idx}>
+                                    {idx > 0 && ', '}
+                                    <Link 
+                                      to={`/character/${participantIds[idx]}`} 
+                                      className="hover:underline text-gray-800 font-bold"
+                                    >
+                                      {name}
+                                    </Link>
+                                  </span>
+                                ))}
+                              </td>
+                              <td className="py-2 pr-4 text-gray-600">{entry.replyCount}</td>
+                              <td className="py-2 pr-4 text-gray-600">
+                                <div>
                                   <Link 
-                                    to={`/character/${participantIds[idx]}`} 
+                                    to={`/character/${entry.lastPosterId}`} 
                                     className="hover:underline text-gray-800 font-bold"
                                   >
-                                    {name}
+                                    {entry.lastPosterName}
                                   </Link>
-                                </span>
-                              ))}
-                            </td>
-                            <td className="py-2 pr-4 text-gray-600">{entry.replyCount}</td>
-                            <td className="py-2 pr-4 text-gray-600">
-                              <div>
-                                <Link 
-                                  to={`/character/${entry.lastPosterId}`} 
-                                  className="hover:underline text-gray-800 font-bold"
+                                </div>
+                                <div className="text-xs text-gray-500">{formattedDate}</div>
+                              </td>
+                              <td className="py-2 text-gray-600 text-right">
+                                <button
+                                  onClick={() => toggleThreadExpanded(entry.threadId)}
+                                  className="inline-flex items-center justify-center w-5 h-5 bg-gray-200 hover:bg-gray-300 transition-colors"
                                 >
-                                  {entry.lastPosterName}
-                                </Link>
-                              </div>
-                              <div className="text-xs text-gray-500">{formattedDate}</div>
-                            </td>
-                            <td className="py-2 text-gray-600">—</td>
-                          </tr>
+                                  <svg 
+                                    className={`w-3 h-3 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </button>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr className="border-b border-black/40">
+                                <td colSpan={5} className="py-0 pb-2">
+                                  <table className="w-full text-sm border border-gray-300">
+                                    <thead>
+                                      <tr className="bg-gray-200">
+                                        <th className="text-left text-xs text-gray-600 uppercase tracking-wide font-semibold px-3 py-2 border-r border-gray-300 w-1/2">Summary</th>
+                                        <th className="text-left text-xs text-gray-600 uppercase tracking-wide font-semibold px-3 py-2 border-r border-gray-300 w-1/3">Earned SP (0)</th>
+                                        <th className="text-center text-xs text-gray-600 uppercase tracking-wide font-semibold px-2 py-2 border-r border-gray-300 w-[5.5%]">E</th>
+                                        <th className="text-center text-xs text-gray-600 uppercase tracking-wide font-semibold px-2 py-2 border-r border-gray-300 w-[5.5%]">P</th>
+                                        <th className="text-center text-xs text-gray-600 uppercase tracking-wide font-semibold px-2 py-2 w-[5.5%]">K</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <tr className="border-t border-gray-300">
+                                        <td className="px-3 py-3 border-r border-gray-300">
+                                          {editingThreadId === entry.threadId ? (
+                                            <div className="space-y-2">
+                                              <textarea
+                                                value={editingSummary}
+                                                onChange={(e) => setEditingSummary(e.target.value)}
+                                                className="w-full h-24 p-2 border border-gray-300 text-sm text-black resize-none focus:outline-none focus:border-gray-400"
+                                                placeholder="Enter thread summary (HTML allowed)..."
+                                              />
+                                              <div className="flex gap-2">
+                                                <button
+                                                  onClick={() => saveSummary(entry.threadId)}
+                                                  className="px-3 py-1 bg-[#2f3a2f] text-white text-xs hover:bg-[#3a4a3a] transition-colors"
+                                                >
+                                                  Save
+                                                </button>
+                                                <button
+                                                  onClick={cancelEditingSummary}
+                                                  className="px-3 py-1 bg-gray-300 text-gray-700 text-xs hover:bg-gray-400 transition-colors"
+                                                >
+                                                  Cancel
+                                                </button>
+                                              </div>
+                                            </div>
+                                          ) : (
+                                            <div>
+                                              {threadSummaries[entry.threadId] ? (
+                                                <div 
+                                                  className="text-gray-700"
+                                                  dangerouslySetInnerHTML={{ __html: threadSummaries[entry.threadId] }}
+                                                />
+                                              ) : (
+                                                <span className="text-gray-500 italic">Coming soon</span>
+                                              )}
+                                              {isOwner && (
+                                                <button
+                                                  onClick={() => startEditingSummary(entry.threadId)}
+                                                  className="mt-2 text-xs text-gray-500 hover:text-gray-700 hover:underline block"
+                                                >
+                                                  Edit
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td className="px-3 py-3 text-gray-500 border-r border-gray-300">—</td>
+                                        <td className="px-2 py-3 text-gray-500 text-center border-r border-gray-300">—</td>
+                                        <td className="px-2 py-3 text-gray-500 text-center border-r border-gray-300">—</td>
+                                        <td className="px-2 py-3 text-gray-500 text-center">—</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         );
                       })
                     ) : (
