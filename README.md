@@ -96,7 +96,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [ ] Discord integration
 
-[ ] "Online Now" status indicator
+✅ "Online Now" status indicator
 
 [ ] Notifications
 
