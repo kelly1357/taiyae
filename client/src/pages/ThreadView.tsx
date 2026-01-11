@@ -250,6 +250,10 @@ const ThreadView: React.FC = () => {
   const [skillPointsSearch, setSkillPointsSearch] = useState('');
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
   const [skillPointsConfirmation, setSkillPointsConfirmation] = useState<{ show: boolean; message: string; isError: boolean }>({ show: false, message: '', isError: false });
+  
+  // Existing claims state
+  const [existingClaims, setExistingClaims] = useState<any[]>([]);
+  const [showExistingClaims, setShowExistingClaims] = useState(false);
 
   // Set background immediately if we have region data from navigation state
   useLayoutEffect(() => {
@@ -288,6 +292,39 @@ const ThreadView: React.FC = () => {
   useEffect(() => {
     fetchThread();
   }, [threadId]);
+
+  // Fetch existing skill point claims for this thread
+  const fetchExistingClaims = async () => {
+    if (!threadId || !activeCharacter) return;
+    try {
+      const response = await fetch(`/api/skill-points-claim?characterId=${activeCharacter.id}&threadId=${threadId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setExistingClaims(data);
+      }
+    } catch (error) {
+      console.error('Error fetching existing claims:', error);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch claims for archived threads (either isArchived flag or in IC Archives forum 7)
+    if (activeCharacter && thread && (thread.isArchived || thread.oocForumId === 7)) {
+      fetchExistingClaims();
+    }
+  }, [thread?.isArchived, thread?.oocForumId, activeCharacter?.id, threadId]);
+
+  // Refetch claims when page gains focus (e.g., user approved on admin page and came back)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (activeCharacter && thread && (thread.isArchived || thread.oocForumId === 7)) {
+        fetchExistingClaims();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [activeCharacter?.id, thread?.isArchived, thread?.oocForumId, threadId]);
 
   const handlePostReply = async () => {
     if (!replyContent.trim() || !threadId) return;
@@ -471,6 +508,8 @@ const ThreadView: React.FC = () => {
         setShowSkillPointsModal(false);
         setSelectedSkillPoints([]);
         setSkillPointsConfirmation({ show: true, message: result.message || 'Skill points claim submitted successfully!', isError: false });
+        // Refresh existing claims
+        fetchExistingClaims();
       } else {
         const error = await response.text();
         setSkillPointsConfirmation({ show: true, message: error || 'Failed to submit skill points claim', isError: true });
@@ -594,6 +633,80 @@ const ThreadView: React.FC = () => {
               ← Back to {thread.regionName}
             </Link>
           </div>
+
+          {/* Existing Skill Points Claims - show for archived threads where user has claims */}
+          {(thread.isArchived || thread.oocForumId === 7) && activeCharacter && existingClaims.length > 0 && (
+            <div className="mb-4 border border-gray-300 rounded bg-gray-50">
+              <button
+                onClick={() => setShowExistingClaims(!showExistingClaims)}
+                className="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-gray-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    Skill Points Claims ({existingClaims.length})
+                  </span>
+                  {existingClaims.some(c => c.IsModeratorApproved === true || c.IsModeratorApproved === 1) && (
+                    <span className="px-2 py-0.5 text-[10px] font-semibold uppercase bg-green-100 text-green-700 rounded">
+                      {existingClaims.filter(c => c.IsModeratorApproved === true || c.IsModeratorApproved === 1).length} Earned
+                    </span>
+                  )}
+                  {existingClaims.some(c => c.IsModeratorApproved === null || c.IsModeratorApproved === undefined) && (
+                    <span className="px-2 py-0.5 text-[10px] font-semibold uppercase bg-yellow-100 text-yellow-700 rounded">
+                      {existingClaims.filter(c => c.IsModeratorApproved === null || c.IsModeratorApproved === undefined).length} Pending
+                    </span>
+                  )}
+                  {existingClaims.some(c => c.IsModeratorApproved === false || c.IsModeratorApproved === 0) && (
+                    <span className="px-2 py-0.5 text-[10px] font-semibold uppercase bg-red-100 text-red-700 rounded">
+                      {existingClaims.filter(c => c.IsModeratorApproved === false || c.IsModeratorApproved === 0).length} Rejected
+                    </span>
+                  )}
+                </div>
+                <svg 
+                  className={`w-4 h-4 text-gray-500 transition-transform ${showExistingClaims ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {showExistingClaims && (
+                <div className="border-t border-gray-300 px-3 py-2">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-1 font-semibold text-gray-600 uppercase">Action</th>
+                        <th className="text-center py-1 font-semibold text-gray-600 uppercase w-10">E</th>
+                        <th className="text-center py-1 font-semibold text-gray-600 uppercase w-10">P</th>
+                        <th className="text-center py-1 font-semibold text-gray-600 uppercase w-10">K</th>
+                        <th className="text-right py-1 font-semibold text-gray-600 uppercase w-20">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {existingClaims.map((claim, idx) => (
+                        <tr key={claim.AssignmentID || idx} className="border-b border-gray-100 last:border-0">
+                          <td className="py-1.5 text-gray-700">{claim.Action}</td>
+                          <td className="py-1.5 text-center text-gray-600">{claim.E || '-'}</td>
+                          <td className="py-1.5 text-center text-gray-600">{claim.P || '-'}</td>
+                          <td className="py-1.5 text-center text-gray-600">{claim.K || '-'}</td>
+                          <td className="py-1.5 text-right">
+                            {claim.IsModeratorApproved === true || claim.IsModeratorApproved === 1 ? (
+                              <span className="text-green-600 font-medium">Earned</span>
+                            ) : claim.IsModeratorApproved === false || claim.IsModeratorApproved === 0 ? (
+                              <span className="text-red-600 font-medium">Rejected</span>
+                            ) : (
+                              <span className="text-yellow-600 font-medium">Pending</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Archive Confirmation Modal */}
           {showArchiveConfirm && (

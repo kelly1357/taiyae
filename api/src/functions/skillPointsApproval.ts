@@ -36,7 +36,7 @@ async function getPendingSkillPointAssignments(request: HttpRequest, context: In
             INNER JOIN Character c ON cspa.CharacterID = c.CharacterID
             INNER JOIN SkillPoints sp ON cspa.SkillPointID = sp.SkillID
             INNER JOIN Thread t ON cspa.ThreadID = t.ThreadID
-            WHERE cspa.IsModeratorApproved = 0 OR cspa.IsModeratorApproved IS NULL
+            WHERE cspa.IsModeratorApproved IS NULL
             ORDER BY cspa.AssignmentID DESC
         `);
 
@@ -61,7 +61,7 @@ async function getPendingSkillPointsCount(request: HttpRequest, context: Invocat
         const result = await pool.request().query(`
             SELECT COUNT(*) AS count
             FROM CharacterSkillPointsAssignment
-            WHERE IsModeratorApproved = 0 OR IsModeratorApproved IS NULL
+            WHERE IsModeratorApproved IS NULL
         `);
 
         return {
@@ -142,7 +142,7 @@ async function approveSkillPointAssignment(request: HttpRequest, context: Invoca
     }
 }
 
-// DELETE: Reject/delete a skill point assignment
+// DELETE: Reject a skill point assignment (marks as rejected, doesn't delete)
 async function rejectSkillPointAssignment(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const assignmentId = request.params.assignmentId;
@@ -156,10 +156,12 @@ async function rejectSkillPointAssignment(request: HttpRequest, context: Invocat
 
         const pool = await getPool();
         
+        // Mark as rejected (IsModeratorApproved = 0 means rejected)
         await pool.request()
             .input('assignmentId', assignmentId)
             .query(`
-                DELETE FROM CharacterSkillPointsAssignment
+                UPDATE CharacterSkillPointsAssignment
+                SET IsModeratorApproved = 0
                 WHERE AssignmentID = @assignmentId
             `);
 
