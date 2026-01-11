@@ -337,8 +337,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             </div>
           ) : (
             <div className="space-x-4">
-              <Link to="/login" className="hover:text-gray-300">Sign In</Link>
-              <Link to="/register" className="hover:text-gray-300">Join</Link>
+              <Link to="/" className="hover:text-gray-300">Sign In / Join</Link>
             </div>
           )}
         </nav>

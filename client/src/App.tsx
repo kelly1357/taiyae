@@ -12,7 +12,7 @@ import CharacterManagement from './pages/CharacterManagement';
 import CharacterProfile from './pages/CharacterProfile';
 import Characters from './pages/Characters';
 import UserManagement from './pages/UserManagement';
-import Login from './pages/Login';
+//import Login from './pages/Login';
 import SpiritSymbolQuiz from './pages/SpiritSymbolQuiz';
 import Weather from './pages/Weather';
 import type { User, Character } from './types';
@@ -143,26 +143,19 @@ const App: React.FC = () => {
     return <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">Loading...</div>;
   }
 
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="*" element={<Login onLogin={handleLogin} />} />
-      </Routes>
-    );
-  }
+  // Always render main layout; Layout handles login form for unauthenticated users
+
 
   // Determine active character
   // 1. Try to find character matching activeCharacterId
   // 2. If not found (or no activeCharacterId), default to the first character
   // 3. If no characters, undefined
-  const activeCharacter = userCharacters.find(c => String(c.id) === String(user.activeCharacterId)) 
-    || (userCharacters.length > 0 ? userCharacters[0] : undefined);
+  const activeCharacter = user && userCharacters.length > 0
+    ? (userCharacters.find(c => String(c.id) === String(user.activeCharacterId)) || userCharacters[0])
+    : undefined;
 
   // If we defaulted to the first character but activeCharacterId wasn't set, update it
-  if (activeCharacter && String(activeCharacter.id) !== String(user.activeCharacterId)) {
-     // We avoid calling setUser here to prevent render loop, but we could sync it if needed.
-     // For now, just passing the derived activeCharacter is enough for display.
-  }
+  // (No-op: just for display, avoid render loop)
 
   // Get online characters, but only show one per player (the most recent)
   const onlineCharacters = (() => {
@@ -185,11 +178,11 @@ const App: React.FC = () => {
     <Routes>
       <Route path="/" element={
         <Layout 
-          user={user} 
-          activeCharacter={activeCharacter} 
+          user={user ?? undefined}
+          activeCharacter={activeCharacter}
           userCharacters={userCharacters}
           onlineCharacters={onlineCharacters}
-          onLogout={handleLogout} 
+          onLogout={handleLogout}
           onCharacterSelect={handleCharacterSelect}
         />
       }>
@@ -201,10 +194,9 @@ const App: React.FC = () => {
         <Route path="thread/:threadId" element={<ThreadView />} />
         <Route path="characters" element={<Characters />} />
         <Route path="character/:characterId" element={<CharacterProfile />} />
-        <Route path="my-characters" element={<CharacterManagement user={user} />} />
-        <Route path="account" element={<UserManagement user={user} onUpdateUser={handleUpdateUser} />} />
+        <Route path="my-characters" element={user ? <CharacterManagement user={user} /> : <div className="text-center mt-20">Please log in to manage your characters.</div>} />
+        <Route path="account" element={user ? <UserManagement user={user} onUpdateUser={handleUpdateUser} /> : <div className="text-center mt-20">Please log in to manage your account.</div>} />
         <Route path="weather" element={<Weather />} />
-        
         {/* Wiki Routes */}
         <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />
         <Route path="wiki/achievements" element={<Achievements />} />
@@ -229,7 +221,6 @@ const App: React.FC = () => {
         <Route path="wiki/wolf-guide" element={<WolfGuide />} />
         <Route path="wiki/wolf-guide-fighting" element={<WolfGuideFighting />} />
         <Route path="wiki/wolf-guide-pup-development" element={<WolfGuidePupDevelopment />} />
-        
         <Route path="*" element={<div className="text-center mt-20">Page not found</div>} />
       </Route>
     </Routes>

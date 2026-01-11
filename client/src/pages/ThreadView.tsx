@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import { useBackground } from '../contexts/BackgroundContext';
+import { useNoUser } from '../contexts/UserContext';
 import type { Character, ForumRegion, User } from '../types';
 
 // Helper type for the API response which flattens character/pack info
@@ -219,7 +220,16 @@ const ThreadView: React.FC = () => {
   const location = useLocation();
   const passedRegion = (location.state as { region?: ForumRegion })?.region;
   const { setBackgroundUrl, resetBackground, setGrayscale } = useBackground();
-  
+
+  // Guest detection at top-level
+  let isGuest = true;
+  try {
+    const noUserContext = useNoUser();
+    isGuest = noUserContext?.isGuest ?? true;
+  } catch {
+    isGuest = true;
+  }
+
   const [thread, setThread] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [replyContent, setReplyContent] = useState('');
@@ -681,8 +691,8 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form - only show if thread is not archived */}
-          {!thread.isArchived ? (
+          {/* Reply Form - only show if thread is not archived and not guest */}
+          {!thread.isArchived && !isGuest && (
             <div className="border border-gray-300 mx-0.5">
               <div className="bg-gray-200 px-4 py-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
@@ -706,7 +716,10 @@ const ThreadView: React.FC = () => {
                 </div>
               </div>
             </div>
-          ) : (
+          )}
+          {/* End Reply Form */}
+          {/* Archived thread message */}
+          {thread.isArchived && (
             <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
               This thread has been archived and is closed for new replies.
             </div>
@@ -715,6 +728,6 @@ const ThreadView: React.FC = () => {
       </section>
     </>
   );
-};
+}
 
 export default ThreadView;

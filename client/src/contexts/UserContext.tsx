@@ -1,5 +1,27 @@
+
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { User, UserRole } from '../types';
+
+// NoUser context for unauthenticated/guest users
+interface NoUserContextType {
+  isGuest: boolean;
+}
+
+const NoUserContext = createContext<NoUserContextType | undefined>(undefined);
+
+export const NoUserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Always guest if used
+  const value: NoUserContextType = { isGuest: true };
+  return <NoUserContext.Provider value={value}>{children}</NoUserContext.Provider>;
+};
+
+export const useNoUser = (): NoUserContextType => {
+  const context = useContext(NoUserContext);
+  if (context === undefined) {
+    throw new Error('useNoUser must be used within a NoUserProvider');
+  }
+  return context;
+};
 
 interface UserContextType {
   user: User | null;
