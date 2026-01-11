@@ -4,7 +4,7 @@
   },
   "scripts": {
     "start": "npx concurrently \"cd api && func start\" \"sleep 3 && cd client && npm run dev\" \"sleep 3 && open -a 'Google Chrome' http://localhost:5173 && open -a 'Microsoft Edge' http://localhost:5173\"",
-    "start -b": "npx concurrently \"cd api && npm run build && sleep 3&& func start\" \"sleep 3 && cd client && npm run dev\" \"sleep 3 && open -a 'Google Chrome' http://localhost:5173 && open -a 'Microsoft Edge' http://localhost:5173\"",
+    "start b": "npx concurrently \"cd api && npm run build && sleep 3&& func start\" \"sleep 3 && cd client && npm run dev\" \"sleep 3 && open -a 'Google Chrome' http://localhost:5173 && open -a 'Microsoft Edge' http://localhost:5173\"",
     "install:all": "cd api && npm install && cd ../client && npm install"
   },
   "dependencies": {
