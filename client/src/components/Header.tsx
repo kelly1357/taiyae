@@ -15,6 +15,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingSkillPointsCount, setPendingSkillPointsCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -38,6 +39,28 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Fetch pending skill points count for moderators
+  useEffect(() => {
+    if (!isModerator) return;
+    
+    const fetchCount = async () => {
+      try {
+        const response = await fetch('/api/skill-points-approval/count');
+        if (response.ok) {
+          const data = await response.json();
+          setPendingSkillPointsCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending skill points count:', error);
+      }
+    };
+    
+    fetchCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, [isModerator]);
 
   const handleDropdownMouseEnter = (label: string) => {
     // Clear any pending close timeout
@@ -78,15 +101,15 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  const NavDropdown = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  const NavDropdown = ({ id, label, children }: { id: string; label: React.ReactNode; children: React.ReactNode }) => (
     <div
       className="relative"
-      onMouseEnter={() => handleDropdownMouseEnter(label)}
+      onMouseEnter={() => handleDropdownMouseEnter(id)}
       onMouseLeave={() => handleDropdownMouseLeave()}
     >
       <button
         type="button"
-        onClick={() => setOpenNavDropdown(openNavDropdown === label ? null : label)}
+        onClick={() => setOpenNavDropdown(openNavDropdown === id ? null : id)}
         className="header-link text-xs uppercase tracking-wide transition-colors flex items-center gap-1"
       >
         {label}
@@ -94,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {openNavDropdown === label && (
+      {openNavDropdown === id && (
         <div
           className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-300 shadow-lg z-50"
           onMouseEnter={() => handleDropdownContentEnter()}
@@ -116,7 +139,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     </Link>
   );
 
-  const MobileNavSection = ({ label, children }: { label: string; children: React.ReactNode }) => {
+  const MobileNavSection = ({ label, children }: { label: React.ReactNode; children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(false);
     return (
       <div className="border-b border-gray-200">
@@ -175,18 +198,18 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
         {/* Desktop navigation */}
         <nav ref={navRef} className="hidden md:flex items-center space-x-6" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
-          <NavDropdown label="For Guests">
+          <NavDropdown id="guests" label="For Guests">
             <DropdownLink to="/wiki/game-overview">About Us</DropdownLink>
             <DropdownLink to="/wiki/faq">FAQ</DropdownLink>
             <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
             <DropdownLink to="/adopt">Adoptables</DropdownLink>
             <DropdownLink to="/my-characters">Join Horizon</DropdownLink>
           </NavDropdown>
-          <NavDropdown label="Characters">
+          <NavDropdown id="characters" label="Characters">
             <DropdownLink to="/characters">Character List</DropdownLink>
             <DropdownLink to="/regions">Regions</DropdownLink>
           </NavDropdown>
-          <NavDropdown label="Wiki">
+          <NavDropdown id="wiki" label="Wiki">
             <DropdownLink to="/wiki/handbook">Handbook</DropdownLink>
             <DropdownLink to="/wiki/title-list">Title List</DropdownLink>
             <hr className="border-t border-gray-300 my-1" />
@@ -197,15 +220,20 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/wiki/skill-points">Skill Points</DropdownLink>
             <DropdownLink to="/wiki/wolf-guide">Wolf Guide</DropdownLink>
           </NavDropdown>
-          <NavDropdown label="OOC">
+          <NavDropdown id="ooc" label="OOC">
             <DropdownLink to="/ooc">Out of Character</DropdownLink>
             <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {isModerator && (
-            <NavDropdown label="Admin">
+            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{pendingSkillPointsCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}</span>}>
               <DropdownLink to="/admin/achievements">Achievements</DropdownLink>
-              <DropdownLink to="/admin/skill-points">Skill Points</DropdownLink>
+              <DropdownLink to="/admin/skill-points">
+                <span className="flex items-center justify-between w-full">
+                  Skill Points
+                  {pendingSkillPointsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}
+                </span>
+              </DropdownLink>
               <DropdownLink to="/admin/inactive-characters">Inactive Characters</DropdownLink>
             </NavDropdown>
           )}
@@ -373,9 +401,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {isModerator && (
-            <MobileNavSection label="Admin">
+            <MobileNavSection label={<span className="flex items-center gap-1">Admin{pendingSkillPointsCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/achievements">Achievements</MobileDropdownLink>
-              <MobileDropdownLink to="/admin/skill-points">Skill Points</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/skill-points">
+                <span className="flex items-center justify-between w-full">
+                  Skill Points
+                  {pendingSkillPointsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}
+                </span>
+              </MobileDropdownLink>
               <MobileDropdownLink to="/admin/inactive-characters">Inactive Characters</MobileDropdownLink>
             </MobileNavSection>
           )}
