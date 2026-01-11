@@ -1033,8 +1033,8 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form - only show if thread is not archived and user is logged in */}
-          {!thread.isArchived && user ? (
+          {/* Reply Form - only show if thread is not archived and user can post (OOC: logged in, IC: has character) */}
+          {!thread.isArchived && user && (isOOCThread || activeCharacter) ? (
             <div className="border border-gray-300 mx-0.5">
               <div className="bg-gray-200 px-4 py-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>

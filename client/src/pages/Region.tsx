@@ -4,7 +4,6 @@ import { createPortal } from 'react-dom';
 import type { ForumRegion, Thread, Character } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
-import { useNoUser } from '../contexts/UserContext';
 
 // Extended type to match the API response which includes joined fields
 interface ThreadSummary extends Omit<Thread, 'replies'> {
@@ -19,15 +18,6 @@ interface RegionContext {
 const Region: React.FC = () => {
   const { regionId } = useParams<{ regionId: string }>();
   const location = useLocation();
-  let isGuest = true;
-  try {
-    const noUserContext = useNoUser();
-    isGuest = noUserContext?.isGuest ?? true;
-  } catch {
-    isGuest = true;
-  }
-  // eslint-disable-next-line no-console
-  console.log('isGuest:', isGuest);
   const { activeCharacter } = useOutletContext<RegionContext>();
   const passedRegion = (location.state as { region?: ForumRegion })?.region;
   
@@ -123,7 +113,7 @@ const Region: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
               <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: region.description }} />
             </div>
-            {!isGuest && (
+            {activeCharacter && (
               <button 
                 onClick={() => setIsModalOpen(true)}
                 className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
