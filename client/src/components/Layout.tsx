@@ -92,8 +92,7 @@ const Layout: React.FC<LayoutProps> = ({
                   Member Login
                 </div>
                 <div className="px-4 py-4">
-                  <Login onLogin={onLogin || (() => {})} />
-                  <div className="text-xs text-gray-400 text-center mt-2">(Read-only mode: navigation only)</div>
+                  <Login onLogin={onLogin || (() => {})} compact />
                 </div>
               </section>
             )}

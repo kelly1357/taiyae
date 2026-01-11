@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 
 interface LoginProps {
   onLogin: (user: any) => void;
+  compact?: boolean; // For sidebar use
 }
 
 // Replace with your actual Google Client ID
 const GOOGLE_CLIENT_ID = "24400309621-82ui432053g7jjgof13i5r4f6cfft1c1.apps.googleusercontent.com"; 
 
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -137,6 +138,95 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     }
   };
 
+  // Compact sidebar version
+  if (compact) {
+    return (
+      <div className="text-gray-900">
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 p-2 rounded mb-3 text-xs">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleEmailAuth} className="space-y-3">
+          {isRegistering && (
+            <div>
+              <label className="block text-xs font-medium mb-1 text-gray-700">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-[#2f3a2f] focus:border-[#2f3a2f]"
+                required
+              />
+            </div>
+          )}
+          
+          <div>
+            <label className="block text-xs font-medium mb-1 text-gray-700">Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-[#2f3a2f] focus:border-[#2f3a2f]"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-1 text-gray-700">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-[#2f3a2f] focus:border-[#2f3a2f]"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-[#2f3a2f] hover:bg-[#3d4a3d] text-white py-1.5 rounded text-sm font-medium"
+          >
+            {isRegistering ? 'Sign Up' : 'Sign In'}
+          </button>
+        </form>
+
+        <div className="mt-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-white text-gray-500">Or</span>
+            </div>
+          </div>
+
+          <div className="mt-3 flex justify-center">
+            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google Login Failed')}
+                theme="outline"
+                size="medium"
+              />
+            </GoogleOAuthProvider>
+          </div>
+        </div>
+
+        <div className="mt-3 text-center">
+          <button
+            onClick={() => setIsRegistering(!isRegistering)}
+            className="text-xs text-[#2f3a2f] hover:text-[#4a5a4a] font-medium"
+          >
+            {isRegistering ? 'Have an account? Sign in' : 'Need an account? Sign up'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Full page version
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-900">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border border-gray-300">
