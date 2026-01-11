@@ -442,18 +442,20 @@ const Home: React.FC = () => {
                   ))}
                 </div>
               )}
-              {user && (
-                <div className="mt-3 text-sm text-gray-500">
-                  <Link to="/plot-news" className="hover:text-gray-700 font-bold">View All</Link>
-                  <span className="mx-1">|</span>
-                  <button
-                    onClick={() => setShowPlotNewsModal(true)}
-                    className="hover:text-gray-700 font-bold"
-                  >
-                    Submit Plot News
-                  </button>
-                </div>
-              )}
+              <div className="mt-3 text-sm text-gray-500">
+                <Link to="/plot-news" className="hover:text-gray-700 font-bold">View All</Link>
+                {user && (
+                  <>
+                    <span className="mx-1">|</span>
+                    <button
+                      onClick={() => setShowPlotNewsModal(true)}
+                      className="hover:text-gray-700 font-bold"
+                    >
+                      Submit Plot News
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
