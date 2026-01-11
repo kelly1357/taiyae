@@ -35,13 +35,13 @@ export async function getSkillPoints(request: HttpRequest, context: InvocationCo
 
     return {
       status: 200,
-      body: Array.from(categoriesMap.values())
+      jsonBody: Array.from(categoriesMap.values())
     };
   } catch (error) {
     context.error?.(error);
     return {
       status: 500,
-      body: JSON.stringify({ error: error.message })
+      jsonBody: { error: error.message }
     };
   }
 }

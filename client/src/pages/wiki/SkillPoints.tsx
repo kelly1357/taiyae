@@ -22,11 +22,9 @@ const SkillPoints: React.FC = () => {
       });
   }, []);
 
-  // Group rows by Category
-  type SkillRow = {
+  // API returns data already grouped by category with items array
+  type SkillItem = {
     SkillID: number;
-    Category: string;
-    CategoryDescription?: string;
     Action?: string;
     ActionDescription?: string;
     E?: number;
@@ -34,11 +32,11 @@ const SkillPoints: React.FC = () => {
     K?: number;
     TOTAL?: number;
   };
-  const grouped: Record<string, SkillRow[]> = rows.reduce((acc: Record<string, SkillRow[]>, row: SkillRow) => {
-    if (!acc[row.Category]) acc[row.Category] = [];
-    acc[row.Category].push(row);
-    return acc;
-  }, {});
+  type SkillCategory = {
+    Category: string;
+    CategoryDescription?: string;
+    items: SkillItem[];
+  };
 
   return (
     <section className="bg-white border border-gray-300 shadow">
@@ -114,11 +112,11 @@ const SkillPoints: React.FC = () => {
 
               {loading && <div className="my-8 text-center text-gray-500">Loading skill points...</div>}
               {error && <div className="my-8 text-center text-red-500">{error}</div>}
-              {!loading && !error && Object.entries(grouped).map(([category, items]) => (
-                <React.Fragment key={category}>
-                  <h4 className="font-semibold mb-2 mt-6">{category}</h4>
-                  {items[0]?.CategoryDescription && (
-                    <p className="mb-2 text-gray-600">{items[0].CategoryDescription}</p>
+              {!loading && !error && (rows as SkillCategory[]).map((category: SkillCategory) => (
+                <React.Fragment key={category.Category}>
+                  <h4 className="font-semibold mb-2 mt-6">{category.Category}</h4>
+                  {category.CategoryDescription && (
+                    <p className="mb-2 text-gray-600">{category.CategoryDescription}</p>
                   )}
                   <table className="w-full border-collapse border border-gray-300 mb-6 text-xs">
                     <thead>
@@ -131,27 +129,24 @@ const SkillPoints: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {items.map((row: SkillRow, idx: number) => (
-                        <tr key={row.SkillID || idx}>
+                      {category.items.map((item: SkillItem, idx: number) => (
+                        <tr key={item.SkillID || idx}>
                           <td className="border border-gray-300 px-2 py-1">
-                            {row.Action ? (
+                            {item.Action ? (
                               <>
-                                <strong>{row.Action}</strong><br />
-                                <span className="text-gray-600">{row.ActionDescription}</span>
+                                <strong>{item.Action}</strong><br />
+                                <span className="text-gray-600">{item.ActionDescription}</span>
                               </>
                             ) : (
-                              <span className="text-gray-400 italic">{row.ActionDescription || <em>Coming soon...</em>}</span>
+                              <span className="text-gray-400 italic">{item.ActionDescription || <em>Coming soon...</em>}</span>
                             )}
                           </td>
-                          <td className="border border-gray-300 px-2 py-1 text-center">{row.E ?? ''}</td>
-                          <td className="border border-gray-300 px-2 py-1 text-center">{row.P ?? ''}</td>
-                          <td className="border border-gray-300 px-2 py-1 text-center">{row.K ?? ''}</td>
-                          <td className="border border-gray-300 px-2 py-1 text-center">{row.TOTAL ?? ''}</td>
+                          <td className="border border-gray-300 px-2 py-1 text-center">{item.E ?? ''}</td>
+                          <td className="border border-gray-300 px-2 py-1 text-center">{item.P ?? ''}</td>
+                          <td className="border border-gray-300 px-2 py-1 text-center">{item.K ?? ''}</td>
+                          <td className="border border-gray-300 px-2 py-1 text-center">{item.TOTAL ?? ''}</td>
                         </tr>
                       ))}
-                      {/*
-                        ...SkillPoints tables and sections commented out...
-                      */}
                     </tbody>
                   </table>
                 </React.Fragment>

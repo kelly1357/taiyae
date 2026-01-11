@@ -241,6 +241,15 @@ const ThreadView: React.FC = () => {
   const [isArchiving, setIsArchiving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Skill Points Claim Modal state
+  const [showSkillPointsModal, setShowSkillPointsModal] = useState(false);
+  const [skillPointsData, setSkillPointsData] = useState<any[]>([]);
+  const [skillPointsLoading, setSkillPointsLoading] = useState(false);
+  const [selectedSkillPoints, setSelectedSkillPoints] = useState<number[]>([]);
+  const [skillPointsSearch, setSkillPointsSearch] = useState('');
+  const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
+  const [skillPointsConfirmation, setSkillPointsConfirmation] = useState<{ show: boolean; message: string; isError: boolean }>({ show: false, message: '', isError: false });
 
   // Set background immediately if we have region data from navigation state
   useLayoutEffect(() => {
@@ -414,6 +423,77 @@ const ThreadView: React.FC = () => {
     }
   };
 
+  // Skill Points Modal handlers
+  const openSkillPointsModal = async () => {
+    setShowSkillPointsModal(true);
+    setSkillPointsLoading(true);
+    setSelectedSkillPoints([]);
+    setSkillPointsSearch('');
+    
+    try {
+      const response = await fetch('/api/skillpoints');
+      if (response.ok) {
+        const data = await response.json();
+        setSkillPointsData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching skill points:', error);
+    } finally {
+      setSkillPointsLoading(false);
+    }
+  };
+
+  const toggleSkillPointSelection = (skillId: number) => {
+    setSelectedSkillPoints(prev => 
+      prev.includes(skillId) 
+        ? prev.filter(id => id !== skillId)
+        : [...prev, skillId]
+    );
+  };
+
+  const handleSubmitSkillPointsClaim = async () => {
+    if (!activeCharacter || !threadId || selectedSkillPoints.length === 0) return;
+    
+    setIsSubmittingClaim(true);
+    try {
+      const response = await fetch('/api/skill-points-claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterId: activeCharacter.id,
+          threadId: parseInt(threadId),
+          skillPointIds: selectedSkillPoints
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setShowSkillPointsModal(false);
+        setSelectedSkillPoints([]);
+        setSkillPointsConfirmation({ show: true, message: result.message || 'Skill points claim submitted successfully!', isError: false });
+      } else {
+        const error = await response.text();
+        setSkillPointsConfirmation({ show: true, message: error || 'Failed to submit skill points claim', isError: true });
+      }
+    } catch (error) {
+      console.error('Error submitting skill points claim:', error);
+      setSkillPointsConfirmation({ show: true, message: 'Failed to submit skill points claim', isError: true });
+    } finally {
+      setIsSubmittingClaim(false);
+    }
+  };
+
+  // Filter skill points based on search
+  const filteredSkillPointsData = skillPointsData.map(category => ({
+    ...category,
+    items: category.items?.filter((item: any) => 
+      !skillPointsSearch || 
+      item.Action?.toLowerCase().includes(skillPointsSearch.toLowerCase()) ||
+      item.ActionDescription?.toLowerCase().includes(skillPointsSearch.toLowerCase()) ||
+      category.Category?.toLowerCase().includes(skillPointsSearch.toLowerCase())
+    )
+  })).filter(category => category.items?.length > 0);
+
   if (loading) return <div>Loading...</div>;
   if (!thread) return <div>Thread not found</div>;
 
@@ -473,15 +553,29 @@ const ThreadView: React.FC = () => {
             </Link>
             {' › '}{thread.title}
           </h2>
-          {/* Archive button - only show if user is the thread creator and thread is not archived */}
-          {user && thread.userId === user.id && !thread.isArchived && (
-            <button
-              onClick={() => setShowArchiveConfirm(true)}
-              className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
-            >
-              Archive
-            </button>
-          )}
+          <div className="flex gap-2">
+            {/* Archive button - only show if user is the thread creator and thread is not archived */}
+            {user && thread.userId === user.id && !thread.isArchived && (
+              <button
+                onClick={() => setShowArchiveConfirm(true)}
+                className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
+              >
+                Archive
+              </button>
+            )}
+            {/* Claim Skill Points button - only show for archived threads where activeCharacter participated */}
+            {thread.isArchived && activeCharacter && (
+              String(activeCharacter.id) === String(thread.authorId) ||
+              thread.replies?.some((reply: any) => String(reply.authorId) === String(activeCharacter.id))
+            ) && (
+              <button
+                onClick={openSkillPointsModal}
+                className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
+              >
+                Claim Skill Points
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="px-4 py-4">
@@ -547,6 +641,141 @@ const ThreadView: React.FC = () => {
                     disabled={isDeleting}
                   >
                     {isDeleting ? 'Deleting...' : 'Yes, Delete'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Skill Points Claim Modal */}
+          {showSkillPointsModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded shadow-lg w-full max-w-3xl max-h-[80vh] flex flex-col">
+                <div className="bg-[#2f3a2f] px-4 py-3 flex justify-between items-center">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-white">Claim Skill Points</h4>
+                  <button
+                    onClick={() => setShowSkillPointsModal(false)}
+                    className="text-white/70 hover:text-white text-xl leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                <div className="p-4 border-b border-gray-200">
+                  <input
+                    type="text"
+                    placeholder="Search skill points..."
+                    value={skillPointsSearch}
+                    onChange={(e) => setSkillPointsSearch(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 text-sm text-black focus:outline-none focus:border-gray-400"
+                  />
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-4">
+                  {skillPointsLoading ? (
+                    <div className="text-center text-gray-500 py-8">Loading skill points...</div>
+                  ) : filteredSkillPointsData.length === 0 ? (
+                    <div className="text-center text-gray-500 py-8">No skill points found</div>
+                  ) : (
+                    filteredSkillPointsData.map((category: any) => (
+                      <div key={category.Category} className="mb-6">
+                        <h5 className="font-semibold text-gray-900 text-sm uppercase tracking-wide mb-2">{category.Category}</h5>
+                        <div className="flex justify-between items-center mb-2">
+                          {category.CategoryDescription ? (
+                            <p className="text-xs text-gray-600">{category.CategoryDescription}</p>
+                          ) : (
+                            <div />
+                          )}
+                          <div className="text-xs text-gray-500 font-semibold whitespace-nowrap mr-2">
+                            <span className="inline-block w-8 text-center">E</span>
+                            <span className="inline-block w-8 text-center">P</span>
+                            <span className="inline-block w-8 text-center">K</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          {category.items?.map((item: any) => (
+                            <label
+                              key={item.SkillID}
+                              className={`flex items-start gap-3 p-2 border cursor-pointer transition-colors ${
+                                selectedSkillPoints.includes(item.SkillID)
+                                  ? 'border-green-500 bg-green-50'
+                                  : 'border-gray-200 hover:bg-gray-50'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedSkillPoints.includes(item.SkillID)}
+                                onChange={() => toggleSkillPointSelection(item.SkillID)}
+                                className="mt-1"
+                              />
+                              <div className="flex-1 text-sm">
+                                <div className="font-medium text-gray-900">{item.Action}</div>
+                                {item.ActionDescription && (
+                                  <div className="text-xs text-gray-600">{item.ActionDescription}</div>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500 text-right whitespace-nowrap">
+                                <span className="inline-block w-8 text-center">{item.E || 0}</span>
+                                <span className="inline-block w-8 text-center">{item.P || 0}</span>
+                                <span className="inline-block w-8 text-center">{item.K || 0}</span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                
+                <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
+                  <div className="text-sm text-gray-600">
+                    {selectedSkillPoints.length} item(s) selected
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowSkillPointsModal(false)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm"
+                      disabled={isSubmittingClaim}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSubmitSkillPointsClaim}
+                      className="px-4 py-2 bg-[#2f3a2f] text-white hover:bg-[#3a4a3a] text-sm disabled:opacity-50"
+                      disabled={isSubmittingClaim || selectedSkillPoints.length === 0}
+                    >
+                      {isSubmittingClaim ? 'Submitting...' : 'Submit Claim'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Skill Points Confirmation Modal */}
+          {skillPointsConfirmation.show && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white rounded shadow-lg w-full max-w-md flex flex-col">
+                <div className={`${skillPointsConfirmation.isError ? 'bg-red-600' : 'bg-[#2f3a2f]'} px-4 py-3 flex justify-between items-center`}>
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-white">
+                    {skillPointsConfirmation.isError ? 'Error' : 'Success'}
+                  </h4>
+                  <button
+                    onClick={() => setSkillPointsConfirmation({ show: false, message: '', isError: false })}
+                    className="text-white/70 hover:text-white text-xl leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="p-6">
+                  <p className="text-gray-700 text-sm">{skillPointsConfirmation.message}</p>
+                </div>
+                <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                  <button
+                    onClick={() => setSkillPointsConfirmation({ show: false, message: '', isError: false })}
+                    className={`px-4 py-2 text-white text-sm ${skillPointsConfirmation.isError ? 'bg-red-600 hover:bg-red-700' : 'bg-[#2f3a2f] hover:bg-[#3a4a3a]'}`}
+                  >
+                    OK
                   </button>
                 </div>
               </div>
@@ -691,8 +920,8 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form - only show if thread is not archived and not guest */}
-          {!thread.isArchived && !isGuest ? (
+          {/* Reply Form - only show if thread is not archived and user is logged in */}
+          {!thread.isArchived && user ? (
             <div className="border border-gray-300 mx-0.5">
               <div className="bg-gray-200 px-4 py-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
@@ -716,11 +945,11 @@ const ThreadView: React.FC = () => {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : thread.isArchived ? (
             <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
               This thread has been archived and is closed for new replies.
             </div>
-          )}
+          ) : null}
         </div>
       </section>
     </>
