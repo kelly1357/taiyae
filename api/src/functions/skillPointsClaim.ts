@@ -129,3 +129,47 @@ app.http('getSkillPointsClaims', {
     route: 'skill-points-claim',
     handler: getSkillPointsClaims
 });
+
+// GET /api/character-skill-points/:characterId
+// Get all approved skill point claims for a character, grouped by thread
+export async function getCharacterSkillPoints(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const characterId = request.params.characterId;
+
+        if (!characterId) {
+            return { status: 400, body: "characterId is required" };
+        }
+
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .query(`
+                SELECT 
+                    a.ThreadID,
+                    sp.[Action],
+                    sp.E,
+                    sp.P,
+                    sp.K,
+                    sp.TOTAL
+                FROM CharacterSkillPointsAssignment a
+                JOIN SkillPoints sp ON a.SkillPointID = sp.SkillID
+                WHERE a.CharacterID = @characterId 
+                  AND a.IsModeratorApproved = 1
+                ORDER BY a.ThreadID
+            `);
+
+        return {
+            jsonBody: result.recordset
+        };
+    } catch (error: any) {
+        context.error(error);
+        return { status: 500, jsonBody: { error: error.message } };
+    }
+}
+
+app.http('getCharacterSkillPoints', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'character-skill-points/{characterId}',
+    handler: getCharacterSkillPoints
+});

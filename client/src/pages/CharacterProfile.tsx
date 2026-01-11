@@ -7,6 +7,15 @@ interface LayoutContext {
   activeCharacter?: Character;
 }
 
+interface SkillPointClaim {
+  ThreadID: number;
+  Action: string;
+  E: number;
+  P: number;
+  K: number;
+  TOTAL: number;
+}
+
 const CharacterProfile: React.FC = () => {
   const { characterId } = useParams<{ characterId: string }>();
   const { user } = useOutletContext<LayoutContext>();
@@ -21,6 +30,7 @@ const CharacterProfile: React.FC = () => {
   const [threadSummaries, setThreadSummaries] = useState<Record<number, string>>({});
   const [editingThreadId, setEditingThreadId] = useState<number | null>(null);
   const [editingSummary, setEditingSummary] = useState<string>('');
+  const [threadSkillPoints, setThreadSkillPoints] = useState<Record<number, SkillPointClaim[]>>({});
 
   // Check if logged-in user owns this character
   const isOwner = user && character && (
@@ -115,6 +125,28 @@ const CharacterProfile: React.FC = () => {
         setThreadSummaries(data);
       })
       .catch(() => {});
+    
+    // Fetch approved skill points for this character
+    fetch(`/api/character-skill-points/${characterId}`)
+      .then(res => res.json())
+      .then((data: SkillPointClaim[]) => {
+        console.log('Skill points API response:', data);
+        if (!Array.isArray(data)) {
+          console.error('Expected array, got:', typeof data, data);
+          return;
+        }
+        // Group by thread ID
+        const grouped: Record<number, SkillPointClaim[]> = {};
+        data.forEach(claim => {
+          if (!grouped[claim.ThreadID]) {
+            grouped[claim.ThreadID] = [];
+          }
+          grouped[claim.ThreadID].push(claim);
+        });
+        console.log('Grouped skill points:', grouped);
+        setThreadSkillPoints(grouped);
+      })
+      .catch((err) => console.error('Failed to fetch skill points:', err));
   }, [characterId]);
 
   if (loading) return <div className="text-center p-8">Loading...</div>;
@@ -702,19 +734,26 @@ const CharacterProfile: React.FC = () => {
                                 <div className="text-xs text-gray-500">{formattedDate}</div>
                               </td>
                               <td className="py-2 text-gray-600 text-right">
-                                <button
-                                  onClick={() => toggleThreadExpanded(entry.threadId)}
-                                  className="inline-flex items-center justify-center w-5 h-5 bg-gray-200 hover:bg-gray-300 transition-colors"
-                                >
-                                  <svg 
-                                    className={`w-3 h-3 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
+                                <div className="flex items-center justify-end gap-2">
+                                  {threadSkillPoints[entry.threadId]?.length > 0 && (
+                                    <span className="text-xs font-semibold text-gray-700">
+                                      {threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.TOTAL, 0)} SP
+                                    </span>
+                                  )}
+                                  <button
+                                    onClick={() => toggleThreadExpanded(entry.threadId)}
+                                    className="inline-flex items-center justify-center w-5 h-5 bg-gray-200 hover:bg-gray-300 transition-colors"
                                   >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                                  </svg>
-                                </button>
+                                    <svg 
+                                      className={`w-3 h-3 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </button>
+                                </div>
                               </td>
                             </tr>
                             {isExpanded && (
@@ -724,7 +763,9 @@ const CharacterProfile: React.FC = () => {
                                     <thead>
                                       <tr className="bg-gray-200">
                                         <th className="text-left text-xs text-gray-600 uppercase tracking-wide font-semibold px-3 py-2 border-r border-gray-300 w-1/2">Summary</th>
-                                        <th className="text-left text-xs text-gray-600 uppercase tracking-wide font-semibold px-3 py-2 border-r border-gray-300 w-1/3">Earned SP (0)</th>
+                                        <th className="text-left text-xs text-gray-600 uppercase tracking-wide font-semibold px-3 py-2 border-r border-gray-300 w-1/3">
+                                          Earned SP ({threadSkillPoints[entry.threadId]?.reduce((sum, sp) => sum + sp.TOTAL, 0) || 0})
+                                        </th>
                                         <th className="text-center text-xs text-gray-600 uppercase tracking-wide font-semibold px-2 py-2 border-r border-gray-300 w-[5.5%]">E</th>
                                         <th className="text-center text-xs text-gray-600 uppercase tracking-wide font-semibold px-2 py-2 border-r border-gray-300 w-[5.5%]">P</th>
                                         <th className="text-center text-xs text-gray-600 uppercase tracking-wide font-semibold px-2 py-2 w-[5.5%]">K</th>
@@ -777,10 +818,38 @@ const CharacterProfile: React.FC = () => {
                                             </div>
                                           )}
                                         </td>
-                                        <td className="px-3 py-3 text-gray-500 border-r border-gray-300">—</td>
-                                        <td className="px-2 py-3 text-gray-500 text-center border-r border-gray-300">—</td>
-                                        <td className="px-2 py-3 text-gray-500 text-center border-r border-gray-300">—</td>
-                                        <td className="px-2 py-3 text-gray-500 text-center">—</td>
+                                        <td className="px-3 py-3 text-gray-700 border-r border-gray-300">
+                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
+                                            <div className="space-y-5">
+                                              {threadSkillPoints[entry.threadId].map((sp, idx) => (
+                                                <div key={idx}>{sp.Action}</div>
+                                              ))}
+                                            </div>
+                                          ) : (
+                                            <span className="text-gray-500">—</span>
+                                          )}
+                                        </td>
+                                        <td className="px-2 py-3 text-center border-r border-gray-300">
+                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
+                                            <span className="text-gray-700">{threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.E, 0)}</span>
+                                          ) : (
+                                            <span className="text-gray-500">—</span>
+                                          )}
+                                        </td>
+                                        <td className="px-2 py-3 text-center border-r border-gray-300">
+                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
+                                            <span className="text-gray-700">{threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.P, 0)}</span>
+                                          ) : (
+                                            <span className="text-gray-500">—</span>
+                                          )}
+                                        </td>
+                                        <td className="px-2 py-3 text-center">
+                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
+                                            <span className="text-gray-700">{threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.K, 0)}</span>
+                                          ) : (
+                                            <span className="text-gray-500">—</span>
+                                          )}
+                                        </td>
                                       </tr>
                                     </tbody>
                                   </table>
