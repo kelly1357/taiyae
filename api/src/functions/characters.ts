@@ -281,6 +281,71 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
     }
 }
 
+// Moderator-only endpoint to update character name, sex, and age
+export async function moderatorUpdateCharacter(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const characterId = request.params.id;
+    if (!characterId) return { status: 400, body: "Missing character ID" };
+
+    try {
+        const body = await request.json() as any;
+        const { name, sex, monthsAge, userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "Missing user ID" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can edit character details" };
+        }
+
+        // Build update query dynamically based on provided fields
+        const updates: string[] = [];
+        const requestObj = pool.request().input('id', sql.Int, parseInt(characterId));
+
+        if (name !== undefined) {
+            updates.push('CharacterName = @name');
+            requestObj.input('name', sql.NVarChar, name);
+        }
+        if (sex !== undefined) {
+            updates.push('Sex = @sex');
+            requestObj.input('sex', sql.NVarChar, sex);
+        }
+        if (monthsAge !== undefined) {
+            updates.push('MonthsAge = @monthsAge');
+            requestObj.input('monthsAge', sql.Int, monthsAge);
+        }
+
+        if (updates.length === 0) {
+            return { status: 400, body: "No fields to update" };
+        }
+
+        updates.push('Modified = GETDATE()');
+
+        await requestObj.query(`
+            UPDATE Character 
+            SET ${updates.join(', ')}
+            WHERE CharacterID = @id
+        `);
+            
+        return { status: 200, body: "Character updated successfully" };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error: " + error.message };
+    }
+}
+
 export async function getCharacterStats(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const pool = await getPool();
@@ -549,4 +614,11 @@ app.http('updateThreadSummary', {
     authLevel: 'anonymous',
     route: 'characters/{id}/thread-summaries/{threadId}',
     handler: updateThreadSummary
+});
+
+app.http('moderatorUpdateCharacter', {
+    methods: ['PATCH'],
+    authLevel: 'anonymous',
+    route: 'characters/{id}/moderator-edit',
+    handler: moderatorUpdateCharacter
 });

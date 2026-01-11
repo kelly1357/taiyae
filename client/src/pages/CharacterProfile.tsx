@@ -35,6 +35,11 @@ const CharacterProfile: React.FC = () => {
   const [threadSkillPoints, setThreadSkillPoints] = useState<Record<number, SkillPointClaim[]>>({});
   const [showUndoConfirm, setShowUndoConfirm] = useState<SkillPointClaim | null>(null);
   const [isUndoing, setIsUndoing] = useState(false);
+  
+  // Moderator edit state
+  const [showModeratorEdit, setShowModeratorEdit] = useState(false);
+  const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0 });
+  const [isModeratorSaving, setIsModeratorSaving] = useState(false);
 
   // Check if logged-in user owns this character
   const isOwner = user && character && (
@@ -125,6 +130,60 @@ const CharacterProfile: React.FC = () => {
       alert('Failed to undo approval');
     } finally {
       setIsUndoing(false);
+    }
+  };
+
+  // Open moderator edit modal
+  const openModeratorEdit = () => {
+    if (character) {
+      const totalMonths = (character as any).monthsAge || 0;
+      setModEditForm({
+        name: character.name || '',
+        sex: character.sex || '',
+        years: Math.floor(totalMonths / 12),
+        months: totalMonths % 12
+      });
+      setShowModeratorEdit(true);
+    }
+  };
+
+  // Save moderator edits
+  const saveModeratorEdit = async () => {
+    if (!character || !user) return;
+    
+    const totalMonths = modEditForm.years * 12 + modEditForm.months;
+    
+    setIsModeratorSaving(true);
+    try {
+      const response = await fetch(`/api/characters/${character.id}/moderator-edit`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: modEditForm.name,
+          sex: modEditForm.sex,
+          monthsAge: totalMonths,
+          userId: user.id
+        })
+      });
+
+      if (response.ok) {
+        // Update local character state
+        setCharacter(prev => prev ? {
+          ...prev,
+          name: modEditForm.name,
+          sex: modEditForm.sex,
+          monthsAge: totalMonths
+        } as Character : null);
+        setShowModeratorEdit(false);
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to update character');
+      }
+    } catch (error) {
+      console.error('Error updating character:', error);
+      alert('Failed to update character');
+    } finally {
+      setIsModeratorSaving(false);
     }
   };
 
@@ -272,6 +331,17 @@ const CharacterProfile: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+              {/* Moderator Edit Button */}
+              {(user?.isModerator || user?.isAdmin) && (
+                <div className="mt-1 flex justify-end">
+                  <button
+                    onClick={openModeratorEdit}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    ✎ Edit Character
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Right column: Profile Images */}
@@ -962,6 +1032,88 @@ const CharacterProfile: React.FC = () => {
                 className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50"
               >
                 {isUndoing ? 'Undoing...' : 'Undo Approval'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Moderator Edit Character Modal */}
+      {showModeratorEdit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Edit Character</h3>
+            
+            <div className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={modEditForm.name}
+                  onChange={(e) => setModEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                />
+              </div>
+
+              {/* Sex */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Sex</label>
+                <select
+                  value={modEditForm.sex}
+                  onChange={(e) => setModEditForm(prev => ({ ...prev, sex: e.target.value }))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                >
+                  <option value="">Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+
+              {/* Age */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Age</label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <select
+                      value={modEditForm.years}
+                      onChange={(e) => setModEditForm(prev => ({ ...prev, years: parseInt(e.target.value) || 0 }))}
+                      className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                    >
+                      {Array.from({ length: 21 }, (_, i) => (
+                        <option key={i} value={i}>{i} year{i !== 1 ? 's' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <select
+                      value={modEditForm.months}
+                      onChange={(e) => setModEditForm(prev => ({ ...prev, months: parseInt(e.target.value) || 0 }))}
+                      className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <option key={i} value={i}>{i} month{i !== 1 ? 's' : ''}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowModeratorEdit(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                disabled={isModeratorSaving}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveModeratorEdit}
+                disabled={isModeratorSaving || !modEditForm.name.trim()}
+                className="px-4 py-2 bg-[#2f3a2f] text-white rounded hover:bg-[#3a4a3a] disabled:opacity-50"
+              >
+                {isModeratorSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
