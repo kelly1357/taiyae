@@ -6,6 +6,7 @@ import { useBackground } from '../contexts/BackgroundContext';
 import Login from '../pages/Login';
 import type { User, Character } from '../types';
 
+
 interface LayoutProps {
   user?: User;
   activeCharacter?: Character;
@@ -13,6 +14,7 @@ interface LayoutProps {
   onlineCharacters?: Character[];
   onLogout?: () => void;
   onCharacterSelect?: (characterId: string | number) => void;
+  onLogin?: (user: User) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -22,6 +24,7 @@ const Layout: React.FC<LayoutProps> = ({
   onlineCharacters,
   onLogout,
   onCharacterSelect,
+  onLogin,
 }) => {
   const onlineList = onlineCharacters ?? [];
   const { backgroundUrl, isGrayscale } = useBackground();
@@ -89,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({
                   Member Login
                 </div>
                 <div className="px-4 py-4">
-                  <Login onLogin={() => {}} />
+                  <Login onLogin={onLogin || (() => {})} />
                   <div className="text-xs text-gray-400 text-center mt-2">(Read-only mode: navigation only)</div>
                 </div>
               </section>

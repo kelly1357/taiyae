@@ -691,8 +691,8 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form - only show if thread is not archived */}
-          {!thread.isArchived ? (
+          {/* Reply Form - only show if thread is not archived and not guest */}
+          {!thread.isArchived && !isGuest ? (
             <div className="border border-gray-300 mx-0.5">
               <div className="bg-gray-200 px-4 py-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
