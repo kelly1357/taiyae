@@ -68,7 +68,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### Backend updates
 
-[ ] Skill Points
+✅ Skill Points
 
 [ ] Character Status: Active, Inactive, Joining (cannot post), Dead (cannot post)
 
