@@ -241,6 +241,8 @@ const ThreadView: React.FC = () => {
   const [isArchiving, setIsArchiving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteThreadConfirm, setShowDeleteThreadConfirm] = useState(false);
+  const [isDeletingThread, setIsDeletingThread] = useState(false);
   
   // Skill Points Claim Modal state
   const [showSkillPointsModal, setShowSkillPointsModal] = useState(false);
@@ -415,7 +417,8 @@ const ThreadView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           characterId: activeCharacter?.id,
-          userId: user?.id
+          userId: user?.id,
+          isModerator: user?.isModerator || user?.isAdmin
         })
       });
 
@@ -442,7 +445,10 @@ const ThreadView: React.FC = () => {
       const response = await fetch(`/api/threads/${threadId}/archive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id })
+        body: JSON.stringify({ 
+          userId: user.id,
+          isModerator: user.isModerator || user.isAdmin
+        })
       });
       
       if (response.ok) {
@@ -457,6 +463,39 @@ const ThreadView: React.FC = () => {
       alert('Failed to archive thread');
     } finally {
       setIsArchiving(false);
+    }
+  };
+
+  const handleDeleteThread = async () => {
+    if (!threadId || !user) return;
+    
+    setIsDeletingThread(true);
+    try {
+      const response = await fetch(`/api/threads/${threadId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      
+      if (response.ok) {
+        setShowDeleteThreadConfirm(false);
+        // Navigate back to region or home
+        if (thread?.regionId) {
+          window.location.href = `/region/${thread.regionId}`;
+        } else if (thread?.oocForumId) {
+          window.location.href = `/ooc-forums/${thread.oocForumId}`;
+        } else {
+          window.location.href = '/';
+        }
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to delete thread');
+      }
+    } catch (error) {
+      console.error('Error deleting thread:', error);
+      alert('Failed to delete thread');
+    } finally {
+      setIsDeletingThread(false);
     }
   };
 
@@ -593,13 +632,22 @@ const ThreadView: React.FC = () => {
             {' › '}{thread.title}
           </h2>
           <div className="flex gap-2">
-            {/* Archive button - only show if user is the thread creator and thread is not archived */}
-            {user && thread.userId === user.id && !thread.isArchived && (
+            {/* Archive button - show if user is thread creator OR is moderator, and thread is not archived */}
+            {user && (thread.userId === user.id || user.isModerator || user.isAdmin) && !thread.isArchived && (
               <button
                 onClick={() => setShowArchiveConfirm(true)}
                 className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
               >
                 Archive
+              </button>
+            )}
+            {/* Delete Thread button - moderator only */}
+            {user && (user.isModerator || user.isAdmin) && (
+              <button
+                onClick={() => setShowDeleteThreadConfirm(true)}
+                className="text-[10px] uppercase tracking-wide text-red-300 hover:text-white bg-red-500/20 hover:bg-red-500/40 px-2 py-0.5 border border-red-500/30"
+              >
+                Delete Thread
               </button>
             )}
             {/* Claim Skill Points button - only show for archived threads where activeCharacter participated */}
@@ -760,6 +808,34 @@ const ThreadView: React.FC = () => {
             </div>
           )}
 
+          {/* Delete Thread Confirmation Modal - Moderator only */}
+          {showDeleteThreadConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg max-w-md">
+                <h4 className="text-lg font-semibold mb-4 text-red-600">Delete Entire Thread</h4>
+                <p className="text-gray-700 mb-4">
+                  <strong>Warning:</strong> This will permanently delete the entire thread including all posts and any skill point claims. This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowDeleteThreadConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    disabled={isDeletingThread}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteThread}
+                    className="px-4 py-2 bg-red-600 text-white hover:bg-red-700"
+                    disabled={isDeletingThread}
+                  >
+                    {isDeletingThread ? 'Deleting...' : 'Yes, Delete Thread'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Skill Points Claim Modal */}
           {showSkillPointsModal && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -904,6 +980,7 @@ const ThreadView: React.FC = () => {
             <div className="flex flex-col md:flex-row">
               {/* Content on LEFT */}
               <div className="flex-grow p-4 relative bg-white md:order-1">
+                {/* Edit button - only for post owner */}
                 {activeCharacter && String(activeCharacter.id) === String(mainAuthor.id) && (
                   <div className="absolute top-2 right-2">
                     <button 
@@ -989,21 +1066,23 @@ const ThreadView: React.FC = () => {
                   {/* Content on RIGHT */}
                   <div className="flex-grow p-4 relative bg-white">
                     <div className="absolute top-2 right-2 flex gap-1">
+                      {/* Edit button - only for post owner */}
                       {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
-                        <>
-                          <button 
-                              onClick={() => handleEditClick(reply.id, reply.content)}
-                              className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300"
-                          >
-                              Edit
-                          </button>
-                          <button 
-                              onClick={() => setShowDeleteConfirm(reply.id)}
-                              className="text-gray-500 hover:text-red-600 text-xs bg-gray-100 hover:bg-red-50 px-2 py-1 border border-gray-300"
-                          >
-                              Delete
-                          </button>
-                        </>
+                        <button 
+                            onClick={() => handleEditClick(reply.id, reply.content)}
+                            className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300"
+                        >
+                            Edit
+                        </button>
+                      )}
+                      {/* Delete button - show for post owner OR moderator */}
+                      {((activeCharacter && String(activeCharacter.id) === String(replyAuthor.id)) || (user && (user.isModerator || user.isAdmin))) && (
+                        <button 
+                            onClick={() => setShowDeleteConfirm(reply.id)}
+                            className="text-gray-500 hover:text-red-600 text-xs bg-gray-100 hover:bg-red-50 px-2 py-1 border border-gray-300"
+                        >
+                            Delete
+                        </button>
                       )}
                     </div>
 

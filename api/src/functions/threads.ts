@@ -298,13 +298,24 @@ export async function deletePost(request: HttpRequest, context: InvocationContex
 
     try {
         const body = await request.json() as any;
-        const { characterId, userId } = body;
+        const { characterId, userId, isModerator } = body;
 
         if (!characterId && !userId) {
             return { status: 400, body: "characterId or userId is required" };
         }
 
         const pool = await getPool();
+        
+        // Verify moderator status if claimed
+        let isActuallyModerator = false;
+        if (isModerator && userId) {
+            const modCheck = await pool.request()
+                .input('userId', sql.Int, parseInt(userId))
+                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+            if (modCheck.recordset.length > 0) {
+                isActuallyModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+            }
+        }
         
         // Get the post to verify ownership
         const postResult = await pool.request()
@@ -325,17 +336,17 @@ export async function deletePost(request: HttpRequest, context: InvocationContex
 
         const post = postResult.recordset[0];
 
-        // Verify the user owns this post
+        // Verify the user owns this post OR is a moderator
         const isOwner = (characterId && post.CharacterID === parseInt(characterId)) ||
                        (userId && (post.UserID === parseInt(userId) || post.characterOwnerUserId === parseInt(userId)));
 
-        if (!isOwner) {
+        if (!isOwner && !isActuallyModerator) {
             return { status: 403, body: "You can only delete your own posts" };
         }
 
-        // Don't allow deleting the first post (thread starter) - use archive instead
+        // Don't allow deleting the first post (thread starter) - use archive or delete thread instead
         if (post.PostID === post.firstPostId) {
-            return { status: 400, body: "Cannot delete the first post. Use archive thread instead." };
+            return { status: 400, body: "Cannot delete the first post. Use archive thread or delete thread instead." };
         }
 
         // Delete the post
@@ -428,13 +439,24 @@ export async function archiveThread(request: HttpRequest, context: InvocationCon
 
     try {
         const body = await request.json() as any;
-        const { userId } = body;
+        const { userId, isModerator } = body;
 
         if (!userId) {
             return { status: 400, body: "userId is required" };
         }
 
         const pool = await getPool();
+        
+        // Verify moderator status if claimed
+        let isActuallyModerator = false;
+        if (isModerator) {
+            const modCheck = await pool.request()
+                .input('userId', sql.Int, parseInt(userId))
+                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+            if (modCheck.recordset.length > 0) {
+                isActuallyModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+            }
+        }
         
         // Get the thread and verify the user is the creator
         const threadResult = await pool.request()
@@ -459,8 +481,8 @@ export async function archiveThread(request: HttpRequest, context: InvocationCon
 
         const thread = threadResult.recordset[0];
 
-        // Check if user is the creator
-        if (thread.creatorUserId !== parseInt(userId)) {
+        // Check if user is the creator OR is a moderator
+        if (thread.creatorUserId !== parseInt(userId) && !isActuallyModerator) {
             return { status: 403, body: "You can only archive your own threads" };
         }
 
@@ -501,4 +523,78 @@ app.http('archiveThread', {
     authLevel: 'anonymous',
     handler: archiveThread,
     route: 'threads/{threadId}/archive'
+});
+
+// DELETE /api/threads/:threadId - Delete an entire thread (moderator only)
+export async function deleteThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const threadId = request.params.threadId;
+    
+    if (!threadId) {
+        return { status: 400, body: "threadId is required" };
+    }
+
+    try {
+        const body = await request.json() as any;
+        const { userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "userId is required" };
+        }
+
+        const pool = await getPool();
+        
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can delete threads" };
+        }
+        
+        // Verify the thread exists
+        const threadCheck = await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('SELECT ThreadID FROM Thread WHERE ThreadID = @threadId');
+        
+        if (threadCheck.recordset.length === 0) {
+            return { status: 404, body: "Thread not found" };
+        }
+
+        // Delete all skill point assignments for this thread
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('DELETE FROM CharacterSkillPointsAssignment WHERE ThreadID = @threadId');
+
+        // Delete all posts in the thread
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('DELETE FROM Post WHERE ThreadID = @threadId');
+
+        // Delete the thread
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('DELETE FROM Thread WHERE ThreadID = @threadId');
+
+        return {
+            status: 200,
+            jsonBody: { message: "Thread deleted successfully" }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('deleteThread', {
+    methods: ['DELETE'],
+    authLevel: 'anonymous',
+    handler: deleteThread,
+    route: 'threads/{threadId}'
 });
