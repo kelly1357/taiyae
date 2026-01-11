@@ -192,10 +192,12 @@ const Home: React.FC = () => {
               id: string;
               title: string;
               authorName?: string;
+              authorId?: number;
               updatedAt: string;
               replyCount: number;
               isOnline?: boolean;
               lastReplyAuthorName?: string;
+              lastReplyAuthorId?: number;
               lastReplyIsOnline?: boolean;
             }> = await response.json();
 
@@ -638,7 +640,13 @@ const Home: React.FC = () => {
                                     {forum.latestThreadTitle}
                                   </Link>
                                   <div className="text-sm text-gray-600">
-                                    by <span className="font-bold">{forum.latestThreadAuthorName || 'Unknown'}</span>, {getRelativeTime(forum.latestThreadUpdatedAt!)}
+                                    by {forum.latestThreadCharacterId ? (
+                                      <Link to={`/character/${forum.latestThreadCharacterId}`} className="font-bold hover:underline">
+                                        {forum.latestThreadAuthorName || 'Unknown'}
+                                      </Link>
+                                    ) : (
+                                      <span className="font-bold">{forum.latestThreadAuthorName || 'Unknown'}</span>
+                                    )}, {getRelativeTime(forum.latestThreadUpdatedAt!)}
                                   </div>
                                 </div>
                               ) : (

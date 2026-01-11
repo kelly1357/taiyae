@@ -22,7 +22,8 @@ export async function getOOCForums(request: HttpRequest, context: InvocationCont
                 latestThread.Subject as latestThreadTitle,
                 latestThread.Modified as latestThreadUpdatedAt,
                 latestThreadAuthor.Username as latestThreadAuthorName,
-                latestThreadAuthor.UserID as latestThreadAuthorId
+                latestThreadAuthor.UserID as latestThreadAuthorId,
+                latestThreadAuthor.CharacterID as latestThreadCharacterId
             FROM OOCForum f
             OUTER APPLY (
                 SELECT TOP 1 t.ThreadID, firstPost.Subject, t.Modified, t.Created
@@ -39,7 +40,8 @@ export async function getOOCForums(request: HttpRequest, context: InvocationCont
             OUTER APPLY (
                 SELECT TOP 1 
                     COALESCE(c.CharacterName, u.Username) as Username,
-                    COALESCE(cu.UserID, u.UserID) as UserID
+                    COALESCE(cu.UserID, u.UserID) as UserID,
+                    c.CharacterID as CharacterID
                 FROM Post p
                 LEFT JOIN [User] u ON p.UserID = u.UserID
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID

@@ -100,6 +100,7 @@ export interface OOCForum {
   latestThreadUpdatedAt?: string;
   latestThreadAuthorName?: string;
   latestThreadAuthorId?: string;
+  latestThreadCharacterId?: string;
 }
 
 export interface Reply {
