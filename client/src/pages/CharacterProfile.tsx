@@ -8,7 +8,9 @@ interface LayoutContext {
 }
 
 interface SkillPointClaim {
+  AssignmentID: number;
   ThreadID: number;
+  CharacterID: number;
   Action: string;
   E: number;
   P: number;
@@ -31,6 +33,8 @@ const CharacterProfile: React.FC = () => {
   const [editingThreadId, setEditingThreadId] = useState<number | null>(null);
   const [editingSummary, setEditingSummary] = useState<string>('');
   const [threadSkillPoints, setThreadSkillPoints] = useState<Record<number, SkillPointClaim[]>>({});
+  const [showUndoConfirm, setShowUndoConfirm] = useState<SkillPointClaim | null>(null);
+  const [isUndoing, setIsUndoing] = useState(false);
 
   // Check if logged-in user owns this character
   const isOwner = user && character && (
@@ -84,6 +88,44 @@ const CharacterProfile: React.FC = () => {
   const cancelEditingSummary = () => {
     setEditingThreadId(null);
     setEditingSummary('');
+  };
+
+  const handleUndoApproval = async (claim: SkillPointClaim) => {
+    if (!user) return;
+    
+    setIsUndoing(true);
+    try {
+      const response = await fetch(`/api/skill-points-undo/${claim.AssignmentID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      
+      if (response.ok) {
+        // Remove from local state
+        setThreadSkillPoints(prev => {
+          const updated = { ...prev };
+          if (updated[claim.ThreadID]) {
+            updated[claim.ThreadID] = updated[claim.ThreadID].filter(
+              sp => sp.AssignmentID !== claim.AssignmentID
+            );
+            if (updated[claim.ThreadID].length === 0) {
+              delete updated[claim.ThreadID];
+            }
+          }
+          return updated;
+        });
+        setShowUndoConfirm(null);
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to undo approval');
+      }
+    } catch (error) {
+      console.error('Error undoing approval:', error);
+      alert('Failed to undo approval');
+    } finally {
+      setIsUndoing(false);
+    }
   };
 
   // Reset imageError when character changes
@@ -822,7 +864,18 @@ const CharacterProfile: React.FC = () => {
                                           {threadSkillPoints[entry.threadId]?.length > 0 ? (
                                             <div className="space-y-5">
                                               {threadSkillPoints[entry.threadId].map((sp, idx) => (
-                                                <div key={idx}>{sp.Action}</div>
+                                                <div key={idx} className="flex items-center justify-between gap-2">
+                                                  <span>{sp.Action}</span>
+                                                  {(user?.isModerator || user?.isAdmin) && (
+                                                    <button
+                                                      onClick={() => setShowUndoConfirm(sp)}
+                                                      className="text-xs text-gray-400 hover:text-red-600"
+                                                      title="Undo approval"
+                                                    >
+                                                      ✕
+                                                    </button>
+                                                  )}
+                                                </div>
                                               ))}
                                             </div>
                                           ) : (
@@ -877,6 +930,43 @@ const CharacterProfile: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Undo Approval Confirmation Modal */}
+      {showUndoConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900 mb-3">Undo Skill Point Approval</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to undo this approval? This will:
+            </p>
+            <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
+              <li>Remove {showUndoConfirm.Experience > 0 ? `${showUndoConfirm.Experience} Experience` : ''}{showUndoConfirm.Physical > 0 ? `${showUndoConfirm.Experience > 0 ? ', ' : ''}${showUndoConfirm.Physical} Physical` : ''}{showUndoConfirm.Knowledge > 0 ? `${(showUndoConfirm.Experience > 0 || showUndoConfirm.Physical > 0) ? ', ' : ''}${showUndoConfirm.Knowledge} Knowledge` : ''} point(s) from the character</li>
+              <li>Set the claim back to pending status</li>
+            </ul>
+            <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4">
+              <p className="text-sm text-amber-800">
+                <strong>Thread:</strong> {showUndoConfirm.ThreadTitle}
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowUndoConfirm(null)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                disabled={isUndoing}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUndoApproval(showUndoConfirm)}
+                disabled={isUndoing}
+                className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50"
+              >
+                {isUndoing ? 'Undoing...' : 'Undo Approval'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

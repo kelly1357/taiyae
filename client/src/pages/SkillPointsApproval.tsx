@@ -24,6 +24,7 @@ const SkillPointsApproval: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState<number | null>(null);
   const [rejecting, setRejecting] = useState<number | null>(null);
+  const [showRejectConfirm, setShowRejectConfirm] = useState<number | null>(null);
 
   const fetchAssignments = async () => {
     try {
@@ -67,8 +68,6 @@ const SkillPointsApproval: React.FC = () => {
   };
 
   const handleReject = async (assignmentId: number) => {
-    if (!confirm('Are you sure you want to reject this claim?')) return;
-    
     setRejecting(assignmentId);
     try {
       const response = await fetch(`/api/skill-points-approval/${assignmentId}`, {
@@ -77,6 +76,7 @@ const SkillPointsApproval: React.FC = () => {
       
       if (response.ok) {
         setAssignments(prev => prev.filter(a => a.AssignmentID !== assignmentId));
+        setShowRejectConfirm(null);
       } else {
         alert('Failed to reject');
       }
@@ -184,7 +184,7 @@ const SkillPointsApproval: React.FC = () => {
                           {approving === assignment.AssignmentID ? '...' : 'Approve'}
                         </button>
                         <button
-                          onClick={() => handleReject(assignment.AssignmentID)}
+                          onClick={() => setShowRejectConfirm(assignment.AssignmentID)}
                           disabled={approving === assignment.AssignmentID || rejecting === assignment.AssignmentID}
                           className="px-2 py-1 text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
                         >
@@ -199,6 +199,32 @@ const SkillPointsApproval: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Reject Confirmation Modal */}
+      {showRejectConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded shadow-lg max-w-md">
+            <h4 className="text-lg font-semibold mb-4 text-gray-900">Reject Claim</h4>
+            <p className="text-gray-700 mb-4">Are you sure you want to reject this skill point claim?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowRejectConfirm(null)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                disabled={rejecting !== null}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleReject(showRejectConfirm)}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700"
+                disabled={rejecting !== null}
+              >
+                {rejecting !== null ? 'Rejecting...' : 'Yes, Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };

@@ -145,7 +145,9 @@ export async function getCharacterSkillPoints(request: HttpRequest, context: Inv
             .input('characterId', sql.Int, parseInt(characterId))
             .query(`
                 SELECT 
+                    a.AssignmentID,
                     a.ThreadID,
+                    a.CharacterID,
                     sp.[Action],
                     sp.E,
                     sp.P,
@@ -172,4 +174,98 @@ app.http('getCharacterSkillPoints', {
     authLevel: 'anonymous',
     route: 'character-skill-points/{characterId}',
     handler: getCharacterSkillPoints
+});
+
+// POST /api/skill-points-undo/:assignmentId
+// Undo an approved skill point claim - reverses points and sets back to pending (moderator only)
+export async function undoSkillPointApproval(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const assignmentId = request.params.assignmentId;
+        const body = await request.json() as any;
+        const { userId } = body;
+
+        if (!assignmentId) {
+            return { status: 400, body: "assignmentId is required" };
+        }
+
+        if (!userId) {
+            return { status: 400, body: "userId is required" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can undo skill point approvals" };
+        }
+
+        // Get the assignment details
+        const assignmentResult = await pool.request()
+            .input('assignmentId', sql.Int, parseInt(assignmentId))
+            .query(`
+                SELECT a.AssignmentID, a.CharacterID, a.IsModeratorApproved,
+                       sp.E, sp.P, sp.K
+                FROM CharacterSkillPointsAssignment a
+                JOIN SkillPoints sp ON a.SkillPointID = sp.SkillID
+                WHERE a.AssignmentID = @assignmentId
+            `);
+
+        if (assignmentResult.recordset.length === 0) {
+            return { status: 404, body: "Assignment not found" };
+        }
+
+        const assignment = assignmentResult.recordset[0];
+
+        if (assignment.IsModeratorApproved !== true && assignment.IsModeratorApproved !== 1) {
+            return { status: 400, body: "This claim is not currently approved" };
+        }
+
+        // Reverse the skill points from the character
+        await pool.request()
+            .input('characterId', sql.Int, assignment.CharacterID)
+            .input('e', sql.Int, assignment.E || 0)
+            .input('p', sql.Int, assignment.P || 0)
+            .input('k', sql.Int, assignment.K || 0)
+            .query(`
+                UPDATE Character 
+                SET Experience = Experience - @e,
+                    Physical = Physical - @p,
+                    Knowledge = Knowledge - @k
+                WHERE CharacterID = @characterId
+            `);
+
+        // Set back to pending (NULL)
+        await pool.request()
+            .input('assignmentId', sql.Int, parseInt(assignmentId))
+            .query(`
+                UPDATE CharacterSkillPointsAssignment 
+                SET IsModeratorApproved = NULL 
+                WHERE AssignmentID = @assignmentId
+            `);
+
+        return {
+            status: 200,
+            jsonBody: { message: "Skill point approval undone. Claim is now pending review." }
+        };
+
+    } catch (error: any) {
+        context.error(error);
+        return { status: 500, jsonBody: { error: error.message } };
+    }
+}
+
+app.http('undoSkillPointApproval', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'skill-points-undo/{assignmentId}',
+    handler: undoSkillPointApproval
 });
