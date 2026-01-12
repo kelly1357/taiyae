@@ -110,6 +110,9 @@ const Home: React.FC = () => {
   const [isSubmittingPlotNews, setIsSubmittingPlotNews] = useState(false);
   const [plotNewsMessage, setPlotNewsMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Bulletin state
+  const [bulletin, setBulletin] = useState<{ Content: string; IsEnabled: boolean } | null>(null);
+
   // Check for season change and age characters if needed (runs once on page load)
   useEffect(() => {
     fetch('/api/season-check')
@@ -148,6 +151,14 @@ const Home: React.FC = () => {
         setPlotNews(data);
       })
       .catch(err => console.error('Failed to fetch plot news:', err));
+
+    // Fetch bulletin
+    fetch('/api/bulletin')
+      .then(res => res.json())
+      .then(data => {
+        setBulletin(data);
+      })
+      .catch(err => console.error('Failed to fetch bulletin:', err));
   }, []);
 
   // Handle plot news submission
@@ -408,6 +419,19 @@ const Home: React.FC = () => {
               Game Updates
             </h2>
           </div>
+
+          {/* Bulletin Banner */}
+          {bulletin && bulletin.IsEnabled && bulletin.Content && (
+            <div className="bg-[#e5ebd4] px-4 py-3">
+              <div className="text-gray-800 text-[13px] text-left">
+                <span className="text-[#81973b]">• Bulletin—</span>{' '}
+                <span 
+                  className="bulletin-content"
+                  dangerouslySetInnerHTML={{ __html: bulletin.Content }}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Sitewide Updates and Plot News - side by side */}
           <div className="grid grid-cols-2 px-4 py-4">

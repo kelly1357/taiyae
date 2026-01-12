@@ -21,6 +21,7 @@ import PlotNewsSubmissions from './pages/PlotNewsSubmissions';
 import PlotNews from './pages/PlotNews';
 import UserAchievements from './pages/Achievements';
 import AchievementAdmin from './pages/AchievementAdmin';
+import BulletinAdmin from './pages/BulletinAdmin';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -219,6 +220,7 @@ const App: React.FC = () => {
         <Route path="admin/skill-points" element={<SkillPointsApproval />} />
         <Route path="admin/plot-news" element={<PlotNewsSubmissions />} />
         <Route path="admin/achievements" element={<AchievementAdmin />} />
+        <Route path="admin/bulletin" element={<BulletinAdmin />} />
         {/* Wiki Routes */}
         <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />
         <Route path="wiki/achievements" element={<Achievements />} />

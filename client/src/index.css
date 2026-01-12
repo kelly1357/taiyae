@@ -77,3 +77,12 @@ a {
   background-color: rgba(55, 65, 81, 0.6) !important;
 }
 
+/* Bulletin content link styles */
+.bulletin-content a {
+  color: #81973b;
+  font-weight: bold;
+}
+.bulletin-content a:hover {
+  text-decoration: underline;
+}
+
