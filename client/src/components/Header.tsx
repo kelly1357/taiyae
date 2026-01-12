@@ -414,13 +414,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                         >
                           Manage Account
                         </Link>
-                        <Link 
-                          to="/achievements" 
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          My Achievements
-                        </Link>
                       </div>
                     </div>
                   )}
@@ -571,13 +564,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Manage Account
-              </Link>
-              <Link 
-                to="/achievements" 
-                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                My Achievements
               </Link>
               <button 
                 onClick={() => { onLogout?.(); setIsMobileMenuOpen(false); }} 
