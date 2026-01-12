@@ -250,10 +250,11 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/wiki/faq">FAQ</DropdownLink>
             <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
             <DropdownLink to="/adopt">Adoptables</DropdownLink>
-            <DropdownLink to="/my-characters">Join Horizon</DropdownLink>
+            <DropdownLink to="/my-characters?new=true">Join Horizon</DropdownLink>
           </NavDropdown>
           <NavDropdown id="characters" label="Characters">
             <DropdownLink to="/characters">Character List</DropdownLink>
+            <DropdownLink to="/activity-tracker">Activity Tracker</DropdownLink>
             <DropdownLink to="/regions">Regions</DropdownLink>
           </NavDropdown>
           <NavDropdown id="wiki" label="Wiki">
@@ -272,7 +273,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
-          {isModerator && (
+          {(isModerator || isAdmin) && (
             <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount}</span>}</span>}>
               <DropdownLink to="/admin/achievements">
                 <span className="flex items-center justify-between w-full">
@@ -438,10 +439,11 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/wiki/faq">FAQ</MobileDropdownLink>
             <MobileDropdownLink to="/wiki/rules-general">Site Rules</MobileDropdownLink>
             <MobileDropdownLink to="/adopt">Adoptables</MobileDropdownLink>
-            <MobileDropdownLink to="/my-characters">Join Horizon</MobileDropdownLink>
+            <MobileDropdownLink to="/my-characters?new=true">Join Horizon</MobileDropdownLink>
           </MobileNavSection>
           <MobileNavSection label="Characters">
             <MobileDropdownLink to="/characters">Character List</MobileDropdownLink>
+            <MobileDropdownLink to="/activity-tracker">Activity Tracker</MobileDropdownLink>
             <MobileDropdownLink to="/regions">Regions</MobileDropdownLink>
           </MobileNavSection>
           <MobileNavSection label="Wiki">
@@ -459,7 +461,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/ooc-forum/7">IC Archives</MobileDropdownLink>
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
-          {isModerator && (
+          {(isModerator || isAdmin) && (
             <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/achievements">
                 <span className="flex items-center justify-between w-full">

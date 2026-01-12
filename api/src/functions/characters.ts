@@ -216,9 +216,9 @@ export async function createCharacter(request: HttpRequest, context: InvocationC
             .input('bio', sql.NVarChar, bio)
             .input('healthStatusId', sql.Int, hStatusId)
             .query(`
-                INSERT INTO Character (UserID, CharacterName, Sex, MonthsAge, AvatarImage, CI_General_HTML, HealthStatus_Id)
+                INSERT INTO Character (UserID, CharacterName, Sex, MonthsAge, AvatarImage, CI_General_HTML, HealthStatus_Id, Created)
                 OUTPUT INSERTED.CharacterID
-                VALUES (@userId, @name, @sex, @monthsAge, @imageUrl, @bio, @healthStatusId)
+                VALUES (@userId, @name, @sex, @monthsAge, @imageUrl, @bio, @healthStatusId, GETDATE())
             `);
             
         return {

@@ -23,6 +23,7 @@ import UserAchievements from './pages/Achievements';
 import AchievementAdmin from './pages/AchievementAdmin';
 import HomepageAdmin from './pages/HomepageAdmin';
 import SitewideUpdates from './pages/SitewideUpdates';
+import ActivityTracker from './pages/ActivityTracker';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -212,8 +213,18 @@ const App: React.FC = () => {
         <Route path="ooc-forum/:forumId" element={<OOCForumPage />} />
         <Route path="thread/:threadId" element={<ThreadView />} />
         <Route path="characters" element={<Characters />} />
+        <Route path="activity-tracker" element={<ActivityTracker />} />
         <Route path="character/:characterId" element={<CharacterProfile />} />
-        <Route path="my-characters" element={user ? <CharacterManagement user={user} /> : <div className="text-center mt-20">Please log in to manage your characters.</div>} />
+        <Route path="my-characters" element={user ? <CharacterManagement user={user} /> : (
+          <section className="bg-white border border-gray-300 shadow">
+            <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+              <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Character Management</h2>
+            </div>
+            <div className="px-6 py-6">
+              <p className="text-sm text-gray-700">To create a character, you must use the sidebar on the left to create an account and login first.</p>
+            </div>
+          </section>
+        )} />
         <Route path="account" element={user ? <UserManagement user={user} onUpdateUser={handleUpdateUser} /> : <div className="text-center mt-20">Please log in to manage your account.</div>} />
         <Route path="weather" element={<Weather />} />
         <Route path="plot-news" element={<PlotNews />} />
