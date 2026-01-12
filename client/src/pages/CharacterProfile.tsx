@@ -16,6 +16,7 @@ interface SkillPointClaim {
   P: number;
   K: number;
   TOTAL: number;
+  ThreadTitle?: string;
 }
 
 interface UserAchievement {
@@ -1071,12 +1072,12 @@ const CharacterProfile: React.FC = () => {
               Are you sure you want to undo this approval? This will:
             </p>
             <ul className="text-sm text-gray-600 mb-4 list-disc list-inside space-y-1">
-              <li>Remove {showUndoConfirm.Experience > 0 ? `${showUndoConfirm.Experience} Experience` : ''}{showUndoConfirm.Physical > 0 ? `${showUndoConfirm.Experience > 0 ? ', ' : ''}${showUndoConfirm.Physical} Physical` : ''}{showUndoConfirm.Knowledge > 0 ? `${(showUndoConfirm.Experience > 0 || showUndoConfirm.Physical > 0) ? ', ' : ''}${showUndoConfirm.Knowledge} Knowledge` : ''} point(s) from the character</li>
+              <li>Remove {showUndoConfirm.E > 0 ? `${showUndoConfirm.E} Experience` : ''}{showUndoConfirm.P > 0 ? `${showUndoConfirm.E > 0 ? ', ' : ''}${showUndoConfirm.P} Physical` : ''}{showUndoConfirm.K > 0 ? `${(showUndoConfirm.E > 0 || showUndoConfirm.P > 0) ? ', ' : ''}${showUndoConfirm.K} Knowledge` : ''} point(s) from the character</li>
               <li>Set the claim back to pending status</li>
             </ul>
             <div className="bg-amber-50 border border-amber-200 rounded p-3 mb-4">
               <p className="text-sm text-amber-800">
-                <strong>Thread:</strong> {showUndoConfirm.ThreadTitle}
+                <strong>Thread:</strong> {showUndoConfirm.ThreadTitle || `Thread #${showUndoConfirm.ThreadID}`}
               </p>
             </div>
             <div className="flex justify-end gap-3">
