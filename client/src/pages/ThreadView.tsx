@@ -25,6 +25,14 @@ interface PostAuthor {
   userId?: number;
 }
 
+interface UserAchievement {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl: string;
+  AwardedAt: string;
+}
+
 // OOC Player info panel component
 import { fetchUserById } from '../data/fetchUserById';
 
@@ -37,6 +45,7 @@ const OOCPlayerInfoPanel: React.FC<{
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userLoading, setUserLoading] = useState(true);
+  const [achievements, setAchievements] = useState<UserAchievement[]>([]);
 
   useEffect(() => {
     if (!userId) return;
@@ -60,6 +69,16 @@ const OOCPlayerInfoPanel: React.FC<{
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/achievements/user/${userId}`)
+      .then(res => res.json())
+      .then((data: UserAchievement[]) => {
+        setAchievements(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {});
   }, [userId]);
 
   return (
@@ -122,6 +141,44 @@ const OOCPlayerInfoPanel: React.FC<{
                     >
                       {char.name}
                     </Link>
+                  ))}
+                </div>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Achievements section */}
+      <table className="w-full text-xs border border-gray-300 mt-2">
+        <tbody>
+          <tr>
+            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">
+              Achievements
+              <Link to="/wiki/achievements" className="ml-1 text-gray-500 hover:text-gray-700" title="View all achievements">(?)</Link>
+            </td>
+          </tr>
+          <tr>
+            <td className="px-2 py-2 text-gray-700">
+              {achievements.length === 0 ? (
+                <span className="text-gray-400 text-center block italic">No achievements yet</span>
+              ) : (
+                <div className="flex flex-wrap justify-center gap-2">
+                  {achievements.map(ach => (
+                    <div 
+                      key={ach.id} 
+                      className="relative group"
+                      title={`${ach.name}: ${ach.description}`}
+                    >
+                      <img 
+                        src={ach.imageUrl || '/achievements/default.png'} 
+                        alt={ach.name}
+                        className="w-8 h-8 rounded-full border border-gray-300"
+                      />
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                        {ach.name}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

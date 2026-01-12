@@ -85,12 +85,15 @@ const Achievements: React.FC = () => {
 
               {/* How to Request Section */}
               <h2 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">
-                How to Request
+                How to Claim
               </h2>
               <p className="text-xs mb-6">
-                To request an achievement, post on the Achievement Claim thread in the Maintenance board in OOC. 
-                Staff will deal with your request, and your shiny new Achievements will be visible in the OOC 
-                boards and in the Player Information section of your profile!
+                To claim an Achievement, go to our{' '}
+                <Link to="/achievements" className="font-bold text-gray-900 hover:underline">
+                  Achievement claims page
+                </Link>{' '}
+                and select the Achievement you have earned!{' '}
+                <strong>Note:</strong> Some Achievements may be unlocked automatically.
               </p>
 
               {/* List Section */}
