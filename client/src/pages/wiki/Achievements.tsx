@@ -1,5 +1,8 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 interface Achievement {
   name: string;
@@ -45,10 +48,22 @@ const regularAchievements: Achievement[][] = [
 ];
 
 const Achievements: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -65,6 +80,12 @@ const Achievements: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="achievements"
+              title="Achievements"
+              userId={user?.id}
+            >
             <div className="max-w-none text-gray-800">
               {/* Overview Section */}
               <h2 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">
@@ -95,9 +116,11 @@ const Achievements: React.FC = () => {
                 and select the Achievement you have earned!{' '}
                 <strong>Note:</strong> Some Achievements may be unlocked automatically.
               </p>
+            </div>
+            </WikiInlineEditor>
 
               {/* List Section */}
-              <h2 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">
+              <h2 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-6">
                 List
               </h2>
 
@@ -106,7 +129,7 @@ const Achievements: React.FC = () => {
                 {regularAchievements.map((row, rowIndex) => {
                   const cols = row.length;
                   return (
-                    <div key={rowIndex} className="border border-gray-300 border-b-0 last:border-b">
+                    <div key={rowIndex} className="border border-gray-300 mb-[-1px]">
                       {/* Achievement Names Row */}
                       <div className={`grid bg-gray-100`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
                         {row.map((achievement, colIndex) => (
@@ -119,7 +142,7 @@ const Achievements: React.FC = () => {
                         ))}
                       </div>
                       {/* Achievement Images Row */}
-                      <div className={`grid border-t border-gray-300`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+                      <div className={`grid bg-white`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
                         {row.map((achievement, colIndex) => (
                           <div 
                             key={colIndex} 
@@ -134,7 +157,7 @@ const Achievements: React.FC = () => {
                         ))}
                       </div>
                       {/* Achievement Descriptions Row */}
-                      <div className={`grid border-t border-gray-300`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+                      <div className={`grid bg-white`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
                         {row.map((achievement, colIndex) => (
                           <div 
                             key={colIndex} 
@@ -148,15 +171,6 @@ const Achievements: React.FC = () => {
                   );
                 })}
               </div>
-
-              {/* Categories */}
-              <div className="mt-8 pt-4 border-t border-gray-300">
-                <h4 className="text-xs font-normal uppercase tracking-wider text-gray-500 mb-2">Categories:</h4>
-                <p className="text-xs">
-                  • <Link to="/wiki/handbook" className="text-[#2f3a2f] hover:underline">Handbook</Link>
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Sidebar */}

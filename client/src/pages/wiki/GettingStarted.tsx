@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const GettingStarted: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,12 @@ const GettingStarted: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="getting-started"
+              title="Getting Started"
+              userId={user?.id}
+            >
             <div className="text-xs text-gray-800 mb-6">
               <p>Welcome to Horizon! This guide will help you get your character set up, as well as help you get yourself oriented with the game. After taking the steps in this guide, you'll be ready to post your first thread (you can post before you do all this stuff, too— this is just to help you out!)</p>
             </div>
@@ -32,22 +53,22 @@ const GettingStarted: React.FC = () => {
             <div className="text-xs text-gray-800 mb-6">
               <ol className="list-decimal list-outside ml-5 space-y-3">
                 <li>
-                  Re-read the <strong>Game Overview</strong> and <strong>Rules</strong> Handbook pages. In general, the <strong>Handbook</strong> (a subsection of the Wiki) is the go-to resource for official game information.
+                  Re-read the <Link to="/wiki/game-overview" className="text-[#2f3a2f] hover:underline"><strong>Game Overview</strong></Link> and <strong>Rules</strong> Handbook pages. In general, the <Link to="/wiki/handbook" className="text-[#2f3a2f] hover:underline"><strong>Handbook</strong></Link> (a subsection of the Wiki) is the go-to resource for official game information.
                 </li>
                 <li>
-                  Finish setting up your avatar and profile (please note that you aren't required to set up your profile before posting!). You can view your profile by clicking on your avatar. To edit your profile, hover over the "No Avatar" image and click the "Edit Profile" button that appears. Don't have an avatar? Post in the <strong>Art board</strong> in OOC!
+                  Finish setting up your avatar and profile (please note that you aren't required to set up your profile before posting!). You can view your profile by clicking on your avatar. To edit your profile, hover over the "No Avatar" image and click the "Edit Profile" button that appears. Don't have an avatar? Post in the <Link to="/ooc-forum/4" className="text-[#2f3a2f] hover:underline"><strong>Art board</strong></Link> in OOC!
                 </li>
                 <li>
-                  Check out the <strong>Skill Points (SP) Guide</strong> for a quick overview of what Skill Points are. Then, claim your starting Skill Points using the <strong>Starting SP form</strong>. Each adult wolf gets 100 SP to start. Your wolf will earn more SP as he completes threads.
+                  Check out the <Link to="/wiki/skill-points" className="text-[#2f3a2f] hover:underline"><strong>Skill Points (SP) Guide</strong></Link> for a quick overview of what Skill Points are. Then, claim your starting Skill Points using the <strong>Starting SP form</strong>. Each adult wolf gets 100 SP to start. Your wolf will earn more SP as he completes threads.
                 </li>
                 <li>
-                  Each wolf in Horizon has a Spirit Symbol (or alignment)— to find out your wolf's Spirit Symbol, take the <strong>Spirit Symbol Quiz</strong>, and then check out symbol information on the <strong>Spirit Symbols</strong> page.
+                  Each wolf in Horizon has a Spirit Symbol (or alignment)— to find out your wolf's Spirit Symbol, take the <Link to="/wiki/spirit-symbol-quiz" className="text-[#2f3a2f] hover:underline"><strong>Spirit Symbol Quiz</strong></Link>, and then check out symbol information on the <Link to="/wiki/spirit-symbols" className="text-[#2f3a2f] hover:underline"><strong>Spirit Symbols</strong></Link> page.
                 </li>
                 <li>
-                  Introduce yourself in the <strong>Icebreakers board</strong>, Horizon's welcoming board for all new and returning members! Horizon focuses heavily on IC happenings, but we're also a friendly community where everyone is welcome :)
+                  Introduce yourself in the <Link to="/ooc-forum/2" className="text-[#2f3a2f] hover:underline"><strong>Icebreakers board</strong></Link>, Horizon's welcoming board for all new and returning members! Horizon focuses heavily on IC happenings, but we're also a friendly community where everyone is welcome :)
                 </li>
                 <li>
-                  Post your first thread! Check out the <strong>Setting Overview</strong> and our <strong>Map</strong> for basic information, or explore each area in the forums to find a good place to start. We always recommend checking out the <strong>Lonely Threads</strong> if you're unsure where to start, and remember, this is a sandbox, freeform site, so your wolf should be as new to the valley as you are!
+                  Post your first thread! Check out the <Link to="/wiki/setting-overview" className="text-[#2f3a2f] hover:underline"><strong>Setting Overview</strong></Link> and our <Link to="/wiki/map" className="text-[#2f3a2f] hover:underline"><strong>Map</strong></Link> for basic information, or explore each area in the forums to find a good place to start. We always recommend checking out the <strong>Lonely Threads</strong> if you're unsure where to start, and remember, this is a sandbox, freeform site, so your wolf should be as new to the valley as you are!
                 </li>
               </ol>
             </div>
@@ -58,13 +79,13 @@ const GettingStarted: React.FC = () => {
             <div className="text-xs text-gray-800 mb-6">
               <ol className="list-decimal list-outside ml-5 space-y-3" start={7}>
                 <li>
-                  Remember, we strictly prohibit <strong>mind reading</strong>. If you're unclear about what exactly this means, we've written up some details for you.
+                  Remember, we strictly prohibit <Link to="/wiki/rules-mind-reading" className="text-[#2f3a2f] hover:underline"><strong>mind reading</strong></Link>. If you're unclear about what exactly this means, we've written up some details for you.
                 </li>
                 <li>
-                  Be sure to check out our handy <strong>Hunting Guide</strong> if you want some pointers on behavior. Hunting is a behavior that can be assumed <strong>offscreen</strong>, but if you want to play it out and get a few SP in the process, we've outlined the dos and don'ts for you.
+                  Be sure to check out our handy <strong>Hunting Guide</strong> if you want some pointers on behavior. Hunting is a behavior that can be assumed <Link to="/wiki/offscreen-interactions" className="text-[#2f3a2f] hover:underline"><strong>offscreen</strong></Link>, but if you want to play it out and get a few SP in the process, we've outlined the dos and don'ts for you.
                 </li>
                 <li>
-                  Is your character already getting into some trouble? Check out our <strong>Official Guide on Fighting</strong> for tips and tricks that will make the process a little less of a hassle for you and your rival. Remember, communication is always helpful when in doubt. If you're unsure about something, reach out to the player you're roleplaying with or staff if that isn't something you're comfortable doing. Fights take practice, IC and OOC, and we're all here to support you along the way.
+                  Is your character already getting into some trouble? Check out our <Link to="/wiki/wolf-guide-fighting" className="text-[#2f3a2f] hover:underline"><strong>Official Guide on Fighting</strong></Link> for tips and tricks that will make the process a little less of a hassle for you and your rival. Remember, communication is always helpful when in doubt. If you're unsure about something, reach out to the player you're roleplaying with or staff if that isn't something you're comfortable doing. Fights take practice, IC and OOC, and we're all here to support you along the way.
                 </li>
               </ol>
             </div>
@@ -72,6 +93,7 @@ const GettingStarted: React.FC = () => {
             <div className="text-xs text-gray-800">
               <p>That's it! Don't forget that you can always come to staff with questions. Happy adventuring! :)</p>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

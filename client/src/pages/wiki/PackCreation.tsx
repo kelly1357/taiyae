@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const PackCreation: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,12 @@ const PackCreation: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="pack-creation"
+              title="Pack Creation"
+              userId={user?.id}
+            >
             {/* Overview */}
             <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Overview</h3>
             
@@ -123,6 +144,7 @@ const PackCreation: React.FC = () => {
                 </li>
               </ul>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

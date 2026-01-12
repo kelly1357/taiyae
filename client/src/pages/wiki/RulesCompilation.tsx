@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const RulesCompilation: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,12 @@ const RulesCompilation: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="rules-compilation"
+              title="Rules: Compilation"
+              userId={user?.id}
+            >
             <div className="text-xs text-gray-800 mb-6">
               <p>We have an ever-expanding Wiki, and so, to make navigation easier for everyone, we're compiling links to major pages, citing smaller infractions, and making this a space for everything you need to know about Horizon's rules!</p>
             </div>
@@ -106,6 +127,7 @@ const RulesCompilation: React.FC = () => {
               <h4 className="font-semibold mb-2">Three Strike Rule</h4>
               <p>If you are found consistently violating site rules, bullying, or refusing to work with staff, you will be <strong>given a strike</strong>. After the third strike, subject to staff decision, you will be banned from the site.</p>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

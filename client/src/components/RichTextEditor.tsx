@@ -7,6 +7,10 @@ import Image from '@tiptap/extension-image';
 import Underline from '@tiptap/extension-underline';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { TableCell } from '@tiptap/extension-table-cell';
 
 interface RichTextEditorProps {
   value: string;
@@ -140,6 +144,12 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       Underline,
       TextStyle,
       Color,
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       Placeholder.configure({
         placeholder: placeholder || 'Write something...',
       }),
@@ -202,6 +212,36 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
         .rich-text-editor .ProseMirror img {
           max-width: 100%;
           height: auto;
+        }
+        .rich-text-editor .ProseMirror table {
+          border-collapse: collapse;
+          margin: 1rem 0;
+          overflow: hidden;
+          width: 100%;
+        }
+        .rich-text-editor .ProseMirror table td,
+        .rich-text-editor .ProseMirror table th {
+          border: 1px solid #d1d5db;
+          box-sizing: border-box;
+          min-width: 1em;
+          padding: 0.5rem;
+          position: relative;
+          vertical-align: top;
+        }
+        .rich-text-editor .ProseMirror table th {
+          background-color: #f9fafb;
+          font-weight: bold;
+        }
+        .rich-text-editor .ProseMirror table .selectedCell:after {
+          background: rgba(200, 200, 255, 0.4);
+          content: "";
+          left: 0;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          pointer-events: none;
+          position: absolute;
+          z-index: 2;
         }
       `}</style>
     </div>

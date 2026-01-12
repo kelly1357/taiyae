@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiEditModal from '../../components/WikiEditModal';
+import { useWikiContent } from '../../hooks/useWikiContent';
+import type { User } from '../../types';
 
 interface WikiArticle {
   title: string;
@@ -31,7 +34,11 @@ const articles: WikiArticle[] = [
 ];
 
 export default function Handbook() {
+  const { user } = useOutletContext<{ user?: User }>();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const isModerator = user?.isModerator || user?.isAdmin;
   const [searchTerm, setSearchTerm] = useState('');
+  const { dbContent, loading } = useWikiContent('handbook');
 
   // Group articles by first letter
   const groupedArticles = useMemo(() => {
@@ -78,8 +85,16 @@ export default function Handbook() {
   return (
     <section className="bg-white border border-gray-300 shadow">
       {/* Header */}
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => setIsEditModalOpen(true)}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
 
       <div className="px-6 py-6">
@@ -99,6 +114,14 @@ export default function Handbook() {
           The Handbook is the "official" source of game rules and information.
         </p>
 
+        {loading ? (
+          <div className="text-sm text-gray-500">Loading...</div>
+        ) : dbContent ? (
+          <div 
+            className="wiki-content text-xs text-gray-800"
+            dangerouslySetInnerHTML={{ __html: dbContent }}
+          />
+        ) : (
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1">
@@ -251,7 +274,15 @@ export default function Handbook() {
             </div>
           </div>
         </div>
+        )}
       </div>
+      <WikiEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        slug="handbook"
+        title="Handbook"
+        userId={user?.id}
+      />
     </section>
   );
 }

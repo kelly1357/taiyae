@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const SkillPoints: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +46,16 @@ const SkillPoints: React.FC = () => {
 
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -58,6 +72,12 @@ const SkillPoints: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="skill-points"
+              title="Skill Points"
+              userId={user?.id}
+            >
             <div className="max-w-none text-gray-800 text-xs">
               <p className="mb-4">
                 Skill Points are divided into categories: physical (gained from hunting, 
@@ -104,7 +124,10 @@ const SkillPoints: React.FC = () => {
                   Admin!
                 </li>
               </ol>
+            </div>
+            </WikiInlineEditor>
 
+            <div className="max-w-none text-gray-800 text-xs">
               {/* Skill Point Descriptions and Breakdown */}
               <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8">
                 Skill Point Descriptions and Breakdown

@@ -1,11 +1,27 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef, useState } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const Map: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+  const [showMapModal, setShowMapModal] = useState(false);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,19 +38,29 @@ const Map: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="map"
+              title="Map"
+              userId={user?.id}
+            >
             {/* Horizon Map */}
             <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Horizon Map</h3>
             
             <div className="text-xs text-gray-800 mb-6">
               <p className="mb-4">The map represents the relative location of each territory (click for a larger view!).</p>
               
-              <a href="https://taiyaefiles.blob.core.windows.net/web/map.jpg" target="_blank" rel="noopener noreferrer">
+              <button
+                type="button"
+                onClick={() => setShowMapModal(true)}
+                className="block"
+              >
                 <img 
                   src="https://taiyaefiles.blob.core.windows.net/web/map.jpg" 
-                  alt="Horizon Valley Map" 
+                  alt="Horizon Valley Map - Click to enlarge" 
                   className="max-w-full cursor-pointer hover:opacity-90 transition-opacity"
                 />
-              </a>
+              </button>
               
               <p className="mt-4 italic">Gigantic thank-you to Lea for making this map!</p>
             </div>
@@ -45,6 +71,7 @@ const Map: React.FC = () => {
             <div className="text-xs text-gray-800">
               <p>Please keep the following in mind when describing your character's travels: It takes a wolf at least half a day to travel from one area to the next. As such, travel across the entire valley can take a wolf several days. It is an arduous journey if taken too quickly without rest.</p>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}
@@ -98,6 +125,28 @@ const Map: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Map Modal */}
+      {showMapModal && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowMapModal(false)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <button
+              onClick={() => setShowMapModal(false)}
+              className="absolute -top-10 right-0 text-white text-xl hover:text-gray-300"
+            >
+              ✕ Close
+            </button>
+            <img 
+              src="https://taiyaefiles.blob.core.windows.net/web/map.jpg" 
+              alt="Horizon Valley Map" 
+              className="max-w-full max-h-[85vh] object-contain"
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

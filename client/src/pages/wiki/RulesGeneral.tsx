@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const RulesGeneral: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,12 @@ const RulesGeneral: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="rules-general"
+              title="Rules: General"
+              userId={user?.id}
+            >
             <div className="text-xs text-gray-800 mb-6">
               <p>When you join Horizon, you're indicating that you're going to follow our rules, which aim to keep the game fair and fun for all members:</p>
             </div>
@@ -117,21 +138,7 @@ const RulesGeneral: React.FC = () => {
                 </li>
               </ol>
             </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between items-center text-xs pt-4 border-t border-gray-200">
-              <div>
-                <span className="text-gray-500">Joining Guide:</span>
-                <br />
-                <span className="text-gray-500">← Back: </span>
-                <Link to="/wiki/game-overview" className="text-[#2f3a2f] hover:underline">Game Overview</Link>
-              </div>
-              <div className="text-right">
-                <span className="text-gray-500">Next: </span>
-                <Link to="/wiki/setting-overview" className="text-[#2f3a2f] hover:underline">Setting Overview</Link>
-                <span className="text-gray-500"> →</span>
-              </div>
-            </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

@@ -1,7 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const SettingOverview: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   const seasons = [
     { name: 'Full Winter', image: 'https://taiyaefiles.blob.core.windows.net/web/Full%20Winter.jpg' },
     { name: 'Late Winter', image: 'https://taiyaefiles.blob.core.windows.net/web/Late%20Winter.jpg' },
@@ -19,8 +26,16 @@ const SettingOverview: React.FC = () => {
 
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -37,6 +52,12 @@ const SettingOverview: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="setting-overview"
+              title="Setting Overview"
+              userId={user?.id}
+            >
             <div className="max-w-none text-gray-800 text-xs">
               {/* Introduction */}
               <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">
@@ -237,31 +258,8 @@ const SettingOverview: React.FC = () => {
                 Horizon— but Horizon is its own story and is an entirely different site 
                 altogether, even though some Taiyae characters are still around.)
               </p>
-
-              {/* Navigation */}
-              <div className="mt-8 pt-4 border-t border-gray-300 flex justify-between text-xs">
-                <div>
-                  <span className="text-gray-500">Joining Guide:</span><br />
-                  <Link to="/wiki/rules-general" className="text-[#2f3a2f] hover:underline">
-                    ← Back: Site Rules
-                  </Link>
-                </div>
-                <div className="text-right">
-                  <br />
-                  <Link to="/wiki/wolf-guide" className="text-[#2f3a2f] hover:underline">
-                    Next: Wolf Guide →
-                  </Link>
-                </div>
-              </div>
-
-              {/* Categories */}
-              <div className="mt-8 pt-4 border-t border-gray-300">
-                <h4 className="text-xs font-normal uppercase tracking-wider text-gray-500 mb-2">Categories:</h4>
-                <p className="text-xs">
-                  • <Link to="/wiki/handbook" className="text-[#2f3a2f] hover:underline">Handbook</Link>
-                </p>
-              </div>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

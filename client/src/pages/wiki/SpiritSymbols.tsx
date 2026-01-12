@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const SpiritSymbols: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,12 @@ const SpiritSymbols: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="spirit-symbols"
+              title="Spirit Symbols"
+              userId={user?.id}
+            >
             <div className="max-w-none text-gray-800 text-xs">
               <p className="mb-4">
                 Spirit Symbols reflect a wolf's tendency toward certain behaviors and values. 
@@ -312,15 +333,8 @@ const SpiritSymbols: React.FC = () => {
                 </p>
               </div>
               <div className="clear-both"></div>
-
-              {/* Categories */}
-              <div className="mt-8 pt-4 border-t border-gray-300">
-                <h4 className="text-xs font-normal uppercase tracking-wider text-gray-500 mb-2">Categories:</h4>
-                <p className="text-xs">
-                  • <Link to="/wiki/handbook" className="text-[#2f3a2f] hover:underline">Handbook</Link>
-                </p>
-              </div>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

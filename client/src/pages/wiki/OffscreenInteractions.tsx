@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const OffscreenInteractions: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,12 @@ const OffscreenInteractions: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="offscreen-interactions"
+              title="Offscreen Interactions"
+              userId={user?.id}
+            >
             {/* Intro */}
             <div className="text-xs text-gray-800 mb-6">
               <h4 className="font-semibold mb-2">Offscreen Interactions</h4>
@@ -84,6 +105,7 @@ const OffscreenInteractions: React.FC = () => {
               <h4 className="font-semibold mb-2">Staff Note</h4>
               <p>This list is a work in progress. If you have any additions or confusion, please reach out to staff so we can further clarify or amend this!</p>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}

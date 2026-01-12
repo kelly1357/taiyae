@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { Link, useOutletContext } from 'react-router-dom';
+import WikiInlineEditor from '../../components/WikiInlineEditor';
+import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
+import type { User } from '../../types';
 
 const GameOverview: React.FC = () => {
+  const { user } = useOutletContext<{ user?: User }>();
+  const isModerator = user?.isModerator || user?.isAdmin;
+  const editorRef = useRef<WikiInlineEditorRef>(null);
+
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
+        {isModerator && (
+          <button
+            onClick={() => editorRef.current?.startEditing()}
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Edit Page
+          </button>
+        )}
       </div>
       <div className="px-6 py-6">
         {/* Breadcrumb */}
@@ -22,6 +37,13 @@ const GameOverview: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            <WikiInlineEditor
+              ref={editorRef}
+              slug="game-overview"
+              title="Game Overview"
+              userId={user?.id}
+            >
+            <div className="max-w-none text-gray-800">
             {/* Header Image */}
             <div className="mb-8">
               <img 
@@ -139,21 +161,8 @@ const GameOverview: React.FC = () => {
               <p className="mb-3">Some characters on Horizon come from a site called Taiyae, which lived on AvidGamers/Acornrack/Spleafnet and ended in 2008. Horizon is a continuation of that story under the same premise, but in a totally new setting and with mostly new characters. You do not have to have been a member at Taiyae to join Horizon! (In fact, we love new people in an almost creepy sort of way.)</p>
               <p>Horizon was built by Chels using ExpressionEngine and the Codeigniter PHP framework.</p>
             </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between items-center text-xs pt-4 border-t border-gray-200">
-              <div>
-                <span className="text-gray-500">Joining Guide:</span>
-                <br />
-                <span className="text-gray-500">← Back: </span>
-                <Link to="/wiki/getting-started" className="text-[#2f3a2f] hover:underline">Join Horizon</Link>
-              </div>
-              <div className="text-right">
-                <span className="text-gray-500">Next: </span>
-                <Link to="/wiki/rules-general" className="text-[#2f3a2f] hover:underline">Site Rules</Link>
-                <span className="text-gray-500"> →</span>
-              </div>
             </div>
+            </WikiInlineEditor>
           </div>
 
           {/* Sidebar */}
