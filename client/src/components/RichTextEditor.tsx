@@ -138,6 +138,10 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
 };
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
+  // Use ref to store onChange to prevent editor recreation
+  const onChangeRef = React.useRef(onChange);
+  onChangeRef.current = onChange;
+  
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -160,15 +164,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChangeRef.current(editor.getHTML());
     },
-  });
-
-  React.useEffect(() => {
-    if (editor && value !== editor.getHTML()) {
-      editor.commands.setContent(value);
-    }
-  }, [value, editor]);
+  }, []);  // Empty deps array - only create editor once
 
   return (
     <div className="rich-text-editor border border-gray-300 rounded overflow-hidden">
@@ -208,6 +206,40 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
         .rich-text-editor .ProseMirror a {
           color: #2563EB;
           text-decoration: underline;
+        }
+        .rich-text-editor .ProseMirror h1 {
+          font-size: 2rem;
+          font-weight: bold;
+          margin: 1rem 0 0.5rem;
+          line-height: 1.2;
+        }
+        .rich-text-editor .ProseMirror h2 {
+          font-size: 1.5rem;
+          font-weight: bold;
+          margin: 1rem 0 0.5rem;
+          line-height: 1.3;
+        }
+        .rich-text-editor .ProseMirror h3 {
+          font-size: 1.25rem;
+          font-weight: bold;
+          margin: 0.75rem 0 0.5rem;
+          line-height: 1.4;
+        }
+        .rich-text-editor .ProseMirror ul {
+          list-style-type: disc;
+          padding-left: 1.5rem;
+          margin: 0.5rem 0;
+        }
+        .rich-text-editor .ProseMirror ol {
+          list-style-type: decimal;
+          padding-left: 1.5rem;
+          margin: 0.5rem 0;
+        }
+        .rich-text-editor .ProseMirror li {
+          margin: 0.25rem 0;
+        }
+        .rich-text-editor .ProseMirror li p {
+          margin: 0;
         }
         .rich-text-editor .ProseMirror img {
           max-width: 100%;

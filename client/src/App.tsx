@@ -46,6 +46,8 @@ import {
   SkillPoints,
   SpiritSymbols,
   ThreeStrikeRule,
+  TitleList,
+  UserWikiPage,
   UsingTags,
   WolfGuide,
   WolfGuideFighting,
@@ -254,6 +256,8 @@ const App: React.FC = () => {
         <Route path="wiki/spirit-symbols" element={<SpiritSymbols />} />
         <Route path="wiki/spirit-symbol-quiz" element={<SpiritSymbolQuiz />} />
         <Route path="wiki/three-strike-rule" element={<ThreeStrikeRule />} />
+        <Route path="wiki/title-list" element={<TitleList />} />
+        <Route path="wiki/user/:slug" element={<UserWikiPage />} />
         <Route path="wiki/using-tags" element={<UsingTags />} />
         <Route path="wiki/wolf-guide" element={<WolfGuide />} />
         <Route path="wiki/wolf-guide-fighting" element={<WolfGuideFighting />} />

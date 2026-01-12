@@ -86,3 +86,98 @@ a {
   text-decoration: underline;
 }
 
+/* Wiki content styles for rendered HTML */
+.wiki-content h1 {
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin: 1rem 0 0.5rem;
+  line-height: 1.2;
+}
+
+.wiki-content h2 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 1rem 0 0.5rem;
+  line-height: 1.3;
+}
+
+.wiki-content h3 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin: 0.75rem 0 0.5rem;
+  line-height: 1.4;
+}
+
+.wiki-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.wiki-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.wiki-content li {
+  margin: 0.25rem 0;
+}
+
+.wiki-content li p {
+  margin: 0;
+}
+
+.wiki-content blockquote {
+  border-left: 3px solid #D1D5DB;
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: #4B5563;
+}
+
+.wiki-content pre {
+  background: #F3F4F6;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin: 0.5rem 0;
+  overflow-x: auto;
+}
+
+.wiki-content code {
+  background: #F3F4F6;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.wiki-content a {
+  color: #2563EB;
+  text-decoration: underline;
+}
+
+.wiki-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.wiki-content p {
+  margin: 0.5rem 0;
+}
+
+.wiki-content table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.wiki-content table td,
+.wiki-content table th {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  vertical-align: top;
+}
+
+.wiki-content table th {
+  background-color: #f9fafb;
+  font-weight: bold;
+}
+

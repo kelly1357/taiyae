@@ -16,6 +16,8 @@ export { default as SettingOverview } from './SettingOverview';
 export { default as SkillPoints } from './SkillPoints';
 export { default as SpiritSymbols } from './SpiritSymbols';
 export { default as ThreeStrikeRule } from './ThreeStrikeRule';
+export { default as TitleList } from './TitleList';
+export { default as UserWikiPage } from './UserWikiPage';
 export { default as UsingTags } from './UsingTags';
 export { default as WolfGuide } from './WolfGuide';
 export { default as WolfGuideFighting } from './WolfGuideFighting';
