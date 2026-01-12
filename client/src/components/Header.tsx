@@ -280,7 +280,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
                 </span>
               </DropdownLink>
-              <DropdownLink to="/admin/bulletin">Bulletin</DropdownLink>
+              <DropdownLink to="/admin/homepage">Homepage</DropdownLink>
               <DropdownLink to="/admin/plot-news">
                 <span className="flex items-center justify-between w-full">
                   Plot News
@@ -467,7 +467,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
                 </span>
               </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/bulletin">Bulletin</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/homepage">Homepage</MobileDropdownLink>
               <MobileDropdownLink to="/admin/plot-news">
                 <span className="flex items-center justify-between w-full">
                   Plot News

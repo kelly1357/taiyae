@@ -21,7 +21,8 @@ import PlotNewsSubmissions from './pages/PlotNewsSubmissions';
 import PlotNews from './pages/PlotNews';
 import UserAchievements from './pages/Achievements';
 import AchievementAdmin from './pages/AchievementAdmin';
-import BulletinAdmin from './pages/BulletinAdmin';
+import HomepageAdmin from './pages/HomepageAdmin';
+import SitewideUpdates from './pages/SitewideUpdates';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -216,11 +217,12 @@ const App: React.FC = () => {
         <Route path="account" element={user ? <UserManagement user={user} onUpdateUser={handleUpdateUser} /> : <div className="text-center mt-20">Please log in to manage your account.</div>} />
         <Route path="weather" element={<Weather />} />
         <Route path="plot-news" element={<PlotNews />} />
+        <Route path="sitewide-updates" element={<SitewideUpdates />} />
         <Route path="achievements" element={<UserAchievements />} />
         <Route path="admin/skill-points" element={<SkillPointsApproval />} />
         <Route path="admin/plot-news" element={<PlotNewsSubmissions />} />
         <Route path="admin/achievements" element={<AchievementAdmin />} />
-        <Route path="admin/bulletin" element={<BulletinAdmin />} />
+        <Route path="admin/homepage" element={<HomepageAdmin />} />
         {/* Wiki Routes */}
         <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />
         <Route path="wiki/achievements" element={<Achievements />} />

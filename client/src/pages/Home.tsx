@@ -82,6 +82,12 @@ interface PlotNewsItem {
   ApprovedAt?: string;
 }
 
+interface SitewideUpdate {
+  UpdateID: number;
+  Content: string;
+  CreatedAt: string;
+}
+
 const Home: React.FC = () => {
   const { user } = useOutletContext<{ user?: User }>();
   const [regions, setRegions] = useState<ForumRegion[]>([]);
@@ -112,6 +118,9 @@ const Home: React.FC = () => {
 
   // Bulletin state
   const [bulletin, setBulletin] = useState<{ Content: string; IsEnabled: boolean } | null>(null);
+
+  // Sitewide Updates state
+  const [sitewideUpdates, setSitewideUpdates] = useState<SitewideUpdate[]>([]);
 
   // Check for season change and age characters if needed (runs once on page load)
   useEffect(() => {
@@ -159,6 +168,14 @@ const Home: React.FC = () => {
         setBulletin(data);
       })
       .catch(err => console.error('Failed to fetch bulletin:', err));
+
+    // Fetch sitewide updates (only 3 most recent)
+    fetch('/api/sitewide-updates?limit=3')
+      .then(res => res.json())
+      .then(data => {
+        setSitewideUpdates(data.updates || []);
+      })
+      .catch(err => console.error('Failed to fetch sitewide updates:', err));
   }, []);
 
   // Handle plot news submission
@@ -438,9 +455,33 @@ const Home: React.FC = () => {
             {/* Sitewide Updates */}
             <div className="pr-4">
               <h3 className="text-base font-semibold text-gray-900 mb-2">Sitewide Updates</h3>
-              <p className="text-sm text-gray-800 leading-relaxed">
-                Welcome to the new Horizon! We have migrated to a new system.
-              </p>
+              {sitewideUpdates.length === 0 ? (
+                <p className="text-sm text-gray-600 italic">No updates.</p>
+              ) : (
+                <div className="space-y-2">
+                  {sitewideUpdates.map((update) => {
+                    const date = new Date(update.CreatedAt);
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    const year = date.getFullYear().toString().slice(-2);
+                    let hours = date.getHours();
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    const ampm = hours >= 12 ? 'PM' : 'AM';
+                    hours = hours % 12 || 12;
+                    const formattedDate = `(${month}/${day}/${year}, ${hours}:${minutes}${ampm})`;
+                    
+                    return (
+                      <div key={update.UpdateID} className="text-sm text-gray-800">
+                        <span className="text-gray-500 font-bold uppercase">{formattedDate}</span>{' '}
+                        <span dangerouslySetInnerHTML={{ __html: update.Content }} />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="mt-3 text-sm text-gray-500">
+                <Link to="/sitewide-updates" className="hover:text-gray-700 font-bold">All Updates</Link>
+              </div>
             </div>
 
             {/* Plot News */}
