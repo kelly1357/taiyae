@@ -287,12 +287,6 @@ const PlotNewsSubmissions: React.FC = () => {
             ))}
           </div>
         )}
-        
-        <div className="mt-4">
-          <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 hover:underline">
-            ← Back to Home
-          </Link>
-        </div>
       </div>
 
       {/* Delete Confirmation Modal */}

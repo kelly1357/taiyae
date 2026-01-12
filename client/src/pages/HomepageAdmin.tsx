@@ -290,12 +290,6 @@ export default function HomepageAdmin() {
           >
             {bulletinSaving ? 'Saving...' : 'Save Bulletin'}
           </button>
-          <Link
-            to="/"
-            className="px-4 py-2 bg-gray-200 text-gray-700 text-sm hover:bg-gray-300"
-          >
-            Back to Home
-          </Link>
         </div>
       </div>
     </section>
