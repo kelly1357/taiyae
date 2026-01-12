@@ -90,7 +90,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [ ] Moderator actions (approving new users, updating user data, delete threads and posts, move threads, deactivating accounts)
 
-[ ] Achievements management
+✅  Achievements management
 
 [ ] Hierarchy management
 
@@ -98,7 +98,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅ "Online Now" status indicator
 
-[ ] Notifications
+✅  Notifications
 
 [ ] User DMing
 
