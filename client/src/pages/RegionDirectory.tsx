@@ -112,76 +112,65 @@ const RegionDirectory: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
-      {/* Background Image */}
-      <div
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: "url('https://taiyaefiles.blob.core.windows.net/web/home.jpg')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      >
-        <div className="absolute inset-0 bg-gray-900/50" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-white drop-shadow-md">Region Directory</h1>
+    <div className="space-y-8">
+      <section className="border border-gray-300 bg-white">
+        <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex justify-between items-center">
+          <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
+            Region Directory
+          </h2>
           {userContext.user?.isAdmin === true && (
             <button 
               onClick={handleCreate}
-              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors shadow-lg"
+              className="text-xs uppercase tracking-wide text-white hover:underline"
             >
-              Add New Region
+              + Add New Region
             </button>
           )}
         </div>
 
         {isEditing && (
-          <section className="border border-gray-300 bg-white mb-8 shadow-lg">
-            <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
-              <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
+          <div className="border-b border-gray-300">
+            <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
                 {currentRegion.id ? 'Edit Region' : 'New Region'}
-              </h2>
+              </h3>
             </div>
-            <div className="p-6">
+            <div className="p-4">
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Region Name</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Region Name</label>
                   <input 
                     type="text" 
                     value={currentRegion.name || ''} 
                     onChange={e => setCurrentRegion({...currentRegion, name: e.target.value})}
-                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-gray-500 focus:outline-none"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Description</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Description</label>
                   <textarea 
                     value={currentRegion.description || ''} 
                     onChange={e => setCurrentRegion({...currentRegion, description: e.target.value})}
-                    className="w-full bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 h-32 focus:border-gray-500 focus:outline-none"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 h-32 focus:outline-none focus:ring-1 focus:ring-gray-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Region Image</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Region Image</label>
                   <div className="flex items-center space-x-4">
                     {currentRegion.imageUrl && (
-                      <img src={currentRegion.imageUrl} alt="Preview" className="w-32 h-20 object-cover rounded border border-gray-300" />
+                      <img src={currentRegion.imageUrl} alt="Preview" className="w-32 h-20 object-cover border border-gray-300" />
                     )}
                     <input 
                       type="file" 
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-gray-800 file:text-white hover:file:bg-gray-700 cursor-pointer"
+                      className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:bg-white file:text-gray-700 hover:file:bg-gray-100 cursor-pointer"
                     />
-                    {uploading && <span className="text-sm text-yellow-600 animate-pulse">Uploading...</span>}
+                    {uploading && <span className="text-sm text-gray-600 animate-pulse">Uploading...</span>}
                   </div>
                 </div>
 
@@ -189,63 +178,68 @@ const RegionDirectory: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
                   >
                     Cancel
                   </button>
                   <button 
                     type="submit"
                     disabled={isLoading || uploading}
-                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50 transition-colors"
+                    className="bg-[#2f3a2f] hover:bg-[#3a4a3a] text-white px-4 py-2 text-sm disabled:opacity-50"
                   >
                     {isLoading ? 'Saving...' : 'Save Region'}
                   </button>
                 </div>
               </form>
             </div>
-          </section>
+          </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {regions.map(region => (
-            <section key={region.id} className="border border-gray-300 bg-white shadow-lg flex flex-col">
-              <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center dark-header">
-                <h3 className="text-xs font-normal uppercase tracking-wider text-[#fff9] truncate">
-                  {region.name}
-                </h3>
-                <span className="text-[10px] text-gray-300 uppercase tracking-wider">
-                  {region.subareas?.length || 0} Subareas
-                </span>
-              </div>
-              
-              {region.imageUrl ? (
-                <img src={region.imageUrl} alt={region.name} className="w-full h-48 object-cover border-b border-gray-300" />
-              ) : (
-                <div className="w-full h-48 bg-gray-100 flex items-center justify-center text-gray-400 border-b border-gray-300">
-                  No Image
+        {/* Regions Grid with Images */}
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {regions.map(region => (
+              <div key={region.id} className="border border-gray-300 bg-white flex flex-col">
+                <div className="bg-gray-200 px-4 py-2 flex justify-between items-center border-b border-gray-300">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-700 truncate">
+                    {region.name}
+                  </h3>
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                    {region.subareas?.length || 0} Subareas
+                  </span>
                 </div>
-              )}
-              
-              <div className="p-6 flex-grow flex flex-col justify-between">
-                <p className="text-gray-800 text-sm mb-4 line-clamp-3 leading-relaxed">{region.description}</p>
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                  <Link to={`/region/${region.id}`} className="text-gray-900 hover:text-gray-700 text-sm font-bold uppercase tracking-wide">
-                    View
+                
+                {region.imageUrl ? (
+                  <Link to={`/region/${region.id}`}>
+                    <img src={region.imageUrl} alt={region.name} className="w-full h-40 object-cover border-b border-gray-300 hover:opacity-90 transition-opacity" />
                   </Link>
-                  {isAdmin && (
-                    <button 
-                      onClick={() => handleEdit(region)}
-                      className="text-green-700 hover:text-green-600 text-sm font-bold uppercase tracking-wide"
-                    >
-                      Edit
-                    </button>
-                  )}
+                ) : (
+                  <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-400 border-b border-gray-300">
+                    No Image
+                  </div>
+                )}
+                
+                <div className="p-4 flex-grow flex flex-col justify-between">
+                  <p className="text-gray-700 text-sm mb-3 line-clamp-3 leading-relaxed">{region.description}</p>
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <Link to={`/region/${region.id}`} className="text-gray-900 hover:underline text-sm font-bold">
+                      View Region
+                    </Link>
+                    {isAdmin && (
+                      <button 
+                        onClick={() => handleEdit(region)}
+                        className="text-xs text-gray-500 hover:text-gray-700"
+                      >
+                        [edit]
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </section>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };
