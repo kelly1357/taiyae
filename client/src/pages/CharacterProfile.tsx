@@ -18,6 +18,14 @@ interface SkillPointClaim {
   TOTAL: number;
 }
 
+interface UserAchievement {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl: string;
+  AwardedAt: string;
+}
+
 const CharacterProfile: React.FC = () => {
   const { characterId } = useParams<{ characterId: string }>();
   const { user } = useOutletContext<LayoutContext>();
@@ -40,6 +48,9 @@ const CharacterProfile: React.FC = () => {
   const [showModeratorEdit, setShowModeratorEdit] = useState(false);
   const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0 });
   const [isModeratorSaving, setIsModeratorSaving] = useState(false);
+  
+  // User achievements state
+  const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
 
   // Check if logged-in user owns this character
   const isOwner = user && character && (
@@ -249,6 +260,30 @@ const CharacterProfile: React.FC = () => {
       })
       .catch((err) => console.error('Failed to fetch skill points:', err));
   }, [characterId]);
+
+  // Fetch user achievements when character data is available
+  useEffect(() => {
+    if (!character) return;
+    const userId = (character as any).odUserId;
+    console.log('CharacterProfile: Fetching achievements for userId:', userId, 'character:', character.name);
+    if (!userId) return;
+
+    // Check for automated achievements first
+    fetch('/api/achievements/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    }).catch(() => {});
+
+    // Then fetch user achievements
+    fetch(`/api/achievements/user/${userId}`)
+      .then(res => res.json())
+      .then((data: UserAchievement[]) => {
+        console.log('CharacterProfile: Got achievements:', data);
+        setUserAchievements(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => console.error('CharacterProfile: Failed to fetch achievements:', err));
+  }, [character]);
 
   if (loading) return <div className="text-center p-8">Loading...</div>;
   if (!character) return <div className="text-center p-8">Character not found</div>;
@@ -732,10 +767,36 @@ const CharacterProfile: React.FC = () => {
                         
                         {/* Achievements */}
                         <tr className="border-b border-gray-300">
-                          <td colSpan={2} className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600">Achievements</td>
+                          <td colSpan={2} className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600">
+                            Achievements
+                            <Link to="/achievements" className="ml-1 text-gray-500 hover:text-gray-700" title="Request achievements">(?)</Link>
+                          </td>
                         </tr>
                         <tr>
-                          <td colSpan={2} className="px-2 py-2 text-gray-700">—</td>
+                          <td colSpan={2} className="px-2 py-3">
+                            {userAchievements.length > 0 ? (
+                              <div className="flex flex-wrap gap-3">
+                                {userAchievements.map(ach => (
+                                  <div 
+                                    key={ach.id} 
+                                    className="relative group"
+                                    title={`${ach.name}: ${ach.description}`}
+                                  >
+                                    <img 
+                                      src={ach.imageUrl || '/achievements/default.png'} 
+                                      alt={ach.name}
+                                      className="w-8 h-8 rounded-full border border-gray-300"
+                                    />
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                                      {ach.name}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-sm italic">No achievements yet</span>
+                            )}
+                          </td>
                         </tr>
                       </tbody>
                     </table>

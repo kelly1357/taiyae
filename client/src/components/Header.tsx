@@ -17,6 +17,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingSkillPointsCount, setPendingSkillPointsCount] = useState(0);
   const [pendingPlotNewsCount, setPendingPlotNewsCount] = useState(0);
+  const [pendingAchievementsCount, setPendingAchievementsCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -76,6 +77,28 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         }
       } catch (error) {
         console.error('Error fetching pending plot news count:', error);
+      }
+    };
+    
+    fetchCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, [isModerator]);
+
+  // Fetch pending achievement requests count for moderators
+  useEffect(() => {
+    if (!isModerator) return;
+    
+    const fetchCount = async () => {
+      try {
+        const response = await fetch('/api/achievements/requests/pending/count');
+        if (response.ok) {
+          const data = await response.json();
+          setPendingAchievementsCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending achievements count:', error);
       }
     };
     
@@ -249,8 +272,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {isModerator && (
-            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount}</span>}</span>}>
-              <DropdownLink to="/admin/achievements">Achievements</DropdownLink>
+            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount}</span>}</span>}>
+              <DropdownLink to="/admin/achievements">
+                <span className="flex items-center justify-between w-full">
+                  Achievements
+                  {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
+                </span>
+              </DropdownLink>
               <DropdownLink to="/admin/plot-news">
                 <span className="flex items-center justify-between w-full">
                   Plot News
@@ -384,6 +412,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                         >
                           Manage Account
                         </Link>
+                        <Link 
+                          to="/achievements" 
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          My Achievements
+                        </Link>
                       </div>
                     </div>
                   )}
@@ -430,8 +465,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {isModerator && (
-            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount}</span>}</span>}>
-              <MobileDropdownLink to="/admin/achievements">Achievements</MobileDropdownLink>
+            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount}</span>}</span>}>
+              <MobileDropdownLink to="/admin/achievements">
+                <span className="flex items-center justify-between w-full">
+                  Achievements
+                  {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
+                </span>
+              </MobileDropdownLink>
               <MobileDropdownLink to="/admin/plot-news">
                 <span className="flex items-center justify-between w-full">
                   Plot News
@@ -528,6 +568,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Manage Account
+              </Link>
+              <Link 
+                to="/achievements" 
+                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                My Achievements
               </Link>
               <button 
                 onClick={() => { onLogout?.(); setIsMobileMenuOpen(false); }} 

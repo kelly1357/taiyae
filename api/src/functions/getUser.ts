@@ -2,6 +2,24 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getPool } from "../db";
 import * as sql from 'mssql';
 
+export async function getAllUsers(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .query(`
+                SELECT DISTINCT u.UserID, u.Username 
+                FROM [User] u
+                INNER JOIN Character c ON u.UserID = c.UserID
+                WHERE c.Is_Active = 1
+                ORDER BY u.Username
+            `);
+        return { status: 200, jsonBody: result.recordset };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, jsonBody: { body: "Internal Server Error: " + (error instanceof Error ? error.message : String(error)) } };
+    }
+}
+
 export async function getUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const id = request.params.id;
@@ -31,4 +49,11 @@ app.http('getUser', {
     authLevel: 'anonymous',
     route: 'users/{id}',
     handler: getUser
+});
+
+app.http('getAllUsers', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'users',
+    handler: getAllUsers
 });
