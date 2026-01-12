@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 
 interface Achievement {
@@ -18,6 +19,12 @@ interface UserAchievement {
   AwardedAt: string;
 }
 
+interface Character {
+  id: number;
+  name: string;
+  healthStatus?: string;
+}
+
 export default function Achievements() {
   const { user, loading: userLoading } = useUser();
   const [achievements, setAchievements] = useState<Achievement[]>([]);
@@ -28,9 +35,28 @@ export default function Achievements() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [charactersLoading, setCharactersLoading] = useState(true);
 
   // Get user ID - API returns UserID but type expects id
   const userId = (user as any)?.UserID || user?.id;
+
+  // Fetch user's characters
+  useEffect(() => {
+    if (!userId) {
+      setCharactersLoading(false);
+      return;
+    }
+    fetch(`/api/characters?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        // Filter to only active characters
+        const activeChars = data.filter((c: Character) => c.healthStatus !== 'Inactive');
+        setCharacters(activeChars);
+        setCharactersLoading(false);
+      })
+      .catch(() => setCharactersLoading(false));
+  }, [userId]);
 
   useEffect(() => {
     // Wait for user context to finish loading before fetching data
@@ -114,6 +140,46 @@ export default function Achievements() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Show loading while checking user and characters
+  if (userLoading || charactersLoading) {
+    return (
+      <section className="bg-white border border-gray-300 shadow">
+        <div className="bg-[#2f3a2f] px-4 py-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-white">Achievements</h2>
+        </div>
+        <div className="p-6 text-center text-gray-500">Loading...</div>
+      </section>
+    );
+  }
+
+  // Access denied if not logged in
+  if (!user || !userId) {
+    return (
+      <section className="bg-white border border-gray-300 shadow">
+        <div className="bg-[#2f3a2f] px-4 py-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-white">Achievements</h2>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-gray-600">You must be logged in to view achievements.</p>
+        </div>
+      </section>
+    );
+  }
+
+  // Access denied if no active characters
+  if (characters.length === 0) {
+    return (
+      <section className="bg-white border border-gray-300 shadow">
+        <div className="bg-[#2f3a2f] px-4 py-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-white">Achievements</h2>
+        </div>
+        <div className="p-6 text-center">
+          <p className="text-gray-600">You must have at least one active character to view achievements.</p>
+        </div>
+      </section>
+    );
   }
 
   if (loading) {
