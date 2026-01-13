@@ -90,11 +90,13 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Character list sorting, grouping, and search to characters list
 
-[ ] Moderator actions (approving new users, updating user data, delete threads and posts, move threads, deactivating accounts)
+[ ] Moderator actions (approving new users, deactivating accounts, creating packs)
 
 ✅  Achievements management
 
 [ ] Hierarchy management
+
+[ ] Pack management/function
 
 [ ] Discord integration
 
