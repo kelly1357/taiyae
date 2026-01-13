@@ -42,6 +42,7 @@ const SpiritSymbols: React.FC = () => {
               slug="spirit-symbols"
               title="Spirit Symbols"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800 text-xs">
               <p className="mb-4">

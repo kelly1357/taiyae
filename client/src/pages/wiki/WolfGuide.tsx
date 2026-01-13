@@ -34,6 +34,7 @@ const WolfGuide: React.FC = () => {
               slug="wolf-guide"
               title="Wolf Guide"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="text-xs text-gray-800 space-y-4">
               {/* PHYSIOLOGY */}

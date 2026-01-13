@@ -30,6 +30,7 @@ const ThreeStrikeRule: React.FC = () => {
           slug="three-strike-rule"
           title="Three Strike Rule"
           userId={user?.id}
+          isModerator={isModerator}
         >
         <div className="text-xs text-gray-800 space-y-4">
           {/* THREE-STRIKE RULE */}

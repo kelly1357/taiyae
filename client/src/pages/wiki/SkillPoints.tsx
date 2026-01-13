@@ -77,6 +77,7 @@ const SkillPoints: React.FC = () => {
               slug="skill-points"
               title="Skill Points"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800 text-xs">
               <p className="mb-4">

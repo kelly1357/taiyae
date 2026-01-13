@@ -42,6 +42,7 @@ const AbsencesAndScarcity: React.FC = () => {
               slug="absences-and-scarcity"
               title="Absences and Scarcity"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800">
               {/* Main Section Header */}

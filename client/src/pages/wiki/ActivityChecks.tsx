@@ -42,6 +42,7 @@ const ActivityChecks: React.FC = () => {
               slug="activity-checks"
               title="Activity Checks"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800">
               {/* Main Section Header */}

@@ -42,6 +42,7 @@ const RulesCompilation: React.FC = () => {
               slug="rules-compilation"
               title="Rules: Compilation"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="text-xs text-gray-800 mb-6">
               <p>We have an ever-expanding Wiki, and so, to make navigation easier for everyone, we're compiling links to major pages, citing smaller infractions, and making this a space for everything you need to know about Horizon's rules!</p>

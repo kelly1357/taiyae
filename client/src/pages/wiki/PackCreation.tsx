@@ -42,6 +42,7 @@ const PackCreation: React.FC = () => {
               slug="pack-creation"
               title="Pack Creation"
               userId={user?.id}
+              isModerator={isModerator}
             >
             {/* Overview */}
             <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Overview</h3>

@@ -57,6 +57,7 @@ const SettingOverview: React.FC = () => {
               slug="setting-overview"
               title="Setting Overview"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800 text-xs">
               {/* Introduction */}

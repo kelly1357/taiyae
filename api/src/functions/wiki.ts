@@ -197,7 +197,7 @@ export async function createWikiPage(request: HttpRequest, context: InvocationCo
     }
 }
 
-// PUT /api/wiki/:slug - Update a wiki page (with permission checks)
+// PUT /api/wiki/:slug - Update a wiki page (with permission checks), or create if moderator
 export async function updateWikiPage(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const slug = request.params.slug;
     if (!slug) {
@@ -220,7 +220,23 @@ export async function updateWikiPage(request: HttpRequest, context: InvocationCo
             .query('SELECT WikiPageID, IsHandbook, CreatedByUserID FROM WikiPage WHERE Slug = @slug');
 
         if (existing.recordset.length === 0) {
-            return { status: 404, body: "Wiki page not found" };
+            // Page doesn't exist - only moderators can create handbook pages via PUT
+            if (!isModerator) {
+                return { status: 403, body: "Only moderators can create handbook pages" };
+            }
+            
+            // Create new handbook page
+            await pool.request()
+                .input('slug', slug)
+                .input('title', title)
+                .input('content', content)
+                .input('userId', userId || null)
+                .query(`
+                    INSERT INTO WikiPage (Slug, Title, Content, ModifiedByUserID, IsHandbook)
+                    VALUES (@slug, @title, @content, @userId, 1)
+                `);
+            
+            return { status: 201, jsonBody: { success: true, created: true } };
         }
 
         const page = existing.recordset[0];

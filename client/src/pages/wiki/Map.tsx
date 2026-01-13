@@ -43,6 +43,7 @@ const Map: React.FC = () => {
               slug="map"
               title="Map"
               userId={user?.id}
+              isModerator={isModerator}
             >
             {/* Horizon Map */}
             <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Horizon Map</h3>

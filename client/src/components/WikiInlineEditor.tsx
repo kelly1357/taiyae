@@ -9,6 +9,7 @@ interface WikiInlineEditorProps {
   slug: string;
   title: string;
   userId?: number | string;
+  isModerator?: boolean;
   children: React.ReactNode;
 }
 
@@ -16,6 +17,7 @@ const WikiInlineEditor = forwardRef<WikiInlineEditorRef, WikiInlineEditorProps>(
   slug,
   title,
   userId,
+  isModerator,
   children,
 }, ref) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -50,10 +52,10 @@ const WikiInlineEditor = forwardRef<WikiInlineEditorRef, WikiInlineEditorProps>(
         const response = await fetch(`/api/wiki/${slug}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.content) {
-            setDbContent(data.content);
-            setContent(data.content);
-            setCodeContent(data.content);
+          if (data.Content) {
+            setDbContent(data.Content);
+            setContent(data.Content);
+            setCodeContent(data.Content);
           }
         }
       } catch (error) {
@@ -94,7 +96,8 @@ const WikiInlineEditor = forwardRef<WikiInlineEditorRef, WikiInlineEditorProps>(
         body: JSON.stringify({
           title,
           content: finalContent,
-          userId
+          userId,
+          isModerator
         }),
       });
 

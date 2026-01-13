@@ -42,6 +42,7 @@ const GettingStarted: React.FC = () => {
               slug="getting-started"
               title="Getting Started"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="text-xs text-gray-800 mb-6">
               <p>Welcome to Horizon! This guide will help you get your character set up, as well as help you get yourself oriented with the game. After taking the steps in this guide, you'll be ready to post your first thread (you can post before you do all this stuff, too— this is just to help you out!)</p>

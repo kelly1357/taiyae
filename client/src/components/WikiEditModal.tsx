@@ -7,9 +7,10 @@ interface WikiEditModalProps {
   slug: string;
   title: string;
   userId?: number;
+  isModerator?: boolean;
 }
 
-const WikiEditModal: React.FC<WikiEditModalProps> = ({ isOpen, onClose, slug, title, userId }) => {
+const WikiEditModal: React.FC<WikiEditModalProps> = ({ isOpen, onClose, slug, title, userId, isModerator }) => {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +51,8 @@ const WikiEditModal: React.FC<WikiEditModalProps> = ({ isOpen, onClose, slug, ti
         body: JSON.stringify({
           title,
           content,
-          userId
+          userId,
+          isModerator
         })
       });
 

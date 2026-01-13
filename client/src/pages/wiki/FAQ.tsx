@@ -42,6 +42,7 @@ const FAQ: React.FC = () => {
               slug="faq"
               title="FAQ"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800">
               {/* Table of Contents */}

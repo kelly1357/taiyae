@@ -42,6 +42,7 @@ const OffscreenInteractions: React.FC = () => {
               slug="offscreen-interactions"
               title="Offscreen Interactions"
               userId={user?.id}
+              isModerator={isModerator}
             >
             {/* Intro */}
             <div className="text-xs text-gray-800 mb-6">

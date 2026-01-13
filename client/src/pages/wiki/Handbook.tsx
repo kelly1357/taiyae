@@ -274,6 +274,7 @@ export default function Handbook() {
         slug="handbook"
         title="Handbook"
         userId={user?.id}
+        isModerator={isModerator}
       />
     </section>
   );

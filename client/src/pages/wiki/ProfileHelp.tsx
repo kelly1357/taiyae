@@ -42,6 +42,7 @@ const ProfileHelp: React.FC = () => {
               slug="profile-help"
               title="Profile Help"
               userId={user?.id}
+              isModerator={isModerator}
             >
             {/* Guidelines */}
             <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Guidelines</h3>

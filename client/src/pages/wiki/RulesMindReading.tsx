@@ -42,6 +42,7 @@ const RulesMindReading: React.FC = () => {
               slug="rules-mind-reading"
               title="Rules: Mind Reading"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800 text-xs">
               {/* What is Mind Reading? */}

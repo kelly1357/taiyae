@@ -42,6 +42,7 @@ const RulesGeneral: React.FC = () => {
               slug="rules-general"
               title="Rules: General"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="text-xs text-gray-800 mb-6">
               <p>When you join Horizon, you're indicating that you're going to follow our rules, which aim to keep the game fair and fun for all members:</p>

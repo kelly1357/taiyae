@@ -42,6 +42,7 @@ export default function WolfGuideFighting() {
               slug="wolf-guide-fighting"
               title="Wolf Guide: Fighting"
               userId={user?.id}
+              isModerator={isModerator}
             >
             <div className="max-w-none text-gray-800">
 

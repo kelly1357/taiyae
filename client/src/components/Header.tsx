@@ -261,7 +261,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/wiki/handbook">Handbook</DropdownLink>
             <DropdownLink to="/wiki/title-list">Title List</DropdownLink>
             <hr className="border-t border-gray-300 my-1" />
-            <DropdownLink to="/wiki/activity-absences">Activity & Absences</DropdownLink>
+            <DropdownLink to="/wiki/absences-and-scarcity">Activity & Absences</DropdownLink>
             <DropdownLink to="/wiki/map">Map</DropdownLink>
             <DropdownLink to="/wiki/setting-overview">Setting Overview</DropdownLink>
             <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
@@ -449,7 +449,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           <MobileNavSection label="Wiki">
             <MobileDropdownLink to="/wiki/handbook">Handbook</MobileDropdownLink>
             <MobileDropdownLink to="/wiki/title-list">Title List</MobileDropdownLink>
-            <MobileDropdownLink to="/wiki/activity-absences">Activity & Absences</MobileDropdownLink>
+            <MobileDropdownLink to="/wiki/absences-and-scarcity">Activity & Absences</MobileDropdownLink>
             <MobileDropdownLink to="/wiki/map">Map</MobileDropdownLink>
             <MobileDropdownLink to="/wiki/setting-overview">Setting Overview</MobileDropdownLink>
             <MobileDropdownLink to="/wiki/rules-general">Site Rules</MobileDropdownLink>

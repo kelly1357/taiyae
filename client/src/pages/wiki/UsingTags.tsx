@@ -30,6 +30,7 @@ const UsingTags: React.FC = () => {
           slug="using-tags"
           title="Using Tags"
           userId={user?.id}
+          isModerator={isModerator}
         >
         <div className="text-xs text-gray-800 space-y-4">
           {/* IC THREAD TAGS */}
