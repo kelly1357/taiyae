@@ -87,14 +87,6 @@ export default function Handbook() {
       {/* Header */}
       <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex items-center justify-between">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Wiki</h2>
-        {isModerator && (
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="text-xs text-white/70 hover:text-white"
-          >
-            Edit Page
-          </button>
-        )}
       </div>
 
       <div className="px-6 py-6">
