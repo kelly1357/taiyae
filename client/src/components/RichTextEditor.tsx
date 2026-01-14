@@ -159,6 +159,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       }),
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          target: null,
+          rel: null,
+        },
       }),
       Image,
     ],
@@ -214,16 +218,26 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
           line-height: 1.2;
         }
         .rich-text-editor .ProseMirror h2 {
-          font-size: 1.5rem;
-          font-weight: bold;
-          margin: 1rem 0 0.5rem;
+          font-size: 0.75rem;
+          font-weight: normal;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #6b7280;
+          border-bottom: 1px solid #d1d5db;
+          padding-bottom: 0.25rem;
+          margin: 1rem 0 1rem;
           line-height: 1.3;
         }
         .rich-text-editor .ProseMirror h3 {
-          font-size: 1.25rem;
-          font-weight: bold;
+          font-size: 0.875rem;
+          font-weight: normal;
+          color: #6c6e29;
           margin: 0.75rem 0 0.5rem;
           line-height: 1.4;
+          text-transform: none;
+          letter-spacing: normal;
+          border-bottom: none;
+          padding-bottom: 0;
         }
         .rich-text-editor .ProseMirror ul {
           list-style-type: disc;

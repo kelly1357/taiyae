@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import RichTextEditor from './RichTextEditor';
 
 export interface WikiInlineEditorRef {
@@ -28,6 +28,23 @@ const WikiInlineEditor = forwardRef<WikiInlineEditorRef, WikiInlineEditorProps>(
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const wikiContentRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicks on anchor links within wiki content
+  const handleWikiContentClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const anchor = target.closest('a');
+    if (anchor) {
+      const href = anchor.getAttribute('href');
+      if (href?.startsWith('#')) {
+        e.preventDefault();
+        const targetElement = document.getElementById(href.slice(1));
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+  }, []);
 
   // Expose startEditing method to parent
   useImperativeHandle(ref, () => ({
@@ -254,11 +271,13 @@ const WikiInlineEditor = forwardRef<WikiInlineEditorRef, WikiInlineEditorProps>(
   // View mode - show DB content or static children
   return dbContent ? (
     <div 
+      ref={wikiContentRef}
       className="wiki-content text-xs text-gray-800"
+      onClick={handleWikiContentClick}
       dangerouslySetInnerHTML={{ __html: dbContent }}
     />
   ) : (
-    <div ref={contentRef}>
+    <div ref={contentRef} onClick={handleWikiContentClick}>
       {children}
     </div>
   );
