@@ -67,7 +67,7 @@ const RulesCompilation: React.FC = () => {
                 <li>The minimum age for a new character entering Horizon is 7 months</li>
                 <li>Wolves may not enter the valley already pregnant</li>
                 <li>Wolfdogs and <strong>certain subspecies</strong> of wolves not native to North America are not allowed</li>
-                <li>Unusual fur or eye colors are not allowed. [<strong>More…</strong>]</li>
+                <li>Unusual fur or eye colors are not allowed. [<Link to="/wiki/wolf-guide#coloration" className="font-bold">More…</Link>]</li>
                 <li>Cannot possess fantasy-type abilities</li>
                 <li>No jewelry, clothing, potions, or the ability to carry around human items like bags, very limited tool use</li>
                 <li>New characters not ICly born within the Horizon must have a birthplace outside the valley</li>

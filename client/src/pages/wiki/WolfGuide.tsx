@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useOutletContext, useLocation } from 'react-router-dom';
 import WikiInlineEditor from '../../components/WikiInlineEditor';
 import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
 import type { User } from '../../types';
@@ -9,6 +9,20 @@ const WolfGuide: React.FC = () => {
   const isModerator = user?.isModerator || user?.isAdmin;
   const [showMaternityModal, setShowMaternityModal] = useState(false);
   const editorRef = useRef<WikiInlineEditorRef>(null);
+  const location = useLocation();
+
+  // Scroll to hash on page load
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.slice(1);
+      setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  }, [location.hash]);
 
   return (
     <section className="bg-white border border-gray-300 shadow">
@@ -38,7 +52,7 @@ const WolfGuide: React.FC = () => {
             >
             <div className="text-xs text-gray-800 space-y-4">
               {/* PHYSIOLOGY */}
-              <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Physiology</h3>
+              <h3 id="physiology" className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 scroll-mt-4">Physiology</h3>
               
               {/* Species */}
               <h4 className="font-bold mb-2 mt-4">Species</h4>
@@ -253,7 +267,7 @@ const WolfGuide: React.FC = () => {
               </div>
 
               {/* Coloration */}
-              <h4 className="font-bold mb-2 mt-6">Coloration</h4>
+              <h4 id="coloration" className="font-bold mb-2 mt-6 scroll-mt-4">Coloration</h4>
               
               <p>
                 Despite the name, gray wolves aren't just gray - they can be found in a wide 
@@ -321,7 +335,7 @@ const WolfGuide: React.FC = () => {
               </p>
 
           {/* PACKS */}
-          <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8">Packs</h3>
+          <h3 id="packs" className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8 scroll-mt-4">Packs</h3>
           
           {/* Overview */}
           <h4 className="font-bold mb-2 mt-4">Overview</h4>
@@ -409,7 +423,7 @@ const WolfGuide: React.FC = () => {
           </p>
 
           {/* REPRODUCTION */}
-          <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8">Reproduction</h3>
+          <h3 id="reproduction" className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8 scroll-mt-4">Reproduction</h3>
           
           {/* Forming pairs */}
           <h4 className="font-bold mb-2 mt-4">Forming pairs</h4>
@@ -469,7 +483,7 @@ const WolfGuide: React.FC = () => {
           </p>
 
           {/* MATERNITY */}
-          <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8">Maternity</h3>
+          <h3 id="maternity" className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8 scroll-mt-4">Maternity</h3>
           
           <div className="my-4">
             <a 
@@ -514,7 +528,7 @@ const WolfGuide: React.FC = () => {
           </p>
 
           {/* PUP DEVELOPMENT */}
-          <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8">Pup Development</h3>
+          <h3 id="pup-development" className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4 mt-8 scroll-mt-4">Pup Development</h3>
           
           <p>
             See the <Link to="/wiki/wolf-guide-pup-development" className="font-bold">Pup Development Guide</Link> for guidelines for playing pup characters as they age.
