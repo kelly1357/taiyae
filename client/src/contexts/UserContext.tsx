@@ -87,6 +87,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       type UserWithRole = User & { role: UserRole };
       const userWithRole: UserWithRole = {
         ...userData,
+        id: userData.UserID, // Map UserID to id for consistency
+        username: userData.Username,
+        email: userData.Email,
+        imageUrl: userData.ImageURL,
+        playerInfo: userData.Description,
+        facebook: userData.Facebook,
+        instagram: userData.Instagram,
+        discord: userData.Discord,
         isModerator,
         isAdmin,
         role,

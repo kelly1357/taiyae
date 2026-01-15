@@ -19,16 +19,35 @@ export async function uploadImage(request: HttpRequest, context: InvocationConte
             access: 'blob' // Allow public read access for web container
         });
 
-        const filename = request.query.get('filename') || `avatar-${Date.now()}.png`;
-        context.log(`Uploading file: ${filename}`);
+        // Parse multipart form data
+        const formData = await request.formData();
+        const file = formData.get('file');
+        
+        if (!file || typeof file === 'string') {
+            return { status: 400, body: "No file uploaded" };
+        }
+        
+        const fileBlob = file as unknown as { name?: string; type?: string; arrayBuffer(): Promise<ArrayBuffer> };
+        const originalName = fileBlob.name || 'image.png';
+        const extension = originalName.split('.').pop()?.toLowerCase() || 'png';
+        const filename = `avatar-${Date.now()}.${extension}`;
+        context.log(`Uploading file: ${filename} (original: ${originalName})`);
         
         const blockBlobClient = containerClient.getBlockBlobClient(filename);
 
-        // Get body as ArrayBuffer or Stream
-        const body = await request.arrayBuffer();
-        context.log(`File size: ${body.byteLength} bytes`);
+        // Get file as ArrayBuffer
+        const arrayBuffer = await fileBlob.arrayBuffer();
+        context.log(`File size: ${arrayBuffer.byteLength} bytes`);
         
-        await blockBlobClient.upload(body, body.byteLength);
+        // Determine content type
+        let contentType = fileBlob.type || 'image/png';
+        if (!contentType.startsWith('image/')) {
+            contentType = 'image/png';
+        }
+        
+        await blockBlobClient.upload(arrayBuffer, arrayBuffer.byteLength, {
+            blobHTTPHeaders: { blobContentType: contentType }
+        });
         context.log(`Upload successful: ${blockBlobClient.url}`);
 
         return {

@@ -21,6 +21,7 @@ import PlotNewsSubmissions from './pages/PlotNewsSubmissions';
 import PlotNews from './pages/PlotNews';
 import UserAchievements from './pages/Achievements';
 import AchievementAdmin from './pages/AchievementAdmin';
+import Adopt from './pages/Adopt';
 import HomepageAdmin from './pages/HomepageAdmin';
 import SitewideUpdates from './pages/SitewideUpdates';
 import ActivityTracker from './pages/ActivityTracker';
@@ -225,6 +226,7 @@ const App: React.FC = () => {
         <Route path="ooc-forum/:forumId" element={<OOCForumPage />} />
         <Route path="thread/:threadId" element={<ThreadView />} />
         <Route path="characters" element={<Characters />} />
+        <Route path="adopt" element={<Adopt />} />
         <Route path="activity-tracker" element={<ActivityTracker />} />
         <Route path="character/:characterId" element={<CharacterProfile />} />
         <Route path="my-characters" element={user ? <CharacterManagement user={user} /> : (

@@ -22,6 +22,7 @@ function getRegions(request, context) {
                 r.RegionName     AS name,
                 r.Description    AS description,
                 r.ImageURL       AS imageUrl,
+                r.HeaderImageURL AS headerImageUrl,
                 s.id             AS subId,
                 s.name           AS subName
             FROM Region r
@@ -36,6 +37,7 @@ function getRegions(request, context) {
                         name: row.name,
                         description: row.description,
                         imageUrl: row.imageUrl,
+                        headerImageUrl: row.headerImageUrl,
                         subareas: []
                     });
                 }
