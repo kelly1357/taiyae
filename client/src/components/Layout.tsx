@@ -11,6 +11,7 @@ interface LayoutProps {
   user?: User;
   activeCharacter?: Character;
   userCharacters?: Character[];
+  charactersLoaded?: boolean;
   onlineCharacters?: Character[];
   onLogout?: () => void;
   onCharacterSelect?: (characterId: string | number) => void;
@@ -21,6 +22,7 @@ const Layout: React.FC<LayoutProps> = ({
   user,
   activeCharacter,
   userCharacters,
+  charactersLoaded,
   onlineCharacters,
   onLogout,
   onCharacterSelect,
@@ -126,7 +128,7 @@ const Layout: React.FC<LayoutProps> = ({
             )}
 
 
-            {!activeCharacter && user && userCharacters?.length === 0 && (
+            {!activeCharacter && user && charactersLoaded && userCharacters?.length === 0 && (
               <section className="bg-white border border-gray-300 shadow">
                 <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                   Create a Character!

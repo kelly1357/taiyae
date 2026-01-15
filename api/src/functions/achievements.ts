@@ -153,6 +153,9 @@ export async function checkAutomatedAchievements(request: HttpRequest, context: 
 
                 case 'FULL_PROFILE': {
                     // Check if user has at least one character with all required fields filled
+                    // Requires: name, sex, age, general info, avatar, at least one profile image,
+                    // height, build, birthplace, father, mother, siblings, pups, spirit symbol
+                    // Surname is optional
                     const fullProfileCheck = await pool.request()
                         .input('userId', sql.Int, parseInt(userId))
                         .query(`
@@ -164,6 +167,20 @@ export async function checkAutomatedAchievements(request: HttpRequest, context: 
                             AND MonthsAge IS NOT NULL
                             AND CI_General_HTML IS NOT NULL AND CI_General_HTML != ''
                             AND AvatarImage IS NOT NULL AND AvatarImage != ''
+                            AND HeightID IS NOT NULL
+                            AND BuildID IS NOT NULL
+                            AND Birthplace IS NOT NULL AND Birthplace != ''
+                            AND Father IS NOT NULL AND Father != ''
+                            AND Mother IS NOT NULL AND Mother != ''
+                            AND Siblings IS NOT NULL AND Siblings != ''
+                            AND Pups IS NOT NULL AND Pups != ''
+                            AND SpiritSymbol IS NOT NULL AND SpiritSymbol != ''
+                            AND (
+                                (ProfileImage1 IS NOT NULL AND ProfileImage1 != '')
+                                OR (ProfileImage2 IS NOT NULL AND ProfileImage2 != '')
+                                OR (ProfileImage3 IS NOT NULL AND ProfileImage3 != '')
+                                OR (ProfileImage4 IS NOT NULL AND ProfileImage4 != '')
+                            )
                         `);
                     if (fullProfileCheck.recordset[0].cnt > 0) {
                         shouldAward = true;
@@ -502,3 +519,48 @@ app.http('awardAchievement', {
     route: 'achievements/award',
     handler: awardAchievement
 });
+
+// Helper function to check and revoke FULL_PROFILE achievement if criteria no longer met
+// Called from characters.ts when a character profile is updated
+export async function checkAndRevokeFullProfile(userId: number): Promise<void> {
+    const pool = await getPool();
+    
+    // Check if user still has any character meeting FULL_PROFILE criteria
+    const fullProfileCheck = await pool.request()
+        .input('userId', sql.Int, userId)
+        .query(`
+            SELECT COUNT(*) as cnt
+            FROM Character
+            WHERE UserID = @userId
+            AND CharacterName IS NOT NULL AND CharacterName != ''
+            AND Sex IS NOT NULL AND Sex != ''
+            AND MonthsAge IS NOT NULL
+            AND CI_General_HTML IS NOT NULL AND CI_General_HTML != ''
+            AND AvatarImage IS NOT NULL AND AvatarImage != ''
+            AND HeightID IS NOT NULL
+            AND BuildID IS NOT NULL
+            AND Birthplace IS NOT NULL AND Birthplace != ''
+            AND Father IS NOT NULL AND Father != ''
+            AND Mother IS NOT NULL AND Mother != ''
+            AND Siblings IS NOT NULL AND Siblings != ''
+            AND Pups IS NOT NULL AND Pups != ''
+            AND SpiritSymbol IS NOT NULL AND SpiritSymbol != ''
+            AND (
+                (ProfileImage1 IS NOT NULL AND ProfileImage1 != '')
+                OR (ProfileImage2 IS NOT NULL AND ProfileImage2 != '')
+                OR (ProfileImage3 IS NOT NULL AND ProfileImage3 != '')
+                OR (ProfileImage4 IS NOT NULL AND ProfileImage4 != '')
+            )
+        `);
+    
+    // If no characters meet criteria, revoke the achievement
+    if (fullProfileCheck.recordset[0].cnt === 0) {
+        await pool.request()
+            .input('userId', sql.Int, userId)
+            .query(`
+                DELETE FROM UserAchievement
+                WHERE UserID = @userId
+                AND AchievementID = (SELECT id FROM Achievement WHERE automationKey = 'FULL_PROFILE')
+            `);
+    }
+}

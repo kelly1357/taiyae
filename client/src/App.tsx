@@ -59,6 +59,7 @@ const App: React.FC = () => {
   const [userCharacters, setUserCharacters] = useState<Character[]>([]);
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
+  const [charactersLoaded, setCharactersLoaded] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -102,12 +103,20 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (user?.id) {
+      setCharactersLoaded(false);
       fetch(`/api/characters?userId=${user.id}`)
         .then(res => res.json())
-        .then(data => setUserCharacters(data))
-        .catch(err => console.error("Failed to fetch user characters", err));
+        .then(data => {
+          setUserCharacters(data);
+          setCharactersLoaded(true);
+        })
+        .catch(err => {
+          console.error("Failed to fetch user characters", err);
+          setCharactersLoaded(true);
+        });
     } else {
       setUserCharacters([]);
+      setCharactersLoaded(true);
     }
   }, [user?.id]);
 
@@ -202,6 +211,7 @@ const App: React.FC = () => {
           user={user ?? undefined}
           activeCharacter={activeCharacter}
           userCharacters={userCharacters}
+          charactersLoaded={charactersLoaded}
           onlineCharacters={onlineCharacters}
           onLogout={handleLogout}
           onCharacterSelect={handleCharacterSelect}

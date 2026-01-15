@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { checkAndRevokeFullProfile } from './achievements';
 
 export async function getHealthStatuses(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
@@ -247,6 +248,12 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
         const pool = await getPool();
         
+        // Get the userId for this character before updating (for achievement check)
+        const characterResult = await pool.request()
+            .input('id', sql.Int, parseInt(id))
+            .query('SELECT UserID FROM Character WHERE CharacterID = @id');
+        const userId = characterResult.recordset[0]?.UserID;
+        
         await pool.request()
             .input('id', sql.Int, parseInt(id))
             .input('name', sql.NVarChar, name)
@@ -273,6 +280,11 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
                 SET CharacterName = @name, Surname = @surname, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4
                 WHERE CharacterID = @id
             `);
+        
+        // Check if FULL_PROFILE achievement should be revoked
+        if (userId) {
+            await checkAndRevokeFullProfile(userId);
+        }
             
         return { status: 200, body: "Updated" };
     } catch (error) {
