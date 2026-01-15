@@ -663,7 +663,8 @@ const Home: React.FC = () => {
           <div>
             {regions.map((region) => {
               const stats = regionStats[region.id];
-              const heroImage = regionImages[region.name];
+              // Use headerImageUrl from database if available, otherwise fall back to hardcoded map
+              const heroImage = region.headerImageUrl || regionImages[region.name];
 
               return (
                 <div key={region.id} className="px-4 py-4">

@@ -5,7 +5,7 @@ import * as sql from 'mssql';
 export async function createRegion(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const body: any = await request.json();
-        const { name, description, imageUrl } = body;
+        const { name, description, imageUrl, headerImageUrl } = body;
 
         if (!name || !description) {
             return { status: 400, body: "Name and Description are required" };
@@ -17,10 +17,11 @@ export async function createRegion(request: HttpRequest, context: InvocationCont
             .input('RegionName', sql.NVarChar, name)
             .input('Description', sql.NVarChar, description)
             .input('ImageURL', sql.NVarChar, imageUrl || null)
+            .input('HeaderImageURL', sql.NVarChar, headerImageUrl || null)
             .query(`
-                INSERT INTO Region (RegionName, Description, ImageURL)
-                OUTPUT INSERTED.RegionID, INSERTED.RegionName, INSERTED.Description, INSERTED.ImageURL
-                VALUES (@RegionName, @Description, @ImageURL)
+                INSERT INTO Region (RegionName, Description, ImageURL, HeaderImageURL)
+                OUTPUT INSERTED.RegionID, INSERTED.RegionName, INSERTED.Description, INSERTED.ImageURL, INSERTED.HeaderImageURL
+                VALUES (@RegionName, @Description, @ImageURL, @HeaderImageURL)
             `);
 
         const region = result.recordset[0];

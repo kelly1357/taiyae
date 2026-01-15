@@ -90,7 +90,8 @@ export interface ForumRegion {
   name: string;
   description: string;
   subareas: ForumSubarea[];
-  imageUrl?: string; // For the region banner/map
+  imageUrl?: string; // For the region background
+  headerImageUrl?: string; // For the homepage header above thread info
 }
 
 export interface OOCForum {

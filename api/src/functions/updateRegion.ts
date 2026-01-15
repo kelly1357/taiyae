@@ -6,7 +6,7 @@ export async function updateRegion(request: HttpRequest, context: InvocationCont
     try {
         const id = request.params.id;
         const body: any = await request.json();
-        const { name, description, imageUrl } = body;
+        const { name, description, imageUrl, headerImageUrl } = body;
 
         if (!id) {
             return { status: 400, body: "Region ID is required" };
@@ -23,12 +23,14 @@ export async function updateRegion(request: HttpRequest, context: InvocationCont
             .input('RegionName', sql.NVarChar, name)
             .input('Description', sql.NVarChar, description)
             .input('ImageURL', sql.NVarChar, imageUrl || null)
+            .input('HeaderImageURL', sql.NVarChar, headerImageUrl || null)
             .query(`
                 UPDATE Region
                 SET RegionName = @RegionName,
                     Description = @Description,
-                    ImageURL = @ImageURL
-                OUTPUT INSERTED.RegionID, INSERTED.RegionName, INSERTED.Description, INSERTED.ImageURL
+                    ImageURL = @ImageURL,
+                    HeaderImageURL = @HeaderImageURL
+                OUTPUT INSERTED.RegionID, INSERTED.RegionName, INSERTED.Description, INSERTED.ImageURL, INSERTED.HeaderImageURL
                 WHERE RegionID = @RegionID
             `);
 

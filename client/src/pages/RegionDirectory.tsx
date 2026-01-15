@@ -7,6 +7,7 @@ interface Region {
   name: string;
   description: string;
   imageUrl?: string;
+  headerImageUrl?: string;
   subareas: { id: string; name: string }[];
 }
 
@@ -16,6 +17,7 @@ const RegionDirectory: React.FC = () => {
   const [currentRegion, setCurrentRegion] = useState<Partial<Region>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingHeader, setUploadingHeader] = useState(false);
   const isAdmin = useIsAdmin();
   const userContext = useUser();
   // Debug: log admin context and user
@@ -42,6 +44,7 @@ const RegionDirectory: React.FC = () => {
       name: '',
       description: '',
       imageUrl: '',
+      headerImageUrl: '',
       subareas: []
     });
     setIsEditing(true);
@@ -76,6 +79,33 @@ const RegionDirectory: React.FC = () => {
       alert(`Image upload failed: ${error}`);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleHeaderImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setUploadingHeader(true);
+
+    try {
+      const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        body: file
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentRegion(prev => ({ ...prev, headerImageUrl: data.url }));
+      } else {
+        const errorText = await response.text();
+        alert(`Header image upload failed: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error uploading header image', error);
+      alert(`Header image upload failed: ${error}`);
+    } finally {
+      setUploadingHeader(false);
     }
   };
 
@@ -159,7 +189,8 @@ const RegionDirectory: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Region Image</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Region Background Image</label>
+                  <p className="text-xs text-gray-500 mb-2">This image displays as the page background when viewing the region.</p>
                   <div className="flex items-center space-x-4">
                     {currentRegion.imageUrl && (
                       <img src={currentRegion.imageUrl} alt="Preview" className="w-32 h-20 object-cover border border-gray-300" />
@@ -174,6 +205,23 @@ const RegionDirectory: React.FC = () => {
                   </div>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Region Header Image</label>
+                  <p className="text-xs text-gray-500 mb-2">This image displays on the homepage above the region's thread info.</p>
+                  <div className="flex items-center space-x-4">
+                    {currentRegion.headerImageUrl && (
+                      <img src={currentRegion.headerImageUrl} alt="Header Preview" className="w-32 h-20 object-cover border border-gray-300" />
+                    )}
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleHeaderImageUpload}
+                      className="text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:bg-white file:text-gray-700 hover:file:bg-gray-100 cursor-pointer"
+                    />
+                    {uploadingHeader && <span className="text-sm text-gray-600 animate-pulse">Uploading...</span>}
+                  </div>
+                </div>
+
                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                   <button 
                     type="button"
@@ -184,7 +232,7 @@ const RegionDirectory: React.FC = () => {
                   </button>
                   <button 
                     type="submit"
-                    disabled={isLoading || uploading}
+                    disabled={isLoading || uploading || uploadingHeader}
                     className="bg-[#2f3a2f] hover:bg-[#3a4a3a] text-white px-4 py-2 text-sm disabled:opacity-50"
                   >
                     {isLoading ? 'Saving...' : 'Save Region'}

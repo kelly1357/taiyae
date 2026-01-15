@@ -70,7 +70,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅ Skill Points
 
-[ ] Add header image upload to Region Directory Page
+✅ Add header image upload to Region Directory Page
 
 [ ] Character Status: Active, Inactive, Joining (cannot post), Dead (cannot post)
 
