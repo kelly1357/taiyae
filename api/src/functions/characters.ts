@@ -374,6 +374,15 @@ export async function moderatorUpdateCharacter(request: HttpRequest, context: In
             requestObj.input('status', sql.NVarChar, status);
             requestObj.input('isActive', sql.Bit, status === 'Active' ? 1 : 0);
             requestObj.input('showInDropdown', sql.Bit, status === 'Active' ? 1 : 0);
+            
+            // Set DeathDate when marking as Dead, clear it otherwise
+            if (status === 'Dead') {
+                updates.push('DeathDate = @deathDate');
+                requestObj.input('deathDate', sql.VarChar(50), formatHorizonDateString());
+            } else {
+                updates.push('DeathDate = NULL');
+            }
+            
             context.log('Status update included:', { status, isActive: status === 'Active' ? 1 : 0 });
         }
 
