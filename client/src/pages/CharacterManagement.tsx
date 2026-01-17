@@ -106,6 +106,40 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     }
   };
 
+  const handleToggleShowInDropdown = async (char: Character) => {
+    console.log('Toggle clicked for character:', char.id, char.name);
+    try {
+      const newValue = !char.showInDropdown;
+      console.log('Sending request with newValue:', newValue);
+      const response = await fetch(`/api/characters/${char.id}/show-in-dropdown`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, showInDropdown: newValue })
+      });
+      
+      console.log('Response status:', response.status);
+      if (response.ok) {
+        // Update local state
+        setCharacters(prev => prev.map(c => 
+          c.id === char.id ? { ...c, showInDropdown: newValue } : c
+        ));
+        setMessage({ 
+          type: 'success', 
+          text: newValue 
+            ? `${char.name} can now be selected for posting` 
+            : `${char.name} removed from posting dropdown`
+        });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } else {
+        const error = await response.json();
+        setMessage({ type: 'error', text: error.error || 'Failed to update character' });
+      }
+    } catch (error) {
+      console.error('Failed to toggle showInDropdown', error);
+      setMessage({ type: 'error', text: 'Failed to update character' });
+    }
+  };
+
   const sortedCharacters = useMemo(() => {
     return [...characters].sort((a, b) => {
       let aVal: string | number;
@@ -141,6 +175,16 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
       return 0;
     });
   }, [characters, sortField, sortDirection]);
+
+  const activeCharacters = useMemo(() => 
+    sortedCharacters.filter(c => c.status !== 'Inactive' && c.status !== 'Dead'), 
+    [sortedCharacters]
+  );
+  
+  const inactiveCharacters = useMemo(() => 
+    sortedCharacters.filter(c => c.status === 'Inactive' || c.status === 'Dead'), 
+    [sortedCharacters]
+  );
 
   const handleCreate = () => {
     setMessage({ type: '', text: '' });
@@ -407,6 +451,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 </div>
 
                 {currentCharacter.id && (
+                  <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700">Health Status</label>
@@ -442,6 +487,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                       </select>
                     </div>
                   </div>
+                  </>
                 )}
               </div>
             </div>
@@ -704,33 +750,35 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               </tr>
             </thead>
             <tbody>
-              {sortedCharacters.map(char => (
+              {activeCharacters.map(char => (
                 <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors align-top">
                   <td className="p-0 w-[25%] border-r border-gray-300 relative">
                     <div className="relative">
-                      {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
-                        <img 
-                          src={char.imageUrl} 
-                          alt={char.name} 
-                          className="w-full object-cover block"
-                          style={{ aspectRatio: '16/9' }}
-                          onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
-                        />
-                      ) : (
-                        <div 
-                          className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center"
-                          style={{ aspectRatio: '16/9' }}
-                        >
+                      <Link to={`/character/${char.id}`}>
+                        {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
                           <img 
-                            src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
-                            alt="Placeholder" 
-                            className="w-12 h-12 opacity-40"
+                            src={char.imageUrl} 
+                            alt={char.name} 
+                            className="w-full object-cover block hover:opacity-90 transition-opacity"
+                            style={{ aspectRatio: '16/9' }}
+                            onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
                           />
-                        </div>
-                      )}
-                      <span className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                        ) : (
+                          <div 
+                            className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center hover:opacity-90 transition-opacity"
+                            style={{ aspectRatio: '16/9' }}
+                          >
+                            <img 
+                              src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                              alt="Placeholder" 
+                              className="w-12 h-12 opacity-40"
+                            />
+                          </div>
+                        )}
+                      </Link>
+                      <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
                         {char.name}
-                      </span>
+                      </Link>
                       <button 
                         onClick={() => handleEdit(char)}
                         className="absolute bottom-2 right-2 text-xs bg-white/90 hover:bg-white text-[#2f3a2f] px-2 py-1 font-medium border border-gray-300"
@@ -766,6 +814,109 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               ))}
             </tbody>
           </table>
+
+          {/* Inactive Characters Section */}
+          {inactiveCharacters.length > 0 && (
+            <>
+              <hr className="my-6 border-gray-300" />
+              <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Inactive & Dead Characters</h3>
+              <table className="w-full border border-gray-300 text-sm bg-white">
+                <thead>
+                  <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                    <th className="px-4 py-2 text-left border-r border-gray-300 w-[25%]">Character</th>
+                    <th className="px-4 py-2 text-left border-r border-gray-300">Sex</th>
+                    <th className="px-4 py-2 text-left border-r border-gray-300">Pack</th>
+                    <th className="px-4 py-2 text-left border-r border-gray-300">Age</th>
+                    <th className="px-4 py-2 text-center">Skill Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {inactiveCharacters.map(char => (
+                    <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors align-top">
+                      <td className="p-0 w-[25%] border-r border-gray-300 relative">
+                        <div className="relative">
+                          <Link to={`/character/${char.id}`}>
+                            {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
+                              <img 
+                                src={char.imageUrl} 
+                                alt={char.name} 
+                                className="w-full object-cover block hover:opacity-90 transition-opacity"
+                                style={{ aspectRatio: '16/9' }}
+                                onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
+                              />
+                            ) : (
+                              <div 
+                                className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center hover:opacity-90 transition-opacity"
+                                style={{ aspectRatio: '16/9' }}
+                              >
+                                <img 
+                                  src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                                  alt="Placeholder" 
+                                  className="w-12 h-12 opacity-40"
+                                />
+                              </div>
+                            )}
+                          </Link>
+                          <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                            {char.name}
+                          </Link>
+                          <span className={`absolute top-0 right-0 px-2 py-1 text-xs font-bold ${
+                            char.status === 'Dead' ? 'bg-gray-800 text-gray-200' : 'bg-yellow-600 text-white'
+                          }`}>
+                            {char.status}
+                          </span>
+                          <div className="absolute bottom-2 right-2 flex gap-1">
+                            {char.status !== 'Dead' && (
+                              <button 
+                                onClick={() => handleToggleShowInDropdown(char)}
+                                className={`text-xs px-2 py-1 font-medium border ${
+                                  char.showInDropdown 
+                                    ? 'bg-green-600 hover:bg-green-700 text-white border-green-700' 
+                                    : 'bg-white/90 hover:bg-white text-gray-600 border-gray-300'
+                                }`}
+                                title={char.showInDropdown ? 'Remove from posting dropdown' : 'Enable for posting'}
+                              >
+                                {char.showInDropdown ? '✓ Posting' : 'Enable Posting'}
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleEdit(char)}
+                              className="text-xs bg-white/90 hover:bg-white text-[#2f3a2f] px-2 py-1 font-medium border border-gray-300"
+                            >
+                              Edit
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={`px-4 py-3 border-r border-gray-300 ${char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{char.sex || 'Unknown'}</td>
+                      <td className="px-4 py-3 border-r border-gray-300 text-gray-600">
+                        {char.packName ? char.packName : (
+                          <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 border-r border-gray-300 text-gray-600">{char.age}</td>
+                      <td className="px-4 py-3">
+                        <div className="border border-gray-300 text-xs text-center w-48 mx-auto">
+                          <div className="grid grid-cols-4 bg-gray-200 text-gray-700 font-semibold">
+                            <div className="p-1 border-r border-gray-300">Exp</div>
+                            <div className="p-1 border-r border-gray-300">Phys</div>
+                            <div className="p-1 border-r border-gray-300">Know</div>
+                            <div className="p-1">Total</div>
+                          </div>
+                          <div className="grid grid-cols-4 bg-white text-gray-800">
+                            <div className="p-1 border-r border-gray-300">{char.experience || 0}</div>
+                            <div className="p-1 border-r border-gray-300">{char.physical || 0}</div>
+                            <div className="p-1 border-r border-gray-300">{char.knowledge || 0}</div>
+                            <div className="p-1 font-bold">{char.totalSkill || 0}</div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
         </div>
       )}
       </section>

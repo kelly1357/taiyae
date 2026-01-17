@@ -47,7 +47,7 @@ const CharacterProfile: React.FC = () => {
   
   // Moderator edit state
   const [showModeratorEdit, setShowModeratorEdit] = useState(false);
-  const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0 });
+  const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0, status: 'Active' as 'Active' | 'Inactive' | 'Dead' });
   const [isModeratorSaving, setIsModeratorSaving] = useState(false);
   
   // User achievements state
@@ -149,11 +149,13 @@ const CharacterProfile: React.FC = () => {
   const openModeratorEdit = () => {
     if (character) {
       const totalMonths = (character as any).monthsAge || 0;
+      const charStatus = (character as any).status || 'Active';
       setModEditForm({
         name: character.name || '',
         sex: character.sex || '',
         years: Math.floor(totalMonths / 12),
-        months: totalMonths % 12
+        months: totalMonths % 12,
+        status: charStatus
       });
       setShowModeratorEdit(true);
     }
@@ -161,34 +163,48 @@ const CharacterProfile: React.FC = () => {
 
   // Save moderator edits
   const saveModeratorEdit = async () => {
-    if (!character || !user) return;
+    console.log('saveModeratorEdit called', { character: !!character, user: !!user, userId: user?.id });
+    if (!character || !user) {
+      console.log('Exiting early - character or user is missing');
+      return;
+    }
     
     const totalMonths = modEditForm.years * 12 + modEditForm.months;
+    
+    const payload = {
+      name: modEditForm.name,
+      sex: modEditForm.sex,
+      monthsAge: totalMonths,
+      status: modEditForm.status,
+      userId: user.id
+    };
+    
+    console.log('Saving moderator edit with payload:', payload);
     
     setIsModeratorSaving(true);
     try {
       const response = await fetch(`/api/characters/${character.id}/moderator-edit`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: modEditForm.name,
-          sex: modEditForm.sex,
-          monthsAge: totalMonths,
-          userId: user.id
-        })
+        body: JSON.stringify(payload)
       });
 
+      console.log('Response status:', response.status, response.statusText);
+
       if (response.ok) {
+        console.log('Update successful!');
         // Update local character state
         setCharacter(prev => prev ? {
           ...prev,
           name: modEditForm.name,
           sex: modEditForm.sex,
-          monthsAge: totalMonths
+          monthsAge: totalMonths,
+          status: modEditForm.status
         } as Character : null);
         setShowModeratorEdit(false);
       } else {
         const error = await response.text();
+        console.error('Update failed - Status:', response.status, 'Body:', error);
         alert(error || 'Failed to update character');
       }
     } catch (error) {
@@ -208,16 +224,22 @@ const CharacterProfile: React.FC = () => {
   useEffect(() => {
     if (!characterId) return;
     
-    fetch('/api/characters')
+    // Fetch the specific character by ID (works for inactive/dead characters too)
+    fetch(`/api/characters?characterId=${characterId}`)
       .then(res => res.json())
       .then((data: Character[]) => {
-        const found = data.find(c => String(c.id) === characterId);
-        setCharacter(found || null);
+        const found = data[0] || null;
+        setCharacter(found);
         // Get all characters belonging to the same user
         if (found) {
           const foundUserId = (found as any).odUserId;
-          const sameUserChars = data.filter(c => (c as any).odUserId === foundUserId);
-          setUserCharacters(sameUserChars);
+          // Fetch user's other characters separately
+          fetch(`/api/characters?userId=${foundUserId}`)
+            .then(res => res.json())
+            .then((userChars: Character[]) => {
+              setUserCharacters(userChars);
+            })
+            .catch(() => {});
         }
         setLoading(false);
       })
@@ -323,6 +345,13 @@ const CharacterProfile: React.FC = () => {
                 </div>
               )}
               
+              {/* Status label for inactive/dead characters */}
+              {character.status && character.status !== 'Active' && (
+                <div className="text-center text-gray-500 italic text-sm mt-3 -mb-4">
+                  {character.status}
+                </div>
+              )}
+              
               {/* Character Info Table */}
               <div className="border border-gray-300 mt-[30px]">
                 <table className="w-full text-sm">
@@ -360,10 +389,22 @@ const CharacterProfile: React.FC = () => {
                       <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300">Age</td>
                       <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600">Skill Points</td>
                     </tr>
-                    <tr>
+                    <tr className={character.status === 'Dead' ? 'border-b border-gray-300' : ''}>
                       <td className="px-2 py-2 text-gray-700 border-r border-gray-300">{character.age}</td>
                       <td className="px-2 py-2 text-gray-700 font-bold">{character.totalSkill || 0}</td>
                     </tr>
+                    
+                    {/* Row 4: Death Date (only for dead characters) */}
+                    {character.status === 'Dead' && (
+                      <>
+                        <tr className="border-b border-gray-300">
+                          <td colSpan={2} className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600">Death Date</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={2} className="px-2 py-2 text-gray-700">{character.deathDate || 'Unknown'}</td>
+                        </tr>
+                      </>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1159,6 +1200,25 @@ const CharacterProfile: React.FC = () => {
                     </select>
                   </div>
                 </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Status</label>
+                <select
+                  value={modEditForm.status}
+                  onChange={(e) => setModEditForm(prev => ({ ...prev, status: e.target.value as 'Active' | 'Inactive' | 'Dead' }))}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Dead">Dead</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {modEditForm.status === 'Inactive' && 'Character will not appear in active character lists.'}
+                  {modEditForm.status === 'Dead' && 'Character is permanently deceased and cannot post.'}
+                  {modEditForm.status === 'Active' && 'Character is active and can participate in roleplay.'}
+                </p>
               </div>
             </div>
 

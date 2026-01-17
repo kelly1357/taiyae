@@ -218,6 +218,17 @@ export async function createReply(request: HttpRequest, context: InvocationConte
         }
         
         await req.query(insertSQL + valuesSQL);
+        
+        // Auto-reactivate character if they were inactive (only for roleplay region posts)
+        if (thread.RegionId && authorId) {
+            await pool.request()
+                .input('characterId', sql.Int, parseInt(authorId))
+                .query(`
+                    UPDATE Character 
+                    SET Status = 'Active', Is_Active = 1 
+                    WHERE CharacterID = @characterId AND Status = 'Inactive'
+                `);
+        }
             
         // Update Thread Modified date
         await pool.request()

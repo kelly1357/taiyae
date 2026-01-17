@@ -19,6 +19,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [pendingSkillPointsCount, setPendingSkillPointsCount] = useState(0);
   const [pendingPlotNewsCount, setPendingPlotNewsCount] = useState(0);
   const [pendingAchievementsCount, setPendingAchievementsCount] = useState(0);
+  const [pendingInactiveCharactersCount, setPendingInactiveCharactersCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -100,6 +101,28 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         }
       } catch (error) {
         console.error('Error fetching pending achievements count:', error);
+      }
+    };
+    
+    fetchCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchCount, 60000);
+    return () => clearInterval(interval);
+  }, [isModerator]);
+
+  // Fetch pending inactive characters count for moderators
+  useEffect(() => {
+    if (!isModerator) return;
+    
+    const fetchCount = async () => {
+      try {
+        const response = await fetch('/api/moderation/characters-to-inactivate/count');
+        if (response.ok) {
+          const data = await response.json();
+          setPendingInactiveCharactersCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending inactive characters count:', error);
       }
     };
     
@@ -294,7 +317,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {pendingSkillPointsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}
                 </span>
               </DropdownLink>
-              <DropdownLink to="/admin/inactive-characters">Inactive Characters</DropdownLink>
+              <DropdownLink to="/admin/inactive-characters">
+                <span className="flex items-center justify-between w-full">
+                  Inactive Characters
+                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
+                </span>
+              </DropdownLink>
             </NavDropdown>
           )}
           {user ? (
@@ -328,7 +356,9 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 shadow-lg z-50">
-                      {userCharacters.map(char => (
+                      {userCharacters
+                        .filter(char => char.status === 'Active' || char.showInDropdown)
+                        .map(char => (
                         <button
                           key={char.id}
                           onClick={() => {
@@ -462,7 +492,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {(isModerator || isAdmin) && (
-            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount}</span>}</span>}>
+            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/achievements">
                 <span className="flex items-center justify-between w-full">
                   Achievements
@@ -482,7 +512,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {pendingSkillPointsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}
                 </span>
               </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/inactive-characters">Inactive Characters</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/inactive-characters">
+                <span className="flex items-center justify-between w-full">
+                  Inactive Characters
+                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
+                </span>
+              </MobileDropdownLink>
             </MobileNavSection>
           )}
           
@@ -521,10 +556,10 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   </div>
                 </div>
               )}
-              {userCharacters.length > 1 && (
+              {userCharacters.filter(c => c.id !== activeCharacter?.id && (c.status === 'Active' || c.showInDropdown)).length > 0 && (
                 <div className="py-2">
                   <div className="px-4 py-1 text-xs uppercase tracking-wide text-gray-500">Switch Character</div>
-                  {userCharacters.filter(c => c.id !== activeCharacter?.id).map(char => (
+                  {userCharacters.filter(c => c.id !== activeCharacter?.id && (c.status === 'Active' || c.showInDropdown)).map(char => (
                     <button
                       key={char.id}
                       onClick={() => {

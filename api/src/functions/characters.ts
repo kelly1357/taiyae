@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getPool } from "../db";
 import * as sql from 'mssql';
 import { checkAndRevokeFullProfile } from './achievements';
+import { formatHorizonDateString } from '../horizonCalendar';
 
 export async function getHealthStatuses(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
@@ -38,6 +39,8 @@ export async function getBuilds(request: HttpRequest, context: InvocationContext
 
 export async function getCharacters(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const userId = request.query.get('userId');
+    const characterId = request.query.get('characterId');
+    const includeInactive = request.query.get('includeInactive') === 'true';
     
     try {
         const pool = await getPool();
@@ -79,6 +82,9 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.ProfileImage2 as profileImage2,
                     c.ProfileImage3 as profileImage3,
                     c.ProfileImage4 as profileImage4,
+                    COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) as status,
+                    c.DeathDate as deathDate,
+                    COALESCE(c.ShowInDropdown, 1) as showInDropdown,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -99,11 +105,20 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
         
         const requestObj = pool.request();
 
-        if (userId) {
+        if (characterId) {
+            // Fetch a specific character by ID (includes inactive/dead for profile viewing)
+            requestObj.input('characterId', sql.Int, parseInt(characterId));
+            query += ` WHERE c.CharacterID = @characterId`;
+        } else if (userId) {
+            // When fetching for a specific user (character management), return all their characters
             requestObj.input('userId', sql.Int, parseInt(userId));
             query += ` WHERE c.UserID = @userId`;
+        } else if (includeInactive) {
+            // Include all characters (active, inactive, and dead)
+            // No WHERE clause needed
         } else {
-            query += ` WHERE c.Is_Active = 1`;
+            // Public character list - only show Active characters (not Inactive or Dead)
+            query += ` WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'`;
         }
 
         query += ` ORDER BY c.CharacterName`;
@@ -238,7 +253,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
     try {
         const body = await request.json() as any;
-        const { name, surname, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol, profileImages } = body;
+        const { name, surname, sex, monthsAge, imageUrl, bio, healthStatusId, father, mother, heightId, buildId, birthplace, siblings, pups, spiritSymbol, profileImages, status, deathDate } = body;
 
         // Extract profile images from array
         const profileImage1 = profileImages?.[0] || null;
@@ -254,7 +269,7 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
             .query('SELECT UserID FROM Character WHERE CharacterID = @id');
         const userId = characterResult.recordset[0]?.UserID;
         
-        await pool.request()
+        const updateRequest = pool.request()
             .input('id', sql.Int, parseInt(id))
             .input('name', sql.NVarChar, name)
             .input('surname', sql.NVarChar, surname || null)
@@ -275,11 +290,21 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
             .input('profileImage2', sql.NVarChar, profileImage2)
             .input('profileImage3', sql.NVarChar, profileImage3)
             .input('profileImage4', sql.NVarChar, profileImage4)
-            .query(`
-                UPDATE Character 
-                SET CharacterName = @name, Surname = @surname, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4
-                WHERE CharacterID = @id
-            `);
+            .input('status', sql.VarChar(20), status || 'Active')
+            .input('deathDate', sql.VarChar(50), status === 'Dead' ? (deathDate || formatHorizonDateString()) : null);
+        
+        // Update Is_Active based on status for backward compatibility
+        const isActive = status === 'Active' ? 1 : 0;
+        // Update ShowInDropdown when status changes
+        const showInDropdown = status === 'Active' ? 1 : 0;
+        updateRequest.input('isActive', sql.Bit, isActive);
+        updateRequest.input('showInDropdown', sql.Bit, showInDropdown);
+        
+        await updateRequest.query(`
+            UPDATE Character 
+            SET CharacterName = @name, Surname = @surname, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4, Status = @status, DeathDate = @deathDate, Is_Active = @isActive, ShowInDropdown = @showInDropdown
+            WHERE CharacterID = @id
+        `);
         
         // Check if FULL_PROFILE achievement should be revoked
         if (userId) {
@@ -293,14 +318,16 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
     }
 }
 
-// Moderator-only endpoint to update character name, sex, and age
+// Moderator-only endpoint to update character name, sex, age, and status
 export async function moderatorUpdateCharacter(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const characterId = request.params.id;
     if (!characterId) return { status: 400, body: "Missing character ID" };
 
     try {
         const body = await request.json() as any;
-        const { name, sex, monthsAge, userId } = body;
+        const { name, sex, monthsAge, status, userId } = body;
+        
+        context.log('Moderator edit request:', { characterId, name, sex, monthsAge, status, userId });
 
         if (!userId) {
             return { status: 400, body: "Missing user ID" };
@@ -338,20 +365,36 @@ export async function moderatorUpdateCharacter(request: HttpRequest, context: In
             updates.push('MonthsAge = @monthsAge');
             requestObj.input('monthsAge', sql.Int, monthsAge);
         }
+        if (status !== undefined && ['Active', 'Inactive', 'Dead'].includes(status)) {
+            updates.push('Status = @status');
+            updates.push('Is_Active = @isActive');
+            updates.push('ShowInDropdown = @showInDropdown');
+            requestObj.input('status', sql.NVarChar, status);
+            requestObj.input('isActive', sql.Bit, status === 'Active' ? 1 : 0);
+            requestObj.input('showInDropdown', sql.Bit, status === 'Active' ? 1 : 0);
+            context.log('Status update included:', { status, isActive: status === 'Active' ? 1 : 0 });
+        }
 
         if (updates.length === 0) {
             return { status: 400, body: "No fields to update" };
         }
 
         updates.push('Modified = GETDATE()');
+        
+        const updateQuery = `UPDATE Character SET ${updates.join(', ')} WHERE CharacterID = @id`;
+        context.log('Executing update query:', updateQuery);
 
-        await requestObj.query(`
-            UPDATE Character 
-            SET ${updates.join(', ')}
-            WHERE CharacterID = @id
-        `);
+        const result = await requestObj.query(updateQuery);
+        context.log('Update result:', result.rowsAffected);
             
-        return { status: 200, body: "Character updated successfully" };
+        return { 
+            status: 200, 
+            jsonBody: { 
+                message: "Character updated successfully",
+                rowsAffected: result.rowsAffected,
+                fieldsUpdated: updates.length - 1 // exclude Modified
+            }
+        };
     } catch (error) {
         context.error(error);
         return { status: 500, body: "Internal Server Error: " + error.message };
@@ -550,6 +593,256 @@ export async function updateThreadSummary(request: HttpRequest, context: Invocat
     }
 }
 
+// Get all inactive and dead characters (moderator-only)
+export async function getInactiveCharacters(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const body = await request.json() as any;
+        const { userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "Missing user ID" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can view inactive characters" };
+        }
+
+        // Get inactive and dead characters with their last post date
+        const result = await pool.request().query(`
+            SELECT 
+                c.CharacterID as id,
+                c.CharacterName as name,
+                c.Surname as surname,
+                c.AvatarImage as imageUrl,
+                c.Sex as sex,
+                c.MonthsAge as monthsAge,
+                u.Username as playerName,
+                u.UserID as playerId,
+                p.PackName as packName,
+                COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) as status,
+                c.DeathDate as deathDate,
+                (SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID) as lastPostDate,
+                (SELECT COUNT(*) FROM Post WHERE CharacterID = c.CharacterID) as totalPosts,
+                DATEDIFF(day, 
+                    COALESCE((SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID), c.Created), 
+                    GETDATE()
+                ) as daysSinceLastPost
+            FROM Character c
+            LEFT JOIN [User] u ON c.UserID = u.UserID
+            LEFT JOIN Pack p ON c.PackID = p.PackID
+            WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) IN ('Inactive', 'Dead')
+            ORDER BY c.CharacterName
+        `);
+
+        const characters = result.recordset.map(c => {
+            const years = Math.floor(c.monthsAge / 12);
+            const months = c.monthsAge % 12;
+            return {
+                ...c,
+                age: `${years} yr${years !== 1 ? 's' : ''}, ${months} mo${months !== 1 ? 's' : ''}`
+            };
+        });
+
+        return { jsonBody: characters };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+// Get characters that should be auto-inactivated (no posts in 30 days)
+export async function getCharactersToInactivate(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const body = await request.json() as any;
+        const { userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "Missing user ID" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can view this" };
+        }
+
+        // Get active characters with no posts in 30+ days
+        const result = await pool.request().query(`
+            SELECT 
+                c.CharacterID as id,
+                c.CharacterName as name,
+                c.Surname as surname,
+                c.AvatarImage as imageUrl,
+                c.Sex as sex,
+                c.MonthsAge as monthsAge,
+                u.Username as playerName,
+                u.UserID as playerId,
+                p.PackName as packName,
+                (SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID) as lastPostDate,
+                (SELECT COUNT(*) FROM Post WHERE CharacterID = c.CharacterID) as totalPosts,
+                DATEDIFF(day, 
+                    COALESCE((SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID), c.Created), 
+                    GETDATE()
+                ) as daysSinceLastPost
+            FROM Character c
+            LEFT JOIN [User] u ON c.UserID = u.UserID
+            LEFT JOIN Pack p ON c.PackID = p.PackID
+            WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'
+              AND DATEDIFF(day, 
+                    COALESCE((SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID), c.Created), 
+                    GETDATE()
+                  ) >= 30
+            ORDER BY daysSinceLastPost DESC
+        `);
+
+        const characters = result.recordset.map(c => {
+            const years = Math.floor(c.monthsAge / 12);
+            const months = c.monthsAge % 12;
+            return {
+                ...c,
+                age: `${years} yr${years !== 1 ? 's' : ''}, ${months} mo${months !== 1 ? 's' : ''}`
+            };
+        });
+
+        return { jsonBody: characters };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+// Moderator-only endpoint to change character status
+export async function updateCharacterStatus(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const characterId = request.params.id;
+    if (!characterId) return { status: 400, body: "Missing character ID" };
+
+    try {
+        const body = await request.json() as any;
+        const { userId, status, deathDate } = body;
+
+        if (!userId) {
+            return { status: 400, body: "Missing user ID" };
+        }
+
+        if (!status || !['Active', 'Inactive', 'Dead'].includes(status)) {
+            return { status: 400, body: "Invalid status. Must be Active, Inactive, or Dead" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can change character status" };
+        }
+
+        // Update character status
+        const isActive = status === 'Active' ? 1 : 0;
+        // When deactivating, remove from dropdown. When activating, add to dropdown.
+        const showInDropdown = status === 'Active' ? 1 : 0;
+        
+        await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .input('status', sql.VarChar(20), status)
+            .input('deathDate', sql.VarChar(50), status === 'Dead' ? (deathDate || formatHorizonDateString()) : null)
+            .input('isActive', sql.Bit, isActive)
+            .input('showInDropdown', sql.Bit, showInDropdown)
+            .query(`
+                UPDATE Character 
+                SET Status = @status, 
+                    DeathDate = @deathDate, 
+                    Is_Active = @isActive,
+                    ShowInDropdown = @showInDropdown,
+                    Modified = GETDATE()
+                WHERE CharacterID = @characterId
+            `);
+
+        return { status: 200, jsonBody: { message: `Character status updated to ${status}` } };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+// Bulk inactivate characters (moderator-only)
+export async function bulkInactivateCharacters(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const body = await request.json() as any;
+        const { userId, characterIds } = body;
+
+        if (!userId) {
+            return { status: 400, body: "Missing user ID" };
+        }
+
+        if (!characterIds || !Array.isArray(characterIds) || characterIds.length === 0) {
+            return { status: 400, body: "No characters specified" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the user is a moderator or admin
+        const modCheck = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
+        
+        if (modCheck.recordset.length === 0) {
+            return { status: 404, body: "User not found" };
+        }
+        
+        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
+        if (!isModerator) {
+            return { status: 403, body: "Only moderators can inactivate characters" };
+        }
+
+        // Bulk update
+        const idList = characterIds.map((id: number) => Number(id)).join(',');
+        await pool.request().query(`
+            UPDATE Character 
+            SET Status = 'Inactive', 
+                Is_Active = 0,
+                ShowInDropdown = 0,
+                Modified = GETDATE()
+            WHERE CharacterID IN (${idList})
+              AND COALESCE(Status, CASE WHEN Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'
+        `);
+
+        return { status: 200, jsonBody: { message: `${characterIds.length} character(s) marked as inactive` } };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 app.http('getHealthStatuses', {
     methods: ['GET'],
     authLevel: 'anonymous',
@@ -584,6 +877,124 @@ app.http('getCharacterStats', {
     authLevel: 'anonymous',
     route: 'character-stats',
     handler: getCharacterStats
+});
+
+app.http('getInactiveCharacters', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'moderation/inactive-characters',
+    handler: getInactiveCharacters
+});
+
+app.http('getCharactersToInactivate', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'moderation/characters-to-inactivate',
+    handler: getCharactersToInactivate
+});
+
+// Count of characters pending inactivation (30+ days no posts)
+export async function getCharactersToInactivateCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+
+        // Get count of active characters with no posts in 30+ days
+        const result = await pool.request().query(`
+            SELECT COUNT(*) as count
+            FROM Character c
+            WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'
+              AND DATEDIFF(day, 
+                    COALESCE((SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID), c.Created), 
+                    GETDATE()
+                  ) >= 30
+        `);
+
+        return { jsonBody: { count: result.recordset[0]?.count || 0 } };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('updateCharacterStatus', {
+    methods: ['PUT'],
+    authLevel: 'anonymous',
+    route: 'moderation/characters/{id}/status',
+    handler: updateCharacterStatus
+});
+
+// Toggle showInDropdown for a character (user can enable/disable their inactive characters from header dropdown)
+export async function toggleShowInDropdown(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const characterId = request.params.id;
+    
+    if (!characterId) {
+        return { status: 400, body: "Character ID is required" };
+    }
+
+    try {
+        const body = await request.json() as any;
+        const { userId, showInDropdown } = body;
+
+        if (!userId) {
+            return { status: 400, body: "User ID is required" };
+        }
+
+        if (typeof showInDropdown !== 'boolean') {
+            return { status: 400, body: "showInDropdown must be a boolean" };
+        }
+
+        const pool = await getPool();
+
+        // Verify the character belongs to this user
+        const ownerCheck = await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT CharacterID, Status FROM Character WHERE CharacterID = @characterId AND UserID = @userId');
+        
+        if (ownerCheck.recordset.length === 0) {
+            return { status: 403, body: "You can only modify your own characters" };
+        }
+
+        // Update the showInDropdown field
+        await pool.request()
+            .input('characterId', sql.Int, parseInt(characterId))
+            .input('showInDropdown', sql.Bit, showInDropdown ? 1 : 0)
+            .query(`
+                UPDATE Character 
+                SET ShowInDropdown = @showInDropdown,
+                    Modified = GETDATE()
+                WHERE CharacterID = @characterId
+            `);
+
+        return { 
+            status: 200, 
+            jsonBody: { success: true, showInDropdown } 
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('toggleShowInDropdown', {
+    methods: ['PUT'],
+    authLevel: 'anonymous',
+    route: 'characters/{id}/show-in-dropdown',
+    handler: toggleShowInDropdown
+});
+
+app.http('bulkInactivateCharacters', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'moderation/characters/bulk-inactivate',
+    handler: bulkInactivateCharacters
+});
+
+app.http('getCharactersToInactivateCount', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'moderation/characters-to-inactivate/count',
+    handler: getCharactersToInactivateCount
 });
 
 app.http('getCharacter', {

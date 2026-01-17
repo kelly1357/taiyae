@@ -35,6 +35,8 @@ export interface Pack {
   };
 }
 
+export type CharacterStatus = 'Active' | 'Inactive' | 'Dead';
+
 export interface Character {
   id: string;
   userId: string;
@@ -77,6 +79,9 @@ export interface Character {
   discord?: string;
   spiritSymbol?: string;
   profileImages?: string[]; // Up to 4 profile images
+  status?: CharacterStatus; // 'Active', 'Inactive', or 'Dead'
+  deathDate?: string; // Horizon date of death (e.g., "HY0, Early Summer")
+  showInDropdown?: boolean; // Whether to show in header dropdown (for inactive characters)
 }
 
 export interface ForumSubarea {

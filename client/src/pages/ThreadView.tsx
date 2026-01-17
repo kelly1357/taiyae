@@ -19,6 +19,7 @@ interface PostAuthor {
   sex?: string;
   age?: string;
   healthStatus?: string;
+  characterStatus?: string;
   skillPoints?: number;
   isOnline?: boolean;
   playerName?: string;
@@ -63,8 +64,8 @@ const OOCPlayerInfoPanel: React.FC<{
     fetch(`/api/characters?userId=${userId}`)
       .then(res => res.json())
       .then(data => {
-        // Filter to only active characters
-        const activeChars = data.filter((c: Character) => c.healthStatus !== 'Inactive');
+        // Filter to only active characters (not Inactive or Dead)
+        const activeChars = data.filter((c: Character) => c.status === 'Active');
         setCharacters(activeChars);
         setLoading(false);
       })
@@ -190,6 +191,24 @@ const OOCPlayerInfoPanel: React.FC<{
   );
 };
 
+// Helper function to format age from months to years and months
+const formatAge = (monthsAge: string | number | undefined): string => {
+  if (!monthsAge) return 'Unknown';
+  const months = typeof monthsAge === 'string' ? parseInt(monthsAge, 10) : monthsAge;
+  if (isNaN(months)) return 'Unknown';
+  
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+  
+  if (years === 0) {
+    return `${remainingMonths} month${remainingMonths !== 1 ? 's' : ''}`;
+  } else if (remainingMonths === 0) {
+    return `${years} year${years !== 1 ? 's' : ''}`;
+  } else {
+    return `${years} yr${years !== 1 ? 's' : ''}, ${remainingMonths} mo`;
+  }
+};
+
 // Character info panel component with table styling
 const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
   return (
@@ -204,10 +223,10 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
         />
       </Link>
       
-      {/* Status badge if inactive */}
-      {author.healthStatus === 'Inactive' && (
-        <div className="text-xs font-bold uppercase tracking-wider py-0.5 px-2 mb-2 bg-gray-400 text-white">
-          Inactive
+      {/* Status text if inactive or dead */}
+      {(author.characterStatus === 'Inactive' || author.characterStatus === 'Dead') && (
+        <div className="text-sm italic text-gray-500 mb-2">
+          {author.characterStatus}
         </div>
       )}
       
@@ -234,7 +253,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
             <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600">Sex</td>
           </tr>
           <tr className="border-b border-gray-300">
-            <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{author.age}</td>
+            <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{formatAge(author.age)}</td>
             <td className={`px-2 py-2 ${author.sex === 'Male' ? 'text-blue-600' : author.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{author.sex}</td>
           </tr>
           <tr className="border-b border-gray-300">
@@ -403,6 +422,11 @@ const ThreadView: React.FC = () => {
       // IC posts use character ID
       if (!activeCharacter) {
         alert("Please select a character to post.");
+        return;
+      }
+      // Block dead characters from posting in IC/roleplay threads
+      if (activeCharacter.status === 'Dead') {
+        alert("Dead characters cannot post in roleplay regions. You can still post in OOC forums.");
         return;
       }
     }
@@ -678,6 +702,7 @@ const ThreadView: React.FC = () => {
     sex: thread.sex || 'Unknown',
     age: thread.age ? `${thread.age} mos.` : 'Unknown',
     healthStatus: thread.healthStatus || 'Unknown',
+    characterStatus: thread.characterStatus,
     skillPoints: thread.skillPoints || 0,
     isOnline: thread.isOnline,
     playerName: thread.playerName || 'Unknown',
@@ -1166,6 +1191,7 @@ const ThreadView: React.FC = () => {
                 sex: reply.sex || 'Unknown',
                 age: reply.age ? `${reply.age} mos.` : 'Unknown',
                 healthStatus: reply.healthStatus || 'Unknown',
+                characterStatus: reply.characterStatus,
                 skillPoints: reply.skillPoints || 0,
                 isOnline: reply.isOnline,
                 playerName: reply.playerName || 'Unknown',

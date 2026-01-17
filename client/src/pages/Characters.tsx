@@ -106,8 +106,9 @@ const Characters: React.FC = () => {
 
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-        Character List
+      <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header flex justify-between items-center">
+        <span>Character List</span>
+        <Link to="/memorial" className="text-[#fff9] hover:text-white normal-case">Dead Characters →</Link>
       </div>
       <div className="px-4 py-4">
         <h3 className="text-base font-semibold text-gray-900 mb-1">Character List</h3>

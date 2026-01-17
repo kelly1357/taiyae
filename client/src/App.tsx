@@ -25,6 +25,8 @@ import Adopt from './pages/Adopt';
 import HomepageAdmin from './pages/HomepageAdmin';
 import SitewideUpdates from './pages/SitewideUpdates';
 import ActivityTracker from './pages/ActivityTracker';
+import InactiveCharacters from './pages/InactiveCharacters';
+import DeadCharacters from './pages/DeadCharacters';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -226,6 +228,7 @@ const App: React.FC = () => {
         <Route path="ooc-forum/:forumId" element={<OOCForumPage />} />
         <Route path="thread/:threadId" element={<ThreadView />} />
         <Route path="characters" element={<Characters />} />
+        <Route path="memorial" element={<DeadCharacters />} />
         <Route path="adopt" element={<Adopt />} />
         <Route path="activity-tracker" element={<ActivityTracker />} />
         <Route path="character/:characterId" element={<CharacterProfile />} />
@@ -248,6 +251,7 @@ const App: React.FC = () => {
         <Route path="admin/plot-news" element={<PlotNewsSubmissions />} />
         <Route path="admin/achievements" element={<AchievementAdmin />} />
         <Route path="admin/homepage" element={<HomepageAdmin />} />
+        <Route path="admin/inactive-characters" element={user ? <InactiveCharacters user={user} /> : <div className="text-center mt-20">Please log in to access this page.</div>} />
         {/* Wiki Routes */}
         <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />
         <Route path="wiki/achievements" element={<Achievements />} />

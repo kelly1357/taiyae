@@ -113,13 +113,18 @@ const Region: React.FC = () => {
               <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
               <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: region.description }} />
             </div>
-            {activeCharacter && (
+            {activeCharacter && activeCharacter.status !== 'Dead' && (
               <button 
                 onClick={() => setIsModalOpen(true)}
                 className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-xs font-bold uppercase tracking-wide shadow"
               >
                 New Thread
               </button>
+            )}
+            {activeCharacter && activeCharacter.status === 'Dead' && (
+              <span className="text-xs text-gray-500 italic">
+                Dead characters cannot create threads in roleplay regions.
+              </span>
             )}
           </div>
 

@@ -204,6 +204,16 @@ function createReply(request, context) {
                 valuesSQL += ", @authorId)";
             }
             yield req.query(insertSQL + valuesSQL);
+            // Auto-reactivate character if they were inactive (only for roleplay region posts)
+            if (thread.RegionId && authorId) {
+                yield pool.request()
+                    .input('characterId', sql.Int, parseInt(authorId))
+                    .query(`
+                    UPDATE Character 
+                    SET Status = 'Active', Is_Active = 1 
+                    WHERE CharacterID = @characterId AND Status = 'Inactive'
+                `);
+            }
             // Update Thread Modified date
             yield pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
