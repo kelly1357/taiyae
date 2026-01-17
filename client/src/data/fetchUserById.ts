@@ -19,6 +19,8 @@ export async function fetchUserById(userId: number | string): Promise<User | nul
       facebook: user.Facebook ?? user.facebook,
       instagram: user.Instagram ?? user.instagram,
       discord: user.Discord ?? user.discord,
+      isModerator: user.Is_Moderator ?? user.isModerator,
+      isAdmin: user.Is_Admin ?? user.isAdmin,
     };
   } catch (e) {
     return null;

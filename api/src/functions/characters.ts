@@ -54,6 +54,8 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     u.Facebook as facebook,
                     u.Instagram as instagram,
                     u.Discord as discord,
+                    u.Is_Moderator as isModerator,
+                    u.Is_Admin as isAdmin,
                     c.CharacterName as name, 
                     c.Surname as surname,
                     c.Sex as sex, 

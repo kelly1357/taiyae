@@ -161,7 +161,7 @@ const Layout: React.FC<LayoutProps> = ({
                       <span key={character.id}>
                         <Link 
                           to={`/character/${character.id}`}
-                          className="hover:text-gray-600"
+                          className={`hover:text-gray-600 ${character.isModerator || character.isAdmin ? 'bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded' : ''}`}
                         >
                           {character.name}
                         </Link>

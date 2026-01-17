@@ -46,6 +46,8 @@ function getThread(request, context) {
                     COALESCE(r.ImageURL, origR.ImageURL) as regionImage,
                     COALESCE(u.Username, oocUser.Username) as playerName,
                     COALESCE(u.UserID, oocUser.UserID) as userId,
+                    COALESCE(u.Is_Moderator, oocUser.Is_Moderator) as isModerator,
+                    COALESCE(u.Is_Admin, oocUser.Is_Admin) as isAdmin,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -86,6 +88,8 @@ function getThread(request, context) {
                 isOnline: p.isOnline === 1,
                 playerName: p.playerName,
                 userId: p.userId,
+                isModerator: p.isModerator === true || p.isModerator === 1,
+                isAdmin: p.isAdmin === true || p.isAdmin === 1,
                 createdAt: p.Created,
                 modifiedAt: p.Modified,
                 modifiedByName: p.modifiedByName
@@ -110,6 +114,8 @@ function getThread(request, context) {
                 isOnline: op.isOnline === 1,
                 playerName: op.playerName,
                 userId: op.userId,
+                isModerator: op.isModerator === true || op.isModerator === 1,
+                isAdmin: op.isAdmin === true || op.isAdmin === 1,
                 createdAt: op.Created,
                 modifiedAt: op.Modified,
                 modifiedByName: op.modifiedByName,

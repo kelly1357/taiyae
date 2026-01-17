@@ -43,6 +43,8 @@ export interface Character {
   odUserId?: number;
   username?: string;
   userCreatedAt?: string;
+  isModerator?: boolean;
+  isAdmin?: boolean;
   name: string;
   surname?: string;
   sex: 'Male' | 'Female' | 'Other';

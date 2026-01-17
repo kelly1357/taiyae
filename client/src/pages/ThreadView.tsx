@@ -24,6 +24,8 @@ interface PostAuthor {
   isOnline?: boolean;
   playerName?: string;
   userId?: number;
+  isModerator?: boolean;
+  isAdmin?: boolean;
 }
 
 interface UserAchievement {
@@ -115,7 +117,14 @@ const OOCPlayerInfoPanel: React.FC<{
             <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
           </tr>
           <tr>
-            <td className="px-2 py-2 text-gray-700 text-center">{playerName || 'Unknown'}</td>
+            <td className="px-2 py-2 text-gray-700">
+              <div className="flex items-center justify-center gap-1">
+                <span>{playerName || 'Unknown'}</span>
+                {user && (user.isModerator || user.isAdmin) && (
+                  <span className="bg-gray-200 text-gray-600 px-1 py-0.5 text-[10px] uppercase font-semibold">Staff</span>
+                )}
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -246,7 +255,12 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
                 <span className="ml-1 w-2 h-2 bg-green-500 rounded-full inline-block" title="Online Now"></span>
               )}
             </td>
-            <td className="px-2 py-2 text-gray-700">{author.playerName || 'Unknown'}</td>
+            <td className="px-2 py-2 text-gray-700">
+              {author.playerName || 'Unknown'}
+              {(author.isModerator || author.isAdmin) && (
+                <span className="ml-1 bg-gray-200 text-gray-600 px-1 py-0.5 text-[10px] uppercase font-semibold">Staff</span>
+              )}
+            </td>
           </tr>
           <tr className="border-b border-gray-300">
             <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300">Age</td>
@@ -706,7 +720,9 @@ const ThreadView: React.FC = () => {
     skillPoints: thread.skillPoints || 0,
     isOnline: thread.isOnline,
     playerName: thread.playerName || 'Unknown',
-    userId: thread.userId
+    userId: thread.userId,
+    isModerator: thread.isModerator,
+    isAdmin: thread.isAdmin
   };
 
   return (
@@ -1195,7 +1211,9 @@ const ThreadView: React.FC = () => {
                 skillPoints: reply.skillPoints || 0,
                 isOnline: reply.isOnline,
                 playerName: reply.playerName || 'Unknown',
-                userId: reply.userId
+                userId: reply.userId,
+                isModerator: reply.isModerator,
+                isAdmin: reply.isAdmin
             };
     
             return (
