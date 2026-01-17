@@ -273,7 +273,7 @@ export default function Handbook() {
         onClose={() => setIsEditModalOpen(false)}
         slug="handbook"
         title="Handbook"
-        userId={user?.id}
+        userId={typeof user?.id === 'number' ? user.id : user?.id ? Number(user.id) : undefined}
         isModerator={isModerator}
       />
     </section>
