@@ -595,7 +595,14 @@ const CharacterProfile: React.FC = () => {
                           <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 w-1/2">Member Since</td>
                         </tr>
                         <tr className="border-b border-gray-300">
-                          <td className="px-2 py-2 text-gray-700 border-r border-gray-300">{character.username || '—'}</td>
+                          <td className="px-2 py-2 text-gray-700 border-r border-gray-300">
+                            <span className="flex items-center gap-1.5">
+                              {character.username || '—'}
+                              {(character.isModerator || character.isAdmin) && (
+                                <span className="bg-gray-200 text-gray-600 px-1 py-0.5 text-[10px] uppercase font-semibold">Staff</span>
+                              )}
+                            </span>
+                          </td>
                           <td className="px-2 py-2 text-gray-700">
                             {character.userCreatedAt 
                               ? new Date(character.userCreatedAt).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
