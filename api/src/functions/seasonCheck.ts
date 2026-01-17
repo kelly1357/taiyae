@@ -74,13 +74,14 @@ export async function checkSeasonChange(request: HttpRequest, context: Invocatio
         let charactersAged = 0;
         
         if (phasesPassed > 0) {
-            // Age all active characters by the number of phases passed
+            // Age all active and inactive characters by the number of phases passed
+            // Dead characters should NOT age
             const ageResult = await pool.request()
                 .input('monthsToAdd', sql.Int, phasesPassed)
                 .query(`
                     UPDATE Character 
                     SET MonthsAge = MonthsAge + @monthsToAdd
-                    WHERE Is_Active = 1
+                    WHERE COALESCE(Status, CASE WHEN Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) <> 'Dead'
                 `);
             
             charactersAged = ageResult.rowsAffected[0];
@@ -107,7 +108,7 @@ export async function checkSeasonChange(request: HttpRequest, context: Invocatio
                 phasesPassed: phasesPassed,
                 charactersAged: charactersAged,
                 message: phasesPassed > 0 
-                    ? `Season changed! ${charactersAged} active characters aged by ${phasesPassed} month(s).`
+                    ? `Season changed! ${charactersAged} characters aged by ${phasesPassed} month(s). Dead characters excluded.`
                     : "Season tracking initialized"
             }
         };
