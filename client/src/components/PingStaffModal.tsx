@@ -5,9 +5,10 @@ interface PingStaffModalProps {
   onClose: () => void;
   userId?: number;
   currentPageUrl: string;
+  isLoggedIn: boolean;
 }
 
-const PingStaffModal: React.FC<PingStaffModalProps> = ({ isOpen, onClose, userId, currentPageUrl }) => {
+const PingStaffModal: React.FC<PingStaffModalProps> = ({ isOpen, onClose, userId, currentPageUrl, isLoggedIn }) => {
   const [message, setMessage] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,7 +86,19 @@ const PingStaffModal: React.FC<PingStaffModalProps> = ({ isOpen, onClose, userId
 
         {/* Content */}
         <div className="p-4">
-          {submitSuccess ? (
+          {!isLoggedIn ? (
+            <div className="text-center py-6">
+              <div className="text-amber-500 text-4xl mb-3">🔒</div>
+              <p className="text-gray-700 font-medium mb-2">Login Required</p>
+              <p className="text-gray-500 text-sm">Please log in or create an account to send a message to staff.</p>
+              <button
+                onClick={handleClose}
+                className="mt-4 px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700"
+              >
+                Close
+              </button>
+            </div>
+          ) : submitSuccess ? (
             <div className="text-center py-8">
               <div className="text-green-600 text-4xl mb-3">✓</div>
               <p className="text-gray-700 font-medium">Your message has been sent!</p>

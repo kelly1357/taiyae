@@ -239,6 +239,7 @@ const Layout: React.FC<LayoutProps> = ({
           onClose={() => setIsPingModalOpen(false)}
           userId={user?.id}
           currentPageUrl={location.pathname}
+          isLoggedIn={!!user}
         />
       </main>
     </div>
