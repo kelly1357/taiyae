@@ -9,6 +9,7 @@ import type { Character, ForumRegion, User } from '../types';
 // Helper type for the API response which flattens character/pack info
 interface PostAuthor {
   id: string;
+  slug?: string;
   name: string;
   surname?: string;
   imageUrl: string;
@@ -146,7 +147,7 @@ const OOCPlayerInfoPanel: React.FC<{
                   {characters.map(char => (
                     <Link 
                       key={char.id} 
-                      to={`/character/${char.id}`}
+                      to={`/character/${char.slug || char.id}`}
                       className="block text-gray-900 hover:underline text-center border border-gray-300 px-1 py-1 bg-white"
                     >
                       {char.name}
@@ -223,7 +224,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
   return (
     <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
       {/* Avatar - same width as table */}
-      <Link to={`/character/${author.id}`} className="mb-2 w-full">
+      <Link to={`/character/${author.slug || author.id}`} className="mb-2 w-full">
         <img 
           src={author.imageUrl} 
           alt={author.name} 
@@ -248,7 +249,7 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
           </tr>
           <tr className="border-b border-gray-300">
             <td className="px-2 py-2 border-r border-gray-300">
-              <Link to={`/character/${author.id}`} className="text-gray-900 hover:underline font-medium">
+              <Link to={`/character/${author.slug || author.id}`} className="text-gray-900 hover:underline font-medium">
                 {author.name}{author.surname ? ` ${author.surname}` : ''}
               </Link>
               {author.isOnline && (
@@ -706,6 +707,7 @@ const ThreadView: React.FC = () => {
   // Construct author object for the main post from thread data
   const mainAuthor: PostAuthor = {
     id: thread.authorId,
+    slug: thread.authorSlug,
     name: thread.authorName,
     surname: thread.authorSurname,
     imageUrl: thread.authorImage,
@@ -1197,6 +1199,7 @@ const ThreadView: React.FC = () => {
           {thread.replies?.map((reply: any, index: number) => {
             const replyAuthor: PostAuthor = {
                 id: reply.authorId,
+                slug: reply.authorSlug,
                 name: reply.authorName,
                 surname: reply.authorSurname,
                 imageUrl: reply.authorImage,

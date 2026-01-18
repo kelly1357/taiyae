@@ -4,6 +4,7 @@ import type { User } from '../types';
 
 interface InactiveCharacter {
   id: number;
+  slug?: string;
   name: string;
   surname?: string;
   imageUrl?: string;
@@ -320,7 +321,7 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
         </td>
       )}
       <td className="p-0 w-[200px] border-r border-gray-300 relative">
-        <Link to={`/character/${char.id}`} className="block">
+        <Link to={`/character/${char.slug || char.id}`} className="block">
           {char.imageUrl && !char.imageUrl.includes('via.placeholder') ? (
             <img 
               src={char.imageUrl} 
@@ -341,7 +342,7 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
             </div>
           )}
         </Link>
-        <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+        <Link to={`/character/${char.slug || char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
           {char.name}{char.surname ? ` ${char.surname}` : ''}
         </Link>
       </td>

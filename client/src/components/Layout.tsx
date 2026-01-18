@@ -102,10 +102,10 @@ const Layout: React.FC<LayoutProps> = ({
             {user && activeCharacter && (
               <section className="bg-white border border-gray-300 shadow">
                 <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-                  Active Character: <Link to={`/character/${activeCharacter.id}`}>{activeCharacter.name}</Link>
+                  Active Character: <Link to={`/character/${activeCharacter.slug || activeCharacter.id}`}>{activeCharacter.name}</Link>
                 </div>
                 <div className="relative">
-                  <Link to={`/character/${activeCharacter.id}`}>
+                  <Link to={`/character/${activeCharacter.slug || activeCharacter.id}`}>
                     {activeCharacter.imageUrl && activeCharacter.imageUrl.trim() !== '' && !imageError ? (
                       <img
                         src={activeCharacter.imageUrl}
@@ -160,7 +160,7 @@ const Layout: React.FC<LayoutProps> = ({
                     {onlineList.map((character, index) => (
                       <span key={character.id}>
                         <Link 
-                          to={`/character/${character.id}`}
+                          to={`/character/${character.slug || character.id}`}
                           className={`hover:text-gray-600 ${character.isModerator || character.isAdmin ? 'bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded' : ''}`}
                         >
                           {character.name}

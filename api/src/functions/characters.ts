@@ -3,6 +3,7 @@ import { getPool } from "../db";
 import * as sql from 'mssql';
 import { checkAndRevokeFullProfile } from './achievements';
 import { formatHorizonDateString } from '../horizonCalendar';
+import { generateUniqueSlug } from '../slugify';
 
 export async function getHealthStatuses(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
@@ -40,6 +41,7 @@ export async function getBuilds(request: HttpRequest, context: InvocationContext
 export async function getCharacters(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const userId = request.query.get('userId');
     const characterId = request.query.get('characterId');
+    const characterSlug = request.query.get('characterSlug');
     const includeInactive = request.query.get('includeInactive') === 'true';
     
     try {
@@ -58,6 +60,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     u.Is_Admin as isAdmin,
                     c.CharacterName as name, 
                     c.Surname as surname,
+                    c.Slug as slug,
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
                     c.AvatarImage as imageUrl, 
@@ -111,6 +114,10 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
             // Fetch a specific character by ID (includes inactive/dead for profile viewing)
             requestObj.input('characterId', sql.Int, parseInt(characterId));
             query += ` WHERE c.CharacterID = @characterId`;
+        } else if (characterSlug) {
+            // Fetch a specific character by slug (includes inactive/dead for profile viewing)
+            requestObj.input('characterSlug', sql.NVarChar, characterSlug);
+            query += ` WHERE c.Slug = @characterSlug`;
         } else if (userId) {
             // When fetching for a specific user (character management), return all their characters
             requestObj.input('userId', sql.Int, parseInt(userId));
@@ -156,19 +163,32 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
     const id = request.params.id;
     
     if (!id) {
-        return { status: 400, body: "Please provide a character id" };
+        return { status: 400, body: "Please provide a character id or slug" };
     }
+
+    // Check if id is numeric (character ID) or string (slug)
+    const isNumeric = /^\d+$/.test(id);
 
     try {
         const pool = await getPool();
-        const result = await pool.request()
-            .input('id', sql.Int, parseInt(id))
-            .query(`
+        const requestObj = pool.request();
+        
+        let whereClause: string;
+        if (isNumeric) {
+            requestObj.input('id', sql.Int, parseInt(id));
+            whereClause = 'c.CharacterID = @id';
+        } else {
+            requestObj.input('slug', sql.NVarChar, id);
+            whereClause = 'c.Slug = @slug';
+        }
+        
+        const result = await requestObj.query(`
                 SELECT 
                     c.CharacterID as id, 
                     c.UserID as userId, 
                     c.CharacterName as name, 
                     c.Surname as surname,
+                    c.Slug as slug,
                     c.Sex as sex, 
                     c.MonthsAge as monthsAge, 
                     c.AvatarImage as imageUrl, 
@@ -187,7 +207,7 @@ export async function getCharacter(request: HttpRequest, context: InvocationCont
                     c.ProfileImage4 as profileImage4
                 FROM Character c
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
-                WHERE c.CharacterID = @id
+                WHERE ${whereClause}
             `);
         
         if (result.recordset.length === 0) {
@@ -225,23 +245,27 @@ export async function createCharacter(request: HttpRequest, context: InvocationC
 
         const pool = await getPool();
         
+        // Generate unique slug from character name
+        const slug = await generateUniqueSlug(pool, name);
+        
         const result = await pool.request()
             .input('userId', sql.Int, parseInt(userId))
             .input('name', sql.NVarChar, name)
+            .input('slug', sql.NVarChar, slug)
             .input('sex', sql.NVarChar, sex)
             .input('monthsAge', sql.Int, monthsAge)
             .input('imageUrl', sql.NVarChar, imageUrl)
             .input('bio', sql.NVarChar, bio)
             .input('healthStatusId', sql.Int, hStatusId)
             .query(`
-                INSERT INTO Character (UserID, CharacterName, Sex, MonthsAge, AvatarImage, CI_General_HTML, HealthStatus_Id, Created)
-                OUTPUT INSERTED.CharacterID
-                VALUES (@userId, @name, @sex, @monthsAge, @imageUrl, @bio, @healthStatusId, GETDATE())
+                INSERT INTO Character (UserID, CharacterName, Slug, Sex, MonthsAge, AvatarImage, CI_General_HTML, HealthStatus_Id, Created)
+                OUTPUT INSERTED.CharacterID, INSERTED.Slug
+                VALUES (@userId, @name, @slug, @sex, @monthsAge, @imageUrl, @bio, @healthStatusId, GETDATE())
             `);
             
         return {
             status: 201,
-            jsonBody: { id: result.recordset[0].CharacterID }
+            jsonBody: { id: result.recordset[0].CharacterID, slug: result.recordset[0].Slug }
         };
     } catch (error) {
         context.error('Create character failed', error);
@@ -634,6 +658,7 @@ export async function getInactiveCharacters(request: HttpRequest, context: Invoc
         const result = await pool.request().query(`
             SELECT 
                 c.CharacterID as id,
+                c.Slug as slug,
                 c.CharacterName as name,
                 c.Surname as surname,
                 c.AvatarImage as imageUrl,
@@ -703,6 +728,7 @@ export async function getCharactersToInactivate(request: HttpRequest, context: I
         const result = await pool.request().query(`
             SELECT 
                 c.CharacterID as id,
+                c.Slug as slug,
                 c.CharacterName as name,
                 c.Surname as surname,
                 c.AvatarImage as imageUrl,

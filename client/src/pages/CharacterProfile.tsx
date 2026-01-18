@@ -28,7 +28,7 @@ interface UserAchievement {
 }
 
 const CharacterProfile: React.FC = () => {
-  const { characterId } = useParams<{ characterId: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { user } = useOutletContext<LayoutContext>();
   const [character, setCharacter] = useState<Character | null>(null);
   const [userCharacters, setUserCharacters] = useState<Character[]>([]);
@@ -80,9 +80,10 @@ const CharacterProfile: React.FC = () => {
 
   const saveSummary = async (threadId: number) => {
     const summaryText = editingSummary.trim();
+    if (!character) return;
     
     try {
-      const response = await fetch(`/api/characters/${characterId}/thread-summaries/${threadId}`, {
+      const response = await fetch(`/api/characters/${character.id}/thread-summaries/${threadId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ summary: summaryText })
@@ -219,16 +220,33 @@ const CharacterProfile: React.FC = () => {
   useEffect(() => {
     setImageError(false);
     setActiveProfileImage(0);
-  }, [characterId]);
+  }, [slug]);
 
   useEffect(() => {
-    if (!characterId) return;
+    if (!slug) return;
     
-    // Fetch the specific character by ID (works for inactive/dead characters too)
-    fetch(`/api/characters?characterId=${characterId}`)
+    // Determine if the param is a numeric ID or a slug
+    const isNumeric = /^\d+$/.test(slug);
+    const queryParam = isNumeric ? `characterId=${slug}` : `characterSlug=${slug}`;
+    
+    // Fetch the specific character by slug or ID (works for inactive/dead characters too)
+    fetch(`/api/characters?${queryParam}`)
       .then(res => res.json())
       .then((data: Character[]) => {
-        const found = data[0] || null;
+        let found = data[0] || null;
+        
+        // If not found by slug, try by ID as fallback
+        if (!found && !isNumeric) {
+          return fetch(`/api/characters?characterId=${slug}`)
+            .then(res => res.json())
+            .then((fallbackData: Character[]) => {
+              found = fallbackData[0] || null;
+              return found;
+            });
+        }
+        return found;
+      })
+      .then((found: Character | null) => {
         setCharacter(found);
         // Get all characters belonging to the same user
         if (found) {
@@ -244,6 +262,12 @@ const CharacterProfile: React.FC = () => {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, [slug]);
+
+  // Fetch additional data once we have the character
+  useEffect(() => {
+    if (!character) return;
+    const characterId = character.id;
     
     // Fetch threadlog
     fetch(`/api/characters/${characterId}/threadlog`)
@@ -282,7 +306,7 @@ const CharacterProfile: React.FC = () => {
         setThreadSkillPoints(grouped);
       })
       .catch((err) => console.error('Failed to fetch skill points:', err));
-  }, [characterId]);
+  }, [character]);
 
   // Fetch user achievements when character data is available
   useEffect(() => {
@@ -803,7 +827,7 @@ const CharacterProfile: React.FC = () => {
                                 {userCharacters.map(c => (
                                   <Link 
                                     key={c.id} 
-                                    to={`/character/${c.id}`}
+                                    to={`/character/${c.slug || c.id}`}
                                     className="text-gray-700 hover:text-gray-900 hover:underline font-bold"
                                   >
                                     {c.name}

@@ -39,6 +39,7 @@ export type CharacterStatus = 'Active' | 'Inactive' | 'Dead';
 
 export interface Character {
   id: string;
+  slug?: string;
   userId: string;
   odUserId?: number;
   username?: string;

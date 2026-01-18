@@ -48,6 +48,7 @@ export async function submitSkillPointsClaim(request: HttpRequest, context: Invo
         }
 
         // Insert each skill point claim
+        // IsModeratorApproved: NULL = pending, 1 = approved, 0 = rejected
         const insertedIds: number[] = [];
         for (const skillPointId of skillPointIds) {
             const result = await pool.request()
@@ -57,7 +58,7 @@ export async function submitSkillPointsClaim(request: HttpRequest, context: Invo
                 .query(`
                     INSERT INTO CharacterSkillPointsAssignment (CharacterID, SkillPointID, ThreadID, IsModeratorApproved)
                     OUTPUT INSERTED.AssignmentID
-                    VALUES (@characterId, @skillPointId, @threadId, 0)
+                    VALUES (@characterId, @skillPointId, @threadId, NULL)
                 `);
             insertedIds.push(result.recordset[0].AssignmentID);
         }

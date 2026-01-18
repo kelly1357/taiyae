@@ -182,7 +182,7 @@ const DeadCharacters: React.FC = () => {
                   {sortedCharacters.map(char => (
                     <tr key={char.id} className="hover:bg-gray-50 transition-colors align-top border-t border-gray-300">
                       <td className="p-0 w-[25%] border-r border-gray-300 relative">
-                        <Link to={`/character/${char.id}`} className="block">
+                        <Link to={`/character/${char.slug || char.id}`} className="block">
                           {char.imageUrl && char.imageUrl.trim() !== '' && !imageErrors.has(char.id) ? (
                             <img 
                               src={char.imageUrl} 
@@ -204,7 +204,7 @@ const DeadCharacters: React.FC = () => {
                             </div>
                           )}
                         </Link>
-                        <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                        <Link to={`/character/${char.slug || char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
                           {char.name}{char.surname ? ` ${char.surname}` : ''}
                         </Link>
                       </td>

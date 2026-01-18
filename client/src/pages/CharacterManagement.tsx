@@ -771,7 +771,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                 <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors align-top">
                   <td className="p-0 w-[25%] border-r border-gray-300 relative">
                     <div className="relative">
-                      <Link to={`/character/${char.id}`}>
+                      <Link to={`/character/${char.slug || char.id}`}>
                         {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
                           <img 
                             src={char.imageUrl} 
@@ -793,7 +793,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                           </div>
                         )}
                       </Link>
-                      <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                      <Link to={`/character/${char.slug || char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
                         {char.name}
                       </Link>
                       <button 
@@ -852,7 +852,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                     <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors align-top">
                       <td className="p-0 w-[25%] border-r border-gray-300 relative">
                         <div className="relative">
-                          <Link to={`/character/${char.id}`}>
+                          <Link to={`/character/${char.slug || char.id}`}>
                             {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
                               <img 
                                 src={char.imageUrl} 
@@ -874,7 +874,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                               </div>
                             )}
                           </Link>
-                          <Link to={`/character/${char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
+                          <Link to={`/character/${char.slug || char.id}`} className="absolute top-0 left-0 text-white px-2 py-1 text-xs font-bold capitalize hover:underline" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(0,0,0,0.9)' }}>
                             {char.name}
                           </Link>
                           <span className={`absolute top-0 right-0 px-2 py-1 text-xs font-bold ${

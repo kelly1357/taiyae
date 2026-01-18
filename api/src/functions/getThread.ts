@@ -23,7 +23,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             .query(`
                 SELECT 
                     p.PostID, p.Subject, p.Body, p.Created, p.Modified,
-                    c.CharacterID as authorId, c.CharacterName as authorName, c.Surname as authorSurname, c.AvatarImage as authorImage,
+                    c.CharacterID as authorId, c.Slug as authorSlug, c.CharacterName as authorName, c.Surname as authorSurname, c.AvatarImage as authorImage,
                     pk.PackName as packName, pk.Colors,
                     c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus,
                     c.Status as characterStatus,
@@ -67,6 +67,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             id: p.PostID,
             content: p.Body,
             authorId: p.authorId,
+            authorSlug: p.authorSlug,
             authorName: p.authorName,
             authorSurname: p.authorSurname,
             authorImage: p.authorImage,
@@ -94,6 +95,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             title: op.Subject,
             content: op.Body,
             authorId: op.authorId,
+            authorSlug: op.authorSlug,
             authorName: op.authorName,
             authorSurname: op.authorSurname,
             authorImage: op.authorImage,
