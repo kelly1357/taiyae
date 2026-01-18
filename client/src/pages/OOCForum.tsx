@@ -128,15 +128,9 @@ const OOCForumPage: React.FC = () => {
                     <tr key={thread.id} className={`hover:bg-gray-50 transition-colors border-t border-gray-300 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
                       <td className="px-4 py-3 border-r border-gray-300">
                         <div className="flex items-start gap-2">
-                          {thread.isPinned && (
-                            <span className="text-amber-600 mt-0.5" title="Pinned">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-                                <path d="M8.5 1.5a.5.5 0 0 0-1 0V4H5.05a2.5 2.5 0 0 0-2.45 2.01L2.5 6.54 2.04 8.5a.5.5 0 0 0 .46.5h4V14a1 1 0 1 0 2 0V9h4a.5.5 0 0 0 .46-.5L12.5 6.54l-.1-.53A2.5 2.5 0 0 0 9.95 4H8.5V1.5Z" />
-                              </svg>
-                            </span>
-                          )}
                           <div className="flex-1">
                             <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium">
+                              {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
                               {thread.title}
                             </Link>
                             {thread.subheader && (
@@ -200,15 +194,9 @@ const OOCForumPage: React.FC = () => {
                 threads.map(thread => (
                   <div key={thread.id} className={`border-b border-gray-300 p-3 hover:bg-gray-50 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
                     <div className="flex items-start gap-2">
-                      {thread.isPinned && (
-                        <span className="text-amber-600 mt-0.5" title="Pinned">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-                            <path d="M8.5 1.5a.5.5 0 0 0-1 0V4H5.05a2.5 2.5 0 0 0-2.45 2.01L2.5 6.54 2.04 8.5a.5.5 0 0 0 .46.5h4V14a1 1 0 1 0 2 0V9h4a.5.5 0 0 0 .46-.5L12.5 6.54l-.1-.53A2.5 2.5 0 0 0 9.95 4H8.5V1.5Z" />
-                          </svg>
-                        </span>
-                      )}
                       <div className="flex-1">
                         <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium block">
+                          {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
                           {thread.title}
                         </Link>
                         {thread.subheader && (
