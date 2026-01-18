@@ -132,6 +132,29 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     return () => clearInterval(interval);
   }, [isModerator]);
 
+  // Fetch pending staff pings count for moderators
+  const [pendingStaffPingsCount, setPendingStaffPingsCount] = useState(0);
+  useEffect(() => {
+    if (!isModerator) return;
+    
+    const fetchCount = async () => {
+      try {
+        const response = await fetch('/api/staff-pings/count');
+        if (response.ok) {
+          const data = await response.json();
+          setPendingStaffPingsCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching pending staff pings count:', error);
+      }
+    };
+    
+    fetchCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, [isModerator]);
+
   const handleDropdownMouseEnter = (label: string) => {
     // Clear any pending close timeout
     if (closeTimeoutRef.current) {
@@ -297,7 +320,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {(isModerator || isAdmin) && (
-            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount}</span>}</span>}>
+            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount}</span>}</span>}>
               <DropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
@@ -323,6 +346,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 </span>
               </DropdownLink>
               <DropdownLink to="/admin/homepage">Homepage</DropdownLink>
+              <DropdownLink to="/admin/staff-pings">
+                <span className="flex items-center justify-between w-full">
+                  Staff Pings
+                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                </span>
+              </DropdownLink>
             </NavDropdown>
           )}
           {user ? (
@@ -492,7 +521,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {(isModerator || isAdmin) && (
-            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount}</span>}</span>}>
+            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
@@ -518,6 +547,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 </span>
               </MobileDropdownLink>
               <MobileDropdownLink to="/admin/homepage">Homepage</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/staff-pings">
+                <span className="flex items-center justify-between w-full">
+                  Staff Pings
+                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                </span>
+              </MobileDropdownLink>
             </MobileNavSection>
           )}
           

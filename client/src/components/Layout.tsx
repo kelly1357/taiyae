@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 
 import Header from './Header';
+import PingStaffModal from './PingStaffModal';
 import { useBackground } from '../contexts/BackgroundContext';
 import Login from '../pages/Login';
 import type { User, Character } from '../types';
@@ -31,6 +32,8 @@ const Layout: React.FC<LayoutProps> = ({
   const onlineList = onlineCharacters ?? [];
   const { backgroundUrl, isGrayscale } = useBackground();
   const [imageError, setImageError] = useState(false);
+  const [isPingModalOpen, setIsPingModalOpen] = useState(false);
+  const location = useLocation();
 
   // Reset imageError when active character changes
   useEffect(() => {
@@ -192,7 +195,10 @@ const Layout: React.FC<LayoutProps> = ({
                 <p className="text-gray-700">
                   Can't reach staff in chat? Ping us and we'll get back to you as soon as possible.
                 </p>
-                <button className="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-semibold py-2 text-sm uppercase tracking-wide">
+                <button 
+                  onClick={() => setIsPingModalOpen(true)}
+                  className="w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-semibold py-2 text-sm uppercase tracking-wide"
+                >
                   Ping Staff
                 </button>
               </div>
@@ -226,6 +232,14 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
           </div>
         </div>
+
+        {/* Ping Staff Modal */}
+        <PingStaffModal
+          isOpen={isPingModalOpen}
+          onClose={() => setIsPingModalOpen(false)}
+          userId={user?.id}
+          currentPageUrl={location.pathname}
+        />
       </main>
     </div>
   );
