@@ -159,7 +159,7 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
               <div className="px-4 py-4 text-sm text-gray-800 space-y-2">
                 {onlineList.length ? (
-                  <div className="flex flex-wrap items-center">
+                  <div className="flex flex-wrap items-center justify-center">
                     {onlineList.map((character, index) => (
                       <span key={character.id}>
                         <Link 
@@ -173,7 +173,7 @@ const Layout: React.FC<LayoutProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-500 italic">No characters online.</p>
+                  <p className="text-gray-500 italic text-center">No characters online.</p>
                 )}
                 <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center">
                   <div className="flex items-center justify-center gap-2">
