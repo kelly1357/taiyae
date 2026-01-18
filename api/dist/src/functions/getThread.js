@@ -37,13 +37,15 @@ function getThread(request, context) {
                     c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus,
                     c.Status as characterStatus,
                     (c.Experience + c.Physical + c.Knowledge) as skillPoints,
-                    mc.CharacterName as modifiedByName,
+                    COALESCE(mc.CharacterName, mu.Username) as modifiedByName,
                     t.RegionID as regionId,
                     t.OOCForumID as oocForumId,
+                    t.Subheader as subheader,
                     t.IsArchived as isArchived,
                     t.OriginalRegionId as originalRegionId,
                     COALESCE(r.RegionName, origR.RegionName) as regionName,
                     COALESCE(r.ImageURL, origR.ImageURL) as regionImage,
+                    oocf.Title as oocForumName,
                     COALESCE(u.Username, oocUser.Username) as playerName,
                     COALESCE(u.UserID, oocUser.UserID) as userId,
                     COALESCE(u.Is_Moderator, oocUser.Is_Moderator) as isModerator,
@@ -56,12 +58,14 @@ function getThread(request, context) {
                 LEFT JOIN Thread t ON p.ThreadID = t.ThreadID
                 LEFT JOIN Region r ON t.RegionID = r.RegionID
                 LEFT JOIN Region origR ON t.OriginalRegionId = origR.RegionID
+                LEFT JOIN OOCForum oocf ON t.OOCForumID = oocf.ID
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN [User] oocUser ON p.UserID = oocUser.UserID
                 LEFT JOIN Pack pk ON c.PackID = pk.PackID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 LEFT JOIN Character mc ON p.ModifiedByCharacterId = mc.CharacterID
+                LEFT JOIN [User] mu ON p.ModifiedByUserId = mu.UserID
                 WHERE p.ThreadID = @threadId
                 ORDER BY p.Created ASC
             `);
@@ -123,6 +127,8 @@ function getThread(request, context) {
                 modifiedByName: op.modifiedByName,
                 regionId: op.regionId,
                 oocForumId: op.oocForumId,
+                oocForumName: op.oocForumName,
+                subheader: op.subheader,
                 regionName: op.regionName,
                 regionImage: op.regionImage,
                 isArchived: op.isArchived === true || op.isArchived === 1,

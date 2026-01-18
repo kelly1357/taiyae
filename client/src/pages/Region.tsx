@@ -128,14 +128,15 @@ const Region: React.FC = () => {
             )}
           </div>
 
-          <div className="border border-gray-300 mx-0.5">
-            <table className="w-full text-sm">
+          <div className="border border-gray-300 mx-0.5 overflow-x-auto">
+            {/* Desktop table view */}
+            <table className="w-full text-sm hidden md:table">
               <thead>
                 <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                  <th className="px-4 py-2 text-left border-r border-gray-300">Thread</th>
-                  <th className="px-4 py-2 text-left border-r border-gray-300 w-32">Author</th>
-                  <th className="px-4 py-2 text-center border-r border-gray-300 w-20">Replies</th>
-                  <th className="px-4 py-2 text-center w-20">Views</th>
+                  <th className="px-4 py-2 text-left border-r border-gray-300">Thread Title</th>
+                  <th className="px-4 py-2 text-left border-r border-gray-300 w-36">Author</th>
+                  <th className="px-4 py-2 text-center border-r border-gray-300 w-16">Replies</th>
+                  <th className="px-4 py-2 text-center w-52">Latest Post</th>
                 </tr>
               </thead>
               <tbody>
@@ -146,18 +147,36 @@ const Region: React.FC = () => {
                         <Link to={`/thread/${thread.id}`} state={{ region }} style={{ color: '#111827' }} className="hover:underline font-medium">
                           {thread.title}
                         </Link>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {new Date(thread.createdAt).toLocaleDateString()}
-                        </div>
+                        {thread.subheader && (
+                          <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-700 border-r border-gray-300">
-                        {thread.authorName || 'Unknown'}
+                        {thread.authorSlug ? (
+                          <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                            {thread.authorName}
+                          </Link>
+                        ) : (
+                          thread.authorName || 'Unknown'
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center text-gray-700 border-r border-gray-300">
                         {thread.replyCount}
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-700">
-                        {thread.views}
+                      <td className="px-4 py-3 text-center text-gray-700 text-xs whitespace-nowrap">
+                        {thread.lastReplyAuthorName && thread.lastPostDate ? (
+                          <>
+                            {thread.lastReplyAuthorSlug ? (
+                              <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                                {thread.lastReplyAuthorName}
+                              </Link>
+                            ) : (
+                              <span className="font-bold">{thread.lastReplyAuthorName}</span>
+                            )} @ {new Date(thread.lastPostDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })}, {new Date(thread.lastPostDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                          </>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                     </tr>
                   ))
@@ -170,6 +189,47 @@ const Region: React.FC = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile card view */}
+            <div className="md:hidden">
+              {threads.length > 0 ? (
+                threads.map(thread => (
+                  <div key={thread.id} className="border-b border-gray-300 p-3 hover:bg-gray-50">
+                    <Link to={`/thread/${thread.id}`} state={{ region }} style={{ color: '#111827' }} className="hover:underline font-medium block">
+                      {thread.title}
+                    </Link>
+                    {thread.subheader && (
+                      <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                      <span>by {thread.authorSlug ? (
+                        <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                          {thread.authorName}
+                        </Link>
+                      ) : (
+                        thread.authorName || 'Unknown'
+                      )}</span>
+                      <span>{thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}</span>
+                    </div>
+                    {thread.lastReplyAuthorName && thread.lastPostDate && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        Latest: {thread.lastReplyAuthorSlug ? (
+                          <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#6b7280' }}>
+                            {thread.lastReplyAuthorName}
+                          </Link>
+                        ) : (
+                          <span className="font-bold">{thread.lastReplyAuthorName}</span>
+                        )} @ {new Date(thread.lastPostDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })}, {new Date(thread.lastPostDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center text-gray-500">
+                  No threads in this region yet. Be the first to post!
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>

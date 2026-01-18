@@ -7,7 +7,13 @@ import { useBackground } from '../contexts/BackgroundContext';
 
 interface ThreadSummary extends Omit<Thread, 'replies'> {
   authorName: string;
+  authorSlug?: string;
   replyCount: number;
+  isPinned?: boolean;
+  subheader?: string;
+  lastReplyAuthorName?: string;
+  lastReplyAuthorSlug?: string;
+  lastPostDate?: string;
 }
 
 interface LayoutContext {
@@ -24,7 +30,10 @@ const OOCForumPage: React.FC = () => {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [loading, setLoading] = useState(!passedForum);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [pinningThreadId, setPinningThreadId] = useState<string | null>(null);
   const { resetBackground } = useBackground();
+
+  const isModerator = user?.isModerator || user?.isAdmin;
 
   // Reset background on unmount (or set specific one if desired)
   useEffect(() => {
@@ -32,6 +41,20 @@ const OOCForumPage: React.FC = () => {
       resetBackground();
     };
   }, [resetBackground]);
+
+  const handleTogglePin = async (threadId: string) => {
+    setPinningThreadId(threadId);
+    try {
+      const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST' });
+      if (response.ok) {
+        fetchThreads();
+      }
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+    } finally {
+      setPinningThreadId(null);
+    }
+  };
 
   const fetchThreads = () => {
     if (!forumId) return;
@@ -88,36 +111,76 @@ const OOCForumPage: React.FC = () => {
             )}
           </div>
 
-          <div className="border border-gray-300 mx-0.5">
-            <table className="w-full text-sm">
+          <div className="border border-gray-300 mx-0.5 overflow-x-auto">
+            {/* Desktop table view */}
+            <table className="w-full text-sm hidden md:table">
               <thead>
                 <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                  <th className="px-4 py-2 text-left border-r border-gray-300">Thread</th>
-                  <th className="px-4 py-2 text-left border-r border-gray-300 w-32">Author</th>
-                  <th className="px-4 py-2 text-center border-r border-gray-300 w-20">Replies</th>
-                  <th className="px-4 py-2 text-center w-20">Views</th>
+                  <th className="px-4 py-2 text-left border-r border-gray-300">Thread Title</th>
+                  <th className="px-4 py-2 text-left border-r border-gray-300 w-36">Author</th>
+                  <th className="px-4 py-2 text-center border-r border-gray-300 w-16">Replies</th>
+                  <th className="px-4 py-2 text-center w-52">Latest Post</th>
                 </tr>
               </thead>
               <tbody>
                 {threads.length > 0 ? (
                   threads.map(thread => (
-                    <tr key={thread.id} className="hover:bg-gray-50 transition-colors border-t border-gray-300">
+                    <tr key={thread.id} className={`hover:bg-gray-50 transition-colors border-t border-gray-300 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
                       <td className="px-4 py-3 border-r border-gray-300">
-                        <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium">
-                          {thread.title}
-                        </Link>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {new Date(thread.createdAt).toLocaleDateString()}
+                        <div className="flex items-start gap-2">
+                          {thread.isPinned && (
+                            <span className="text-amber-600 mt-0.5" title="Pinned">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                                <path d="M8.5 1.5a.5.5 0 0 0-1 0V4H5.05a2.5 2.5 0 0 0-2.45 2.01L2.5 6.54 2.04 8.5a.5.5 0 0 0 .46.5h4V14a1 1 0 1 0 2 0V9h4a.5.5 0 0 0 .46-.5L12.5 6.54l-.1-.53A2.5 2.5 0 0 0 9.95 4H8.5V1.5Z" />
+                              </svg>
+                            </span>
+                          )}
+                          <div className="flex-1">
+                            <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium">
+                              {thread.title}
+                            </Link>
+                            {thread.subheader && (
+                              <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
+                            )}
+                          </div>
+                          {isModerator && (
+                            <button
+                              onClick={() => handleTogglePin(thread.id)}
+                              disabled={pinningThreadId === thread.id}
+                              className={`text-xs px-2 py-1 rounded ${thread.isPinned ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} ${pinningThreadId === thread.id ? 'opacity-50 cursor-wait' : ''}`}
+                              title={thread.isPinned ? 'Unpin thread' : 'Pin thread'}
+                            >
+                              {pinningThreadId === thread.id ? '...' : (thread.isPinned ? 'Unpin' : 'Pin')}
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-700 border-r border-gray-300">
-                        {thread.authorName || 'Unknown'}
+                        {thread.authorSlug ? (
+                          <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                            {thread.authorName}
+                          </Link>
+                        ) : (
+                          thread.authorName || 'Unknown'
+                        )}
                       </td>
                       <td className="px-4 py-3 text-center text-gray-700 border-r border-gray-300">
                         {thread.replyCount}
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-700">
-                        {thread.views}
+                      <td className="px-4 py-3 text-center text-gray-700 text-xs whitespace-nowrap">
+                        {thread.lastReplyAuthorName && thread.lastPostDate ? (
+                          <>
+                            {thread.lastReplyAuthorSlug ? (
+                              <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                                {thread.lastReplyAuthorName}
+                              </Link>
+                            ) : (
+                              <span className="font-bold">{thread.lastReplyAuthorName}</span>
+                            )} @ {new Date(thread.lastPostDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })}, {new Date(thread.lastPostDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                          </>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                     </tr>
                   ))
@@ -130,6 +193,68 @@ const OOCForumPage: React.FC = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile card view */}
+            <div className="md:hidden">
+              {threads.length > 0 ? (
+                threads.map(thread => (
+                  <div key={thread.id} className={`border-b border-gray-300 p-3 hover:bg-gray-50 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
+                    <div className="flex items-start gap-2">
+                      {thread.isPinned && (
+                        <span className="text-amber-600 mt-0.5" title="Pinned">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                            <path d="M8.5 1.5a.5.5 0 0 0-1 0V4H5.05a2.5 2.5 0 0 0-2.45 2.01L2.5 6.54 2.04 8.5a.5.5 0 0 0 .46.5h4V14a1 1 0 1 0 2 0V9h4a.5.5 0 0 0 .46-.5L12.5 6.54l-.1-.53A2.5 2.5 0 0 0 9.95 4H8.5V1.5Z" />
+                          </svg>
+                        </span>
+                      )}
+                      <div className="flex-1">
+                        <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium block">
+                          {thread.title}
+                        </Link>
+                        {thread.subheader && (
+                          <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
+                        )}
+                      </div>
+                      {isModerator && (
+                        <button
+                          onClick={() => handleTogglePin(thread.id)}
+                          disabled={pinningThreadId === thread.id}
+                          className={`text-xs px-2 py-1 rounded ${thread.isPinned ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} ${pinningThreadId === thread.id ? 'opacity-50 cursor-wait' : ''}`}
+                          title={thread.isPinned ? 'Unpin thread' : 'Pin thread'}
+                        >
+                          {pinningThreadId === thread.id ? '...' : (thread.isPinned ? 'Unpin' : 'Pin')}
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                      <span>by {thread.authorSlug ? (
+                        <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                          {thread.authorName}
+                        </Link>
+                      ) : (
+                        thread.authorName || 'Unknown'
+                      )}</span>
+                      <span>{thread.replyCount} {thread.replyCount === 1 ? 'reply' : 'replies'}</span>
+                    </div>
+                    {thread.lastReplyAuthorName && thread.lastPostDate && (
+                      <div className="text-xs text-gray-400 mt-1">
+                        Latest: {thread.lastReplyAuthorSlug ? (
+                          <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#6b7280' }}>
+                            {thread.lastReplyAuthorName}
+                          </Link>
+                        ) : (
+                          <span className="font-bold">{thread.lastReplyAuthorName}</span>
+                        )} @ {new Date(thread.lastPostDate).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })}, {new Date(thread.lastPostDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center text-gray-500">
+                  No threads in this forum yet. Be the first to post!
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>

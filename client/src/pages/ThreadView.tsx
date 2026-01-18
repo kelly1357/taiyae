@@ -348,6 +348,12 @@ const ThreadView: React.FC = () => {
   
   // Existing claims state
   const [existingClaims, setExistingClaims] = useState<any[]>([]);
+  
+  // Edit thread title/subheader state
+  const [isEditingThread, setIsEditingThread] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editSubheader, setEditSubheader] = useState('');
+  const [isSavingThread, setIsSavingThread] = useState(false);
   const [showExistingClaims, setShowExistingClaims] = useState(false);
 
   // Set background immediately if we have region data from navigation state
@@ -421,6 +427,43 @@ const ThreadView: React.FC = () => {
     return () => window.removeEventListener('focus', handleFocus);
   }, [activeCharacter?.id, thread?.isArchived, thread?.oocForumId, threadId]);
 
+  // Start editing thread title/subheader
+  const handleStartEditThread = () => {
+    setEditTitle(thread.title);
+    setEditSubheader(thread.subheader || '');
+    setIsEditingThread(true);
+  };
+
+  // Save thread title/subheader
+  const handleSaveThread = async () => {
+    if (!editTitle.trim()) return;
+    
+    setIsSavingThread(true);
+    try {
+      const response = await fetch(`/api/threads/${threadId}/details`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          subheader: editSubheader.trim() || null
+        })
+      });
+
+      if (response.ok) {
+        setThread((prev: any) => ({
+          ...prev,
+          title: editTitle.trim(),
+          subheader: editSubheader.trim() || null
+        }));
+        setIsEditingThread(false);
+      }
+    } catch (error) {
+      console.error('Error updating thread:', error);
+    } finally {
+      setIsSavingThread(false);
+    }
+  };
+
   const handlePostReply = async () => {
     if (!replyContent.trim() || !threadId) return;
     
@@ -481,7 +524,10 @@ const ThreadView: React.FC = () => {
   };
 
   const handleSaveEdit = async (postId: string | number) => {
-    if (!activeCharacter) return;
+    if (!activeCharacter && !user) return;
+
+    // Check if this is an OOC thread (has oocForumId and no originalRegionId)
+    const isOOCEdit = thread && thread.oocForumId && !thread.originalRegionId;
 
     try {
       const response = await fetch(`/api/posts/${postId}`, {
@@ -489,7 +535,10 @@ const ThreadView: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           content: editContent,
-          modifiedByCharacterId: activeCharacter.id
+          // Use user ID for OOC forums, character ID for roleplay
+          ...(isOOCEdit || !activeCharacter
+            ? { modifiedByUserId: user?.id }
+            : { modifiedByCharacterId: activeCharacter.id })
         })
       });
 
@@ -755,9 +804,15 @@ const ThreadView: React.FC = () => {
       <section className={`bg-white border border-gray-300 shadow ${showPhotoMode ? 'invisible' : ''}`}>
         <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex justify-between items-center">
           <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
-            <Link to={`/region/${thread.regionId}`} className="hover:text-white">
-              {thread.regionName || 'Thread'}
-            </Link>
+            {thread.oocForumId && !thread.originalRegionId ? (
+              <Link to={`/ooc-forum/${thread.oocForumId}`} className="hover:text-white">
+                {thread.oocForumName || 'OOC Forum'}
+              </Link>
+            ) : (
+              <Link to={`/region/${thread.regionId}`} className="hover:text-white">
+                {thread.regionName || 'Thread'}
+              </Link>
+            )}
             {' › '}{thread.title}
           </h2>
           <div className="flex gap-2">
@@ -805,19 +860,71 @@ const ThreadView: React.FC = () => {
 
         <div className="px-4 py-4">
           <div className="flex justify-between items-start mb-4">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                {thread.title}
-                {thread.isArchived && <span className="text-gray-500 font-normal ml-2">(closed)</span>}
-              </h3>
+            <div className="flex-1">
+              {isEditingThread ? (
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Thread Title</label>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={(e) => setEditTitle(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#294023] focus:border-transparent"
+                      placeholder="Thread title..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Subheader (optional)</label>
+                    <input
+                      type="text"
+                      value={editSubheader}
+                      onChange={(e) => setEditSubheader(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#294023] focus:border-transparent"
+                      placeholder="Brief description or subtitle..."
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={handleSaveThread}
+                      disabled={isSavingThread || !editTitle.trim()}
+                      className="px-3 py-1 text-xs bg-[#294023] text-white rounded hover:bg-[#3d5a35] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSavingThread ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+                      onClick={() => setIsEditingThread(false)}
+                      disabled={isSavingThread}
+                      className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {thread.title}
+                      {thread.isArchived && <span className="text-gray-500 font-normal ml-2">(closed)</span>}
+                    </h3>
+                    {user && thread.userId === user.id && !thread.isArchived && (
+                      <button
+                        onClick={handleStartEditThread}
+                        className="text-gray-400 hover:text-gray-600 p-1"
+                        title="Edit thread title"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                  {thread.subheader && (
+                    <p className="text-sm text-gray-500 mt-0.5">{thread.subheader}</p>
+                  )}
+                </>
+              )}
             </div>
-            <Link 
-              to={thread.originalRegionId ? `/region/${thread.originalRegionId}` : `/region/${thread.regionId}`}
-              style={{ color: '#111827' }}
-              className="hover:underline text-sm"
-            >
-              ← Back to {thread.regionName}
-            </Link>
           </div>
 
           {/* Existing Skill Points Claims - show for archived threads where user has claims */}
@@ -1149,8 +1256,8 @@ const ThreadView: React.FC = () => {
             <div className="flex flex-col md:flex-row">
               {/* Content on LEFT */}
               <div className="flex-grow p-4 relative bg-white md:order-1">
-                {/* Edit button - only for post owner */}
-                {activeCharacter && String(activeCharacter.id) === String(mainAuthor.id) && (
+                {/* Edit button - only for post owner (character match OR user match for OOC) */}
+                {((activeCharacter && String(activeCharacter.id) === String(mainAuthor.id)) || (user && String(user.id) === String(mainAuthor.userId))) && (
                   <div className="absolute top-2 right-2">
                     <button 
                       onClick={() => handleEditClick(thread.postId, thread.content)}
@@ -1239,8 +1346,8 @@ const ThreadView: React.FC = () => {
                   {/* Content on RIGHT */}
                   <div className="flex-grow p-4 relative bg-white">
                     <div className="absolute top-2 right-2 flex gap-1">
-                      {/* Edit button - only for post owner */}
-                      {activeCharacter && String(activeCharacter.id) === String(replyAuthor.id) && (
+                      {/* Edit button - only for post owner (character match OR user match for OOC) */}
+                      {((activeCharacter && String(activeCharacter.id) === String(replyAuthor.id)) || (user && String(user.id) === String(replyAuthor.userId))) && (
                         <button 
                             onClick={() => handleEditClick(reply.id, reply.content)}
                             className="text-gray-500 hover:text-gray-800 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 border border-gray-300"
@@ -1249,7 +1356,7 @@ const ThreadView: React.FC = () => {
                         </button>
                       )}
                       {/* Delete button - show for post owner OR moderator */}
-                      {((activeCharacter && String(activeCharacter.id) === String(replyAuthor.id)) || (user && (user.isModerator || user.isAdmin))) && (
+                      {((activeCharacter && String(activeCharacter.id) === String(replyAuthor.id)) || (user && (user.isModerator || user.isAdmin || String(user.id) === String(replyAuthor.userId)))) && (
                         <button 
                             onClick={() => setShowDeleteConfirm(reply.id)}
                             className="text-gray-500 hover:text-red-600 text-xs bg-gray-100 hover:bg-red-50 px-2 py-1 border border-gray-300"

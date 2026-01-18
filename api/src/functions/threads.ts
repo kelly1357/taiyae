@@ -17,12 +17,15 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                     t.ThreadID as id,
                     t.RegionId as regionId,
                     t.OOCForumID as oocForumId,
+                    t.IsPinned as isPinned,
+                    t.Subheader as subheader,
                     t.Created as createdAt,
                     t.Modified as updatedAt,
                     firstPost.Subject as title,
                     firstPost.Body as content,
                     COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
                     COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
+                    threadAuthor.Slug as authorSlug,
                     CASE 
                         WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
@@ -32,6 +35,7 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                     0 as views,
                     COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
                     lastPostAuthor.CharacterID as lastReplyAuthorId,
+                    lastPostAuthor.Slug as lastReplyAuthorSlug,
                     lastPost.Created as lastPostDate,
                     CASE 
                         WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
@@ -59,15 +63,19 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
         const requestBuilder = pool.request();
         
         let whereClause = "";
+        let orderByClause = "";
         if (regionId) {
             whereClause = " WHERE t.RegionId = @regionId";
+            orderByClause = " ORDER BY lastPost.Created DESC";
             requestBuilder.input('regionId', sql.Int, parseInt(regionId));
         } else {
             whereClause = " WHERE t.OOCForumID = @oocForumId";
+            // For OOC forums, sort pinned threads first, then by last post date
+            orderByClause = " ORDER BY t.IsPinned DESC, lastPost.Created DESC";
             requestBuilder.input('oocForumId', sql.Int, parseInt(oocForumId));
         }
         
-        const query = header + whereClause + " ORDER BY lastPost.Created DESC";
+        const query = header + whereClause + orderByClause;
 
         const result = await requestBuilder.query(query);
 
@@ -83,7 +91,7 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
 export async function createThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const body = await request.json() as any;
-        const { regionId, oocForumId, title, content, authorId } = body;
+        const { regionId, oocForumId, title, content, authorId, subheader } = body;
 
         if ((!regionId && !oocForumId) || !title || !content || !authorId) {
             return { status: 400, body: "Missing required fields" };
@@ -96,10 +104,11 @@ export async function createThread(request: HttpRequest, context: InvocationCont
 
         try {
             // Insert Thread and get generated ID
-            let insertThreadSQL = "INSERT INTO Thread (Created, Modified";
-            let valuesSQL = "VALUES (GETDATE(), GETDATE()";
+            let insertThreadSQL = "INSERT INTO Thread (Created, Modified, Subheader";
+            let valuesSQL = "VALUES (GETDATE(), GETDATE(), @subheader";
             
             const req = transaction.request();
+            req.input('subheader', sql.NVarChar, subheader || null);
             
             if (regionId) {
                 insertThreadSQL += ", RegionId)";
@@ -262,25 +271,42 @@ export async function updatePost(request: HttpRequest, context: InvocationContex
 
     try {
         const body = await request.json() as any;
-        const { content, modifiedByCharacterId } = body;
+        const { content, modifiedByCharacterId, modifiedByUserId } = body;
 
-        if (!content || !modifiedByCharacterId) {
-            return { status: 400, body: "Content and modifiedByCharacterId are required" };
+        if (!content || (!modifiedByCharacterId && !modifiedByUserId)) {
+            return { status: 400, body: "Content and either modifiedByCharacterId or modifiedByUserId are required" };
         }
 
         const pool = await getPool();
         
-        await pool.request()
-            .input('postId', sql.Int, parseInt(postId))
-            .input('body', sql.NVarChar, content)
-            .input('modifiedByCharacterId', sql.Int, parseInt(modifiedByCharacterId))
-            .query(`
-                UPDATE Post 
-                SET Body = @body, 
-                    Modified = GETDATE(),
-                    ModifiedByCharacterId = @modifiedByCharacterId
-                WHERE PostID = @postId
-            `);
+        // Use different update based on whether it's a character or user edit
+        if (modifiedByCharacterId) {
+            await pool.request()
+                .input('postId', sql.Int, parseInt(postId))
+                .input('body', sql.NVarChar, content)
+                .input('modifiedByCharacterId', sql.Int, parseInt(modifiedByCharacterId))
+                .query(`
+                    UPDATE Post 
+                    SET Body = @body, 
+                        Modified = GETDATE(),
+                        ModifiedByCharacterId = @modifiedByCharacterId,
+                        ModifiedByUserId = NULL
+                    WHERE PostID = @postId
+                `);
+        } else {
+            await pool.request()
+                .input('postId', sql.Int, parseInt(postId))
+                .input('body', sql.NVarChar, content)
+                .input('modifiedByUserId', sql.Int, parseInt(modifiedByUserId))
+                .query(`
+                    UPDATE Post 
+                    SET Body = @body, 
+                        Modified = GETDATE(),
+                        ModifiedByCharacterId = NULL,
+                        ModifiedByUserId = @modifiedByUserId
+                    WHERE PostID = @postId
+                `);
+        }
 
         return {
             status: 200,
@@ -713,4 +739,116 @@ app.http('unarchiveThread', {
     authLevel: 'anonymous',
     handler: unarchiveThread,
     route: 'threads/{threadId}/unarchive'
+});
+
+// Toggle pin status for OOC forum threads (moderator/admin only)
+export async function toggleThreadPin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const threadId = request.params.threadId;
+
+    if (!threadId) {
+        return { status: 400, body: "Thread ID is required" };
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Check if thread exists and is in an OOC forum
+        const threadCheck = await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('SELECT ThreadID, OOCForumID, IsPinned FROM Thread WHERE ThreadID = @threadId');
+
+        if (threadCheck.recordset.length === 0) {
+            return { status: 404, body: "Thread not found" };
+        }
+
+        const thread = threadCheck.recordset[0];
+
+        if (!thread.OOCForumID) {
+            return { status: 400, body: "Only OOC forum threads can be pinned" };
+        }
+
+        // Toggle the pin status
+        const newPinStatus = !thread.IsPinned;
+
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .input('isPinned', sql.Bit, newPinStatus)
+            .query('UPDATE Thread SET IsPinned = @isPinned WHERE ThreadID = @threadId');
+
+        return {
+            status: 200,
+            jsonBody: { 
+                message: newPinStatus ? "Thread pinned successfully" : "Thread unpinned successfully",
+                isPinned: newPinStatus
+            }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('toggleThreadPin', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    handler: toggleThreadPin,
+    route: 'threads/{threadId}/pin'
+});
+
+// Update thread title and subheader
+export async function updateThreadDetails(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const threadId = request.params.threadId;
+
+    if (!threadId) {
+        return { status: 400, body: "Thread ID is required" };
+    }
+
+    try {
+        const body = await request.json() as any;
+        const { title, subheader } = body;
+
+        if (!title || !title.trim()) {
+            return { status: 400, body: "Title is required" };
+        }
+
+        const pool = await getPool();
+
+        // Update the thread's subheader
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .input('subheader', sql.NVarChar, subheader?.trim() || null)
+            .query('UPDATE Thread SET Subheader = @subheader, Modified = GETDATE() WHERE ThreadID = @threadId');
+
+        // Update the first post's subject (title)
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .input('title', sql.NVarChar, title.trim())
+            .query(`
+                UPDATE Post 
+                SET Subject = @title, Modified = GETDATE()
+                WHERE ThreadID = @threadId 
+                AND PostID = (SELECT TOP 1 PostID FROM Post WHERE ThreadID = @threadId ORDER BY Created ASC)
+            `);
+
+        return {
+            status: 200,
+            jsonBody: { 
+                message: "Thread updated successfully",
+                title: title.trim(),
+                subheader: subheader?.trim() || null
+            }
+        };
+
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('updateThreadDetails', {
+    methods: ['PATCH'],
+    authLevel: 'anonymous',
+    handler: updateThreadDetails,
+    route: 'threads/{threadId}/details'
 });
