@@ -258,6 +258,14 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+    
+    // Check file size (1MB = 1,048,576 bytes)
+    if (file.size > 1048576) {
+      alert('Image must be 1MB or smaller.');
+      e.target.value = '';
+      return;
+    }
+    
     setUploading(true);
 
     try {
@@ -287,6 +295,14 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+    
+    // Check file size (1MB = 1,048,576 bytes)
+    if (file.size > 1048576) {
+      alert('Image must be 1MB or smaller.');
+      e.target.value = '';
+      return;
+    }
+    
     setUploadingProfileImage(index);
 
     try {
@@ -530,6 +546,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                             onChange={handleImageUpload}
                             className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:border file:border-gray-300 file:text-sm file:font-medium file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
                           />
+                          <span className="text-xs text-gray-500">Max file size: 1MB.</span>
                           {uploading && <span className="text-sm text-yellow-600">Uploading...</span>}
                         </div>
                       </div>
@@ -584,7 +601,7 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                           );
                         })}
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Click to upload or drag images. These will be displayed on your character's profile page.</p>
+                      <p className="text-xs text-gray-500 mt-1">Click to upload or drag images. Max file size: 1MB.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
