@@ -38,6 +38,7 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
   const [showDeathModal, setShowDeathModal] = useState<InactiveCharacter | null>(null);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isModerator = user?.isModerator || user?.isAdmin;
 
@@ -251,8 +252,33 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     });
   };
 
-  const sortedInactiveCharacters = useMemo(() => sortCharacters(inactiveCharacters), [inactiveCharacters, sortField, sortDirection]);
-  const sortedCharactersToInactivate = useMemo(() => sortCharacters(charactersToInactivate), [charactersToInactivate, sortField, sortDirection]);
+  const sortedInactiveCharacters = useMemo(() => {
+    let filtered = inactiveCharacters;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.name.toLowerCase().includes(query) ||
+        (c.surname || '').toLowerCase().includes(query) ||
+        (c.playerName || '').toLowerCase().includes(query) ||
+        (c.packName || '').toLowerCase().includes(query)
+      );
+    }
+    return sortCharacters(filtered);
+  }, [inactiveCharacters, sortField, sortDirection, searchQuery]);
+  
+  const sortedCharactersToInactivate = useMemo(() => {
+    let filtered = charactersToInactivate;
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.name.toLowerCase().includes(query) ||
+        (c.surname || '').toLowerCase().includes(query) ||
+        (c.playerName || '').toLowerCase().includes(query) ||
+        (c.packName || '').toLowerCase().includes(query)
+      );
+    }
+    return sortCharacters(filtered);
+  }, [charactersToInactivate, sortField, sortDirection, searchQuery]);
 
   if (!isModerator) {
     return (
@@ -412,6 +438,17 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
             </button>
           </div>
         )}
+
+        {/* Search Bar */}
+        <div className="mb-4">
+          <input
+            type="text"
+            placeholder="Search characters, players, or packs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
+          />
+        </div>
 
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-300 bg-gray-200 w-fit">
