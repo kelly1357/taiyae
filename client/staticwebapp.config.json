@@ -22,6 +22,7 @@
   "mimeTypes": {
     ".js": "application/javascript",
     ".mjs": "application/javascript",
-    ".json": "application/json"
+    ".json": "application/json",
+    ".wasm": "application/wasm"
   }
 }
