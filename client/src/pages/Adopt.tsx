@@ -298,16 +298,6 @@ const Adopt: React.FC = () => {
     return symbol?.imageUrl || null;
   };
 
-  const ColorSwatch: React.FC<{ color: string | null; label?: string }> = ({ color, label }) => {
-    if (!color) return null;
-    return (
-      <div
-        className="w-5 h-5 rounded border border-gray-400 cursor-default"
-        style={{ backgroundColor: color }}
-        title={label || color}
-      />
-    );
-  };
 
   return (
     <>

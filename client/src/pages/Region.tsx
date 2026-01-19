@@ -9,6 +9,11 @@ import { useBackground } from '../contexts/BackgroundContext';
 interface ThreadSummary extends Omit<Thread, 'replies'> {
   authorName: string;
   replyCount: number;
+  subheader?: string;
+  authorSlug?: string;
+  lastReplyAuthorName?: string;
+  lastReplyAuthorSlug?: string;
+  lastPostDate?: string;
 }
 
 interface RegionContext {

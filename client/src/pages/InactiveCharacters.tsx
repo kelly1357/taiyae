@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { User } from '../types';
+import { formatHorizonYear, getHorizonDate } from '../utils/horizonCalendar';
 
 interface InactiveCharacter {
   id: number;

@@ -237,7 +237,7 @@ const Layout: React.FC<LayoutProps> = ({
         <PingStaffModal
           isOpen={isPingModalOpen}
           onClose={() => setIsPingModalOpen(false)}
-          userId={user?.id}
+          userId={typeof user?.id === 'string' ? parseInt(user.id, 10) : user?.id}
           currentPageUrl={location.pathname}
           isLoggedIn={!!user}
         />

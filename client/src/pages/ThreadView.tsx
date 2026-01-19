@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
 import { useBackground } from '../contexts/BackgroundContext';
-import { useNoUser } from '../contexts/UserContext';
 import type { Character, ForumRegion, User } from '../types';
 
 // Helper type for the API response which flattens character/pack info
@@ -313,13 +312,6 @@ const ThreadView: React.FC = () => {
   const { setBackgroundUrl, resetBackground, setGrayscale } = useBackground();
 
   // Guest detection at top-level
-  let isGuest = true;
-  try {
-    const noUserContext = useNoUser();
-    isGuest = noUserContext?.isGuest ?? true;
-  } catch {
-    isGuest = true;
-  }
 
   const [thread, setThread] = useState<any>(null);
   const [loading, setLoading] = useState(true);
