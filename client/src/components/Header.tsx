@@ -20,6 +20,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [pendingPlotNewsCount, setPendingPlotNewsCount] = useState(0);
   const [pendingAchievementsCount, setPendingAchievementsCount] = useState(0);
   const [pendingInactiveCharactersCount, setPendingInactiveCharactersCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -136,7 +137,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [pendingStaffPingsCount, setPendingStaffPingsCount] = useState(0);
   useEffect(() => {
     if (!isModerator) return;
-    
+
     const fetchCount = async () => {
       try {
         const response = await fetch('/api/staff-pings/count');
@@ -148,12 +149,45 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         console.error('Error fetching pending staff pings count:', error);
       }
     };
-    
+
     fetchCount();
     // Refresh every 30 seconds
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
   }, [isModerator]);
+
+  // Fetch unread messages count
+  useEffect(() => {
+    if (!activeCharacter) return;
+
+    const fetchCount = async () => {
+      try {
+        const response = await fetch(`/api/conversations?characterId=${activeCharacter.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const totalUnread = data.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
+          setUnreadMessagesCount(totalUnread);
+        }
+      } catch (error) {
+        console.error('Error fetching unread messages count:', error);
+      }
+    };
+
+    fetchCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchCount, 60000);
+
+    // Listen for conversation read events
+    const handleConversationRead = () => {
+      fetchCount();
+    };
+    window.addEventListener('conversationRead', handleConversationRead);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('conversationRead', handleConversationRead);
+    };
+  }, [activeCharacter]);
 
   const handleDropdownMouseEnter = (label: string) => {
     // Clear any pending close timeout
@@ -321,8 +355,9 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {user && activeCharacter && (
-            <Link to="/conversations" className="header-link text-xs uppercase tracking-wide transition-colors">
+            <Link to="/conversations" className="header-link text-xs uppercase tracking-wide transition-colors flex items-center gap-1">
               Messages
+              {unreadMessagesCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadMessagesCount}</span>}
             </Link>
           )}
           {(isModerator || isAdmin) && (
@@ -531,9 +566,10 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               <Link
                 to="/conversations"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-800 hover:bg-gray-100"
+                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-800 hover:bg-gray-100 flex items-center justify-between"
               >
-                Messages
+                <span>Messages</span>
+                {unreadMessagesCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadMessagesCount}</span>}
               </Link>
             </div>
           )}

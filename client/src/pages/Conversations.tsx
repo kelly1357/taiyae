@@ -21,32 +21,16 @@ const Conversations: React.FC = () => {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // New conversation modal state
+  // New conversation state
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string>('');
-  const [initialMessage, setInitialMessage] = useState('');
   const [creatingConversation, setCreatingConversation] = useState(false);
 
   const selectedConversation = conversations.find(
-    c => c.conversationId === parseInt(selectedConversationId || '0')
+    c => c.conversationId === parseInt(selectedConversationId || '0', 10)
   );
-
-  const otherCharacter = selectedConversation
-    ? selectedConversation.fromCharacterId === activeCharacter?.id
-      ? {
-          id: selectedConversation.toCharacterId,
-          name: selectedConversation.toCharacterName,
-          imageUrl: selectedConversation.toCharacterImageUrl,
-        }
-      : {
-          id: selectedConversation.fromCharacterId,
-          name: selectedConversation.fromCharacterName,
-          imageUrl: selectedConversation.fromCharacterImageUrl,
-        }
-    : null;
 
   // Fetch conversations
   const fetchConversations = async () => {
@@ -69,8 +53,16 @@ const Conversations: React.FC = () => {
     try {
       const res = await fetch(`/api/conversations/${conversationId}/messages`);
       const data = await res.json();
+
       setMessages(data);
       setMessagesLoading(false);
+
+      // Scroll messages container to bottom after messages load
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+      }, 100);
 
       // Mark conversation as read
       await fetch(`/api/conversations/${conversationId}/mark-read`, {
@@ -81,6 +73,9 @@ const Conversations: React.FC = () => {
 
       // Refresh conversations to update unread count
       fetchConversations();
+
+      // Dispatch event to update header badge
+      window.dispatchEvent(new CustomEvent('conversationRead'));
     } catch (error) {
       console.error('Error fetching messages:', error);
       setMessagesLoading(false);
@@ -95,7 +90,7 @@ const Conversations: React.FC = () => {
       // Filter out current character and inactive characters
       const filtered = data.filter(
         (c: Character) =>
-          c.id !== activeCharacter?.id &&
+          String(c.id) !== String(activeCharacter?.id) &&
           c.healthStatus !== 'Inactive'
       );
       setAllCharacters(filtered);
@@ -116,39 +111,34 @@ const Conversations: React.FC = () => {
     }
 
     fetchConversations();
+    fetchAllCharacters();
   }, [user, activeCharacter, navigate]);
 
   // Load messages when conversation is selected
   useEffect(() => {
     if (selectedConversationId && activeCharacter) {
-      fetchMessages(parseInt(selectedConversationId));
+      fetchMessages(parseInt(selectedConversationId, 10));
     } else {
       setMessages([]);
     }
   }, [selectedConversationId, activeCharacter]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
+  // TODO: Optimize message polling - currently disabled to reduce API hits
   // Poll for new messages
-  useEffect(() => {
-    if (selectedConversationId && activeCharacter) {
-      // Poll every 3 seconds for new messages
-      pollingIntervalRef.current = setInterval(() => {
-        fetchMessages(parseInt(selectedConversationId));
-      }, 3000);
+  // useEffect(() => {
+  //   if (selectedConversationId && activeCharacter) {
+  //     // Poll every 5 seconds for new messages
+  //     pollingIntervalRef.current = window.setInterval(() => {
+  //       fetchMessages(parseInt(selectedConversationId, 10), true);
+  //     }, 5000);
 
-      return () => {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-        }
-      };
-    }
-  }, [selectedConversationId, activeCharacter]);
+  //     return () => {
+  //       if (pollingIntervalRef.current) {
+  //         clearInterval(pollingIntervalRef.current);
+  //       }
+  //     };
+  //   }
+  // }, [selectedConversationId, activeCharacter]);
 
   // Send message
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -173,7 +163,7 @@ const Conversations: React.FC = () => {
       if (res.ok) {
         setNewMessage('');
         // Immediately fetch new messages
-        await fetchMessages(parseInt(selectedConversationId));
+        await fetchMessages(parseInt(selectedConversationId, 10));
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -182,11 +172,11 @@ const Conversations: React.FC = () => {
     }
   };
 
-  // Create new conversation
-  const handleCreateConversation = async (e: React.FormEvent) => {
+  // Start new conversation (just send first message)
+  const handleStartConversation = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedCharacter || !initialMessage.trim() || !activeCharacter) {
+    if (!selectedCharacter || !newMessage.trim() || !activeCharacter) {
       return;
     }
 
@@ -199,7 +189,7 @@ const Conversations: React.FC = () => {
         body: JSON.stringify({
           fromCharacterId: activeCharacter.id,
           toCharacterId: selectedCharacter,
-          initialMessage: initialMessage.trim(),
+          initialMessage: newMessage.trim(),
         }),
       });
 
@@ -207,7 +197,7 @@ const Conversations: React.FC = () => {
         const data = await res.json();
         setShowNewConversation(false);
         setSelectedCharacter('');
-        setInitialMessage('');
+        setNewMessage('');
         // Refresh conversations and navigate to new conversation
         await fetchConversations();
         setSearchParams({ conversationId: data.conversationId.toString() });
@@ -272,20 +262,23 @@ const Conversations: React.FC = () => {
   }
 
   return (
-    <div className="bg-white shadow min-h-[600px] flex">
+    <div className="bg-white shadow h-[calc(100vh-200px)] flex">
       {/* Sidebar - Conversations List */}
       <div className="w-80 border-r border-gray-300 flex flex-col">
         {/* Header */}
-        <div className="bg-[#2f3a2f] text-white p-4 flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Conversations</h2>
+        <div className="bg-[#2f3a2f] text-white p-4 flex justify-between items-center flex-shrink-0">
+          <h2 className="text-lg font-semibold">Messages</h2>
           <button
             onClick={() => {
-              setShowNewConversation(true);
-              fetchAllCharacters();
+              setShowNewConversation(!showNewConversation);
+              if (!showNewConversation) {
+                setSelectedCharacter('');
+                setNewMessage('');
+              }
             }}
             className="bg-white text-[#2f3a2f] px-3 py-1 text-sm font-semibold hover:bg-gray-100 transition-colors"
           >
-            New
+            {showNewConversation ? 'Cancel' : 'New'}
           </button>
         </div>
 
@@ -293,90 +286,96 @@ const Conversations: React.FC = () => {
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="p-4 text-center text-gray-500">Loading...</div>
-          ) : conversations.length === 0 ? (
+          ) : conversations.length === 0 && !showNewConversation ? (
             <div className="p-4 text-center text-gray-500">
               No conversations yet. Start a new conversation!
             </div>
           ) : (
-            conversations.map((conv) => {
-              const isFromChar = conv.fromCharacterId === activeCharacter.id;
-              const otherChar = isFromChar
-                ? { name: conv.toCharacterName, imageUrl: conv.toCharacterImageUrl }
-                : { name: conv.fromCharacterName, imageUrl: conv.fromCharacterImageUrl };
+            <>
+              {showNewConversation && (
+                <div className="p-3 border-b-2 border-green-600 bg-green-50">
+                  <div className="font-semibold text-gray-900 mb-2">New Conversation</div>
+                  <select
+                    value={selectedCharacter}
+                    onChange={(e) => setSelectedCharacter(e.target.value)}
+                    className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-green-600 mb-2"
+                  >
+                    <option value="">Select character...</option>
+                    {allCharacters.map((char) => (
+                      <option key={char.id} value={char.id}>
+                        {char.name} {char.surname ? char.surname : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {conversations.map((conv) => {
+                const isFromChar = conv.fromCharacterId === parseInt(String(activeCharacter.id), 10);
+                const otherChar = isFromChar
+                  ? { name: conv.toCharacterName, imageUrl: conv.toCharacterImageUrl }
+                  : { name: conv.fromCharacterName, imageUrl: conv.fromCharacterImageUrl };
 
-              const isSelected = conv.conversationId === parseInt(selectedConversationId || '0');
+                const isSelected = conv.conversationId === parseInt(selectedConversationId || '0', 10);
 
-              return (
-                <div
-                  key={conv.conversationId}
-                  onClick={() => setSearchParams({ conversationId: conv.conversationId.toString() })}
-                  className={`p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    isSelected ? 'bg-gray-100' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
-                      {renderAvatar(otherChar.imageUrl, otherChar.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start">
-                        <span className="font-semibold text-gray-900 truncate">{otherChar.name}</span>
-                        {conv.lastMessageCreated && (
-                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                            {formatDate(conv.lastMessageCreated)}
-                          </span>
-                        )}
+                return (
+                  <div
+                    key={conv.conversationId}
+                    onClick={() => {
+                      setShowNewConversation(false);
+                      setSearchParams({ conversationId: conv.conversationId.toString() });
+                    }}
+                    className={`p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      isSelected ? 'bg-gray-100' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
+                        {renderAvatar(otherChar.imageUrl, otherChar.name)}
                       </div>
-                      <p className="text-sm text-gray-600 truncate">{conv.lastMessage || 'No messages yet'}</p>
-                      {(conv.unreadCount ?? 0) > 0 && (
-                        <div className="mt-1">
-                          <span className="inline-block bg-green-600 text-white text-xs px-2 py-0.5 rounded-full">
-                            {conv.unreadCount} new
-                          </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <span className="font-semibold text-gray-900 truncate">{otherChar.name}</span>
+                          <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                            {conv.lastMessageCreated && (
+                              <span className="text-xs text-gray-500">
+                                {formatDate(conv.lastMessageCreated)}
+                              </span>
+                            )}
+                            {(conv.unreadCount ?? 0) > 0 && (
+                              <span className="w-2.5 h-2.5 bg-green-600 rounded-full"></span>
+                            )}
+                          </div>
                         </div>
-                      )}
+                        <p className={`text-sm text-gray-600 truncate ${(conv.unreadCount ?? 0) > 0 ? 'font-bold' : ''}`}>
+                          {conv.lastMessage || 'No messages yet'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </>
           )}
         </div>
       </div>
 
       {/* Main Content - Messages */}
-      <div className="flex-1 flex flex-col">
-        {selectedConversationId && selectedConversation ? (
+      <div className="flex-1 flex flex-col min-w-0">
+        {selectedConversationId && selectedConversation && !showNewConversation ? (
           <>
-            {/* Header */}
-            <div className="bg-[#2f3a2f] text-white p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-white flex-shrink-0">
-                {renderAvatar(otherCharacter?.imageUrl, otherCharacter?.name)}
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">{otherCharacter?.name}</h2>
-                <Link
-                  to={`/character/${otherCharacter?.id}`}
-                  className="text-sm text-gray-300 hover:underline"
-                >
-                  View Profile
-                </Link>
-              </div>
-            </div>
-
             {/* Messages */}
             <div
               ref={messagesContainerRef}
               className="flex-1 overflow-y-auto p-4 bg-gray-50"
             >
-              {messagesLoading ? (
+              {messagesLoading && messages.length === 0 ? (
                 <div className="text-center text-gray-500">Loading messages...</div>
               ) : messages.length === 0 ? (
                 <div className="text-center text-gray-500">No messages yet. Start the conversation!</div>
               ) : (
                 <div className="space-y-4">
                   {messages.map((msg) => {
-                    const isActiveChar = msg.characterId === activeCharacter.id;
+                    const isActiveChar = msg.characterId === parseInt(String(activeCharacter.id), 10);
 
                     return (
                       <div
@@ -384,9 +383,18 @@ const Conversations: React.FC = () => {
                         className={`flex items-start gap-3 ${isActiveChar ? 'flex-row-reverse' : ''}`}
                       >
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
-                          {renderAvatar(msg.characterImageUrl, msg.characterName)}
-                        </div>
+                        {isActiveChar ? (
+                          <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 flex-shrink-0">
+                            {renderAvatar(msg.characterImageUrl, msg.characterName)}
+                          </div>
+                        ) : (
+                          <Link
+                            to={`/character/${msg.characterId}`}
+                            className="w-10 h-10 rounded-full overflow-hidden border border-gray-300 flex-shrink-0 hover:opacity-80 transition-opacity"
+                          >
+                            {renderAvatar(msg.characterImageUrl, msg.characterName)}
+                          </Link>
+                        )}
 
                         {/* Message Bubble */}
                         <div
@@ -414,13 +422,13 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-300 bg-white">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-300 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600"
+                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600 text-black"
                   rows={2}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -432,9 +440,63 @@ const Conversations: React.FC = () => {
                 <button
                   type="submit"
                   disabled={sending || !newMessage.trim()}
-                  className="bg-green-600 text-white px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  className="bg-green-600 text-white px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
                 >
                   {sending ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
+            </form>
+          </>
+        ) : showNewConversation && selectedCharacter ? (
+          <>
+            {/* New Conversation Header */}
+            <div className="bg-[#2f3a2f] text-white p-4 flex items-center gap-3 flex-shrink-0">
+              <div className="w-10 h-10 rounded-full overflow-hidden border border-white flex-shrink-0">
+                {renderAvatar(
+                  allCharacters.find(c => String(c.id) === selectedCharacter)?.imageUrl,
+                  allCharacters.find(c => String(c.id) === selectedCharacter)?.name
+                )}
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">
+                  {allCharacters.find(c => String(c.id) === selectedCharacter)?.name}
+                </h2>
+                <p className="text-sm text-gray-300">New conversation</p>
+              </div>
+            </div>
+
+            {/* Empty state */}
+            <div className="flex-1 bg-gray-50 flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <p className="text-lg mb-2">Start your conversation</p>
+                <p className="text-sm">Send a message below to begin</p>
+              </div>
+            </div>
+
+            {/* Message Input */}
+            <form onSubmit={handleStartConversation} className="p-4 border-t border-gray-300 bg-white flex-shrink-0">
+              <div className="flex gap-2">
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your first message..."
+                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600 text-black"
+                  rows={2}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleStartConversation(e);
+                    }
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={creatingConversation || !newMessage.trim()}
+                  className="bg-green-600 text-white px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
+                >
+                  {creatingConversation ? 'Starting...' : 'Start'}
                 </button>
               </div>
               <p className="text-xs text-gray-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
@@ -443,77 +505,16 @@ const Conversations: React.FC = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center text-gray-500">
-              <p className="text-lg mb-2">Select a conversation to view messages</p>
-              <p className="text-sm">or start a new conversation</p>
+              <p className="text-lg mb-2">
+                {showNewConversation ? 'Select a character to message' : 'A-wooooo! Select a conversation.'}
+              </p>
+              {showNewConversation && (
+                <p className="text-sm">Choose a character from the list on the left</p>
+              )}
             </div>
           </div>
         )}
       </div>
-
-      {/* New Conversation Modal */}
-      {showNewConversation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 w-full max-w-md shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900">New Conversation</h2>
-            <form onSubmit={handleCreateConversation}>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Select Character
-                </label>
-                <select
-                  value={selectedCharacter}
-                  onChange={(e) => setSelectedCharacter(e.target.value)}
-                  className="w-full border border-gray-300 px-3 py-2 focus:outline-none focus:border-green-600"
-                  required
-                >
-                  <option value="">Choose a character...</option>
-                  {allCharacters.map((char) => (
-                    <option key={char.id} value={char.id}>
-                      {char.name} {char.surname ? char.surname : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Message
-                </label>
-                <textarea
-                  value={initialMessage}
-                  onChange={(e) => setInitialMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="w-full border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600"
-                  rows={4}
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewConversation(false);
-                    setSelectedCharacter('');
-                    setInitialMessage('');
-                  }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
-                  disabled={creatingConversation}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={creatingConversation || !selectedCharacter || !initialMessage.trim()}
-                  className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  {creatingConversation ? 'Creating...' : 'Start Conversation'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
