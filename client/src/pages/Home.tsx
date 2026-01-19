@@ -527,9 +527,9 @@ const Home: React.FC = () => {
           {/* Game Statistics */}
           <div className="px-4 py-4">
             <h3 className="text-base font-semibold text-gray-900 mb-3">Game Statistics</h3>
-            <div className="grid grid-cols-3 border border-gray-300 mx-0.5">
+            <div className="grid grid-cols-1 md:grid-cols-3 border border-gray-300 mx-0.5">
               {/* Setting */}
-              <div className="border-r border-gray-300">
+              <div className="md:border-r border-b md:border-b-0 border-gray-300">
                 <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Setting
@@ -567,7 +567,7 @@ const Home: React.FC = () => {
               </div>
 
               {/* Population */}
-              <div className="border-r border-gray-300">
+              <div className="md:border-r border-b md:border-b-0 border-gray-300">
                 <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Population
