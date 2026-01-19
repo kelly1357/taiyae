@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
-import type { User } from '../types';
+import { Link } from 'react-router-dom';
 
 interface InactiveCharacter {
   CharacterID: number;
@@ -14,7 +13,6 @@ type SortField = 'CharacterID' | 'Name' | 'Username' | 'LastICPostAt' | 'JoinedA
 type SortDirection = 'asc' | 'desc';
 
 const ActivityTracker: React.FC = () => {
-  const { user } = useOutletContext<{ user?: User }>();
   const [characters, setCharacters] = useState<InactiveCharacter[]>([]);
   const [loading, setLoading] = useState(true);
   const [nextCheckDate, setNextCheckDate] = useState<string>('');

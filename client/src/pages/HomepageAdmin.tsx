@@ -2,13 +2,6 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../contexts/UserContext';
 import { Link } from 'react-router-dom';
 
-interface SitewideUpdate {
-  UpdateID: number;
-  Content: string;
-  CreatedAt: string;
-  CreatedByUserID?: number;
-  CreatedByUsername?: string;
-}
 
 export default function HomepageAdmin() {
   const { user } = useUser();
@@ -20,7 +13,6 @@ export default function HomepageAdmin() {
   const [bulletinSaving, setBulletinSaving] = useState(false);
   
   // Sitewide Updates state
-  const [updates, setUpdates] = useState<SitewideUpdate[]>([]);
   const [updatesLoading, setUpdatesLoading] = useState(true);
   const [newUpdateContent, setNewUpdateContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -55,8 +47,7 @@ export default function HomepageAdmin() {
     try {
       const res = await fetch('/api/sitewide-updates?limit=20');
       if (res.ok) {
-        const data = await res.json();
-        setUpdates(data.updates || []);
+         await res.json();
       }
     } catch (error) {
       console.error('Error loading updates:', error);
@@ -124,36 +115,6 @@ export default function HomepageAdmin() {
     }
   }
 
-  async function handleDeleteUpdate(updateId: number) {
-    if (!confirm('Are you sure you want to delete this update?')) return;
-
-    try {
-      const res = await fetch(`/api/sitewide-updates/${updateId}`, {
-        method: 'DELETE'
-      });
-
-      if (res.ok) {
-        setUpdates(updates.filter(u => u.UpdateID !== updateId));
-        setMessage({ type: 'success', text: 'Update deleted' });
-      } else {
-        setMessage({ type: 'error', text: 'Failed to delete update' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Error deleting update' });
-    }
-  }
-
-  function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const year = date.getFullYear().toString().slice(-2);
-    let hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'pm' : 'am';
-    hours = hours % 12 || 12;
-    return `(${month}/${day}/${year}, ${hours}:${minutes}${ampm})`;
-  }
 
   // Check if user is moderator or admin
   if (!isModerator) {
