@@ -126,7 +126,8 @@ const Characters: React.FC = () => {
         </div>
 
         <div className="border border-gray-300 mx-0.5">
-          <table className="w-full text-sm border-collapse">
+          {/* Desktop Table View */}
+          <table className="hidden md:table w-full text-sm border-collapse">
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                 <th 
@@ -231,6 +232,98 @@ const Characters: React.FC = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden divide-y divide-gray-300">
+            {/* Mobile Sort Options */}
+            <div className="bg-gray-200 px-3 py-2 flex items-center gap-2 text-xs">
+              <span className="text-gray-600">Sort by:</span>
+              <select 
+                value={sortField}
+                onChange={(e) => setSortField(e.target.value as SortField)}
+                className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+              >
+                <option value="name">Name</option>
+                <option value="sex">Sex</option>
+                <option value="age">Age</option>
+                <option value="packName">Pack</option>
+                <option value="totalSkill">Skill Points</option>
+                <option value="username">Player</option>
+              </select>
+              <button 
+                onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+              >
+                {sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
+              </button>
+            </div>
+            
+            {sortedCharacters.map(char => (
+              <div key={char.id} className="flex gap-3 p-3 hover:bg-gray-50">
+                {/* Character Image */}
+                <Link to={`/character/${char.slug || char.id}`} className="flex-shrink-0 w-24 relative">
+                  {char.imageUrl && char.imageUrl.trim() !== '' && !imageErrors.has(char.id) ? (
+                    <img 
+                      src={char.imageUrl} 
+                      alt={char.name} 
+                      className="w-full object-cover rounded"
+                      style={{ aspectRatio: '1/1' }}
+                      onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
+                    />
+                  ) : (
+                    <div 
+                      className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded"
+                      style={{ aspectRatio: '1/1' }}
+                    >
+                      <img 
+                        src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                        alt="Placeholder" 
+                        className="w-8 h-8 opacity-40"
+                      />
+                    </div>
+                  )}
+                  {!!char.isOnline && (
+                    <span className="absolute top-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" title="Online Now"></span>
+                  )}
+                </Link>
+
+                {/* Character Info */}
+                <div className="flex-1 min-w-0">
+                  <Link to={`/character/${char.slug || char.id}`} className="font-semibold text-gray-900 hover:underline">
+                    {char.name}{char.surname ? ` ${char.surname}` : ''}
+                  </Link>
+                  <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className={char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-600'}>
+                        {char.sex === 'Male' ? '♂' : char.sex === 'Female' ? '♀' : '—'} {char.sex || 'Unknown'}
+                      </span>
+                      <span className="text-gray-400">·</span>
+                      <span>{char.age}</span>
+                    </div>
+                    <div>
+                      {char.packName ? char.packName : (
+                        <span className="uppercase tracking-wide text-gray-500" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">SP: {char.totalSkill || 0}</span>
+                      {char.spiritSymbol && (
+                        <>
+                          <span className="text-gray-400">·</span>
+                          <img 
+                            src={`https://taiyaefiles.blob.core.windows.net/web/${char.spiritSymbol}_d.png`}
+                            alt={char.spiritSymbol}
+                            className="w-4 h-4 inline"
+                          />
+                        </>
+                      )}
+                    </div>
+                    <div className="text-gray-500">Player: {char.username || 'Unknown'}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

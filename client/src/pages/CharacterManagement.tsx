@@ -746,7 +746,30 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
         </div>
       ) : (
         <div className="px-4 py-4">
-          <table className="w-full border border-gray-300 text-sm bg-white">
+          {/* Mobile Sort Options */}
+          <div className="md:hidden bg-gray-200 border border-gray-300 px-3 py-2 flex items-center gap-2 text-xs mb-4">
+            <span className="text-gray-600">Sort by:</span>
+            <select 
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value as SortField)}
+              className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+            >
+              <option value="name">Name</option>
+              <option value="sex">Sex</option>
+              <option value="packName">Pack</option>
+              <option value="age">Age</option>
+              <option value="totalSkill">Skill Score</option>
+            </select>
+            <button 
+              onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+              className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+            >
+              {sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
+            </button>
+          </div>
+
+          {/* Desktop Table View */}
+          <table className="hidden md:table w-full border border-gray-300 text-sm bg-white">
             <thead>
               <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                 <th 
@@ -847,12 +870,79 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
             </tbody>
           </table>
 
+          {/* Mobile Card View for Active Characters */}
+          <div className="md:hidden border border-gray-300 divide-y divide-gray-300">
+            {activeCharacters.map(char => (
+              <div key={char.id} className="p-3 hover:bg-gray-50">
+                <div className="flex gap-3">
+                  {/* Character Image */}
+                  <Link to={`/character/${char.slug || char.id}`} className="flex-shrink-0 w-20 relative">
+                    {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
+                      <img 
+                        src={char.imageUrl} 
+                        alt={char.name} 
+                        className="w-full object-cover rounded"
+                        style={{ aspectRatio: '1/1' }}
+                        onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
+                      />
+                    ) : (
+                      <div 
+                        className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded"
+                        style={{ aspectRatio: '1/1' }}
+                      >
+                        <img 
+                          src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                          alt="Placeholder" 
+                          className="w-8 h-8 opacity-40"
+                        />
+                      </div>
+                    )}
+                  </Link>
+
+                  {/* Character Info */}
+                  <div className="flex-1 min-w-0">
+                    <Link to={`/character/${char.slug || char.id}`} className="font-semibold text-gray-900 hover:underline">
+                      {char.name}
+                    </Link>
+                    <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className={char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-600'}>
+                          {char.sex === 'Male' ? '♂' : char.sex === 'Female' ? '♀' : '—'} {char.sex || 'Unknown'}
+                        </span>
+                        <span className="text-gray-400">·</span>
+                        <span>{char.age}</span>
+                      </div>
+                      <div>
+                        {char.packName ? char.packName : (
+                          <span className="uppercase tracking-wide text-gray-500" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-gray-700">
+                        <span className="font-medium">SP:</span>
+                        <span>{char.experience || 0}</span>/<span>{char.physical || 0}</span>/<span>{char.knowledge || 0}</span>
+                        <span className="font-bold ml-1">= {char.totalSkill || 0}</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleEdit(char)}
+                      className="mt-2 text-xs bg-gray-100 hover:bg-gray-200 text-[#2f3a2f] px-3 py-1 font-medium border border-gray-300"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Inactive Characters Section */}
           {inactiveCharacters.length > 0 && (
             <>
               <hr className="my-6 border-gray-300" />
               <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">Inactive & Dead Characters</h3>
-              <table className="w-full border border-gray-300 text-sm bg-white">
+              
+              {/* Desktop Table View */}
+              <table className="hidden md:table w-full border border-gray-300 text-sm bg-white">
                 <thead>
                   <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                     <th className="px-4 py-2 text-left border-r border-gray-300 w-[25%]">Character</th>
@@ -956,6 +1046,100 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                   ))}
                 </tbody>
               </table>
+
+              {/* Mobile Card View for Inactive Characters */}
+              <div className="md:hidden border border-gray-300 divide-y divide-gray-300">
+                {inactiveCharacters.map(char => (
+                  <div key={char.id} className="p-3 hover:bg-gray-50">
+                    <div className="flex gap-3">
+                      {/* Character Image */}
+                      <Link to={`/character/${char.slug || char.id}`} className="flex-shrink-0 w-20 relative">
+                        {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
+                          <img 
+                            src={char.imageUrl} 
+                            alt={char.name} 
+                            className="w-full object-cover rounded"
+                            style={{ aspectRatio: '1/1' }}
+                            onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
+                          />
+                        ) : (
+                          <div 
+                            className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded"
+                            style={{ aspectRatio: '1/1' }}
+                          >
+                            <img 
+                              src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                              alt="Placeholder" 
+                              className="w-8 h-8 opacity-40"
+                            />
+                          </div>
+                        )}
+                        {/* Status badge on image */}
+                        <span className={`absolute top-0 right-0 px-1 py-0.5 text-[10px] font-bold ${
+                          char.status === 'Dead' ? 'bg-gray-800 text-gray-200' : 'bg-yellow-600 text-white'
+                        }`}>
+                          {char.status}
+                        </span>
+                        {/* Unread badge */}
+                        {unreadByCharacter[char.id] > 0 && (
+                          <span 
+                            className="absolute bottom-0 right-0 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 flex items-center justify-center px-1 rounded-tl"
+                            title={`${unreadByCharacter[char.id]} unread message${unreadByCharacter[char.id] > 1 ? 's' : ''}`}
+                          >
+                            ✉ {unreadByCharacter[char.id]}
+                          </span>
+                        )}
+                      </Link>
+
+                      {/* Character Info */}
+                      <div className="flex-1 min-w-0">
+                        <Link to={`/character/${char.slug || char.id}`} className="font-semibold text-gray-900 hover:underline">
+                          {char.name}
+                        </Link>
+                        <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                          <div className="flex items-center gap-2">
+                            <span className={char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-600'}>
+                              {char.sex === 'Male' ? '♂' : char.sex === 'Female' ? '♀' : '—'} {char.sex || 'Unknown'}
+                            </span>
+                            <span className="text-gray-400">·</span>
+                            <span>{char.age}</span>
+                          </div>
+                          <div>
+                            {char.packName ? char.packName : (
+                              <span className="uppercase tracking-wide text-gray-500" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-gray-700">
+                            <span className="font-medium">SP:</span>
+                            <span>{char.experience || 0}</span>/<span>{char.physical || 0}</span>/<span>{char.knowledge || 0}</span>
+                            <span className="font-bold ml-1">= {char.totalSkill || 0}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 mt-2">
+                          {char.status !== 'Dead' && (
+                            <button 
+                              onClick={() => handleToggleShowInDropdown(char)}
+                              className={`text-xs px-2 py-1 font-medium border ${
+                                char.showInDropdown 
+                                  ? 'bg-green-600 hover:bg-green-700 text-white border-green-700' 
+                                  : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-300'
+                              }`}
+                            >
+                              {char.showInDropdown ? '✓ Posting' : 'Enable'}
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleEdit(char)}
+                            className="text-xs bg-gray-100 hover:bg-gray-200 text-[#2f3a2f] px-3 py-1 font-medium border border-gray-300"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>

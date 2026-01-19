@@ -546,6 +546,125 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     </tr>
   );
 
+  // Mobile Character Card Component
+  const CharacterCard: React.FC<{ 
+    char: InactiveCharacter; 
+    showInactivateAction?: boolean;
+    showCheckbox?: boolean;
+  }> = ({ char, showInactivateAction, showCheckbox }) => (
+    <div className="p-3 hover:bg-gray-50">
+      <div className="flex gap-3">
+        {/* Checkbox for pending tab */}
+        {showCheckbox && (
+          <div className="flex-shrink-0 flex items-start pt-2">
+            <input
+              type="checkbox"
+              checked={selectedForInactivation.has(char.id)}
+              onChange={() => toggleSelection(char.id)}
+              className="w-4 h-4"
+            />
+          </div>
+        )}
+        
+        {/* Character Image */}
+        <Link to={`/character/${char.slug || char.id}`} className="flex-shrink-0 w-20 relative">
+          {char.imageUrl && !char.imageUrl.includes('via.placeholder') ? (
+            <img 
+              src={char.imageUrl} 
+              alt={char.name} 
+              className="w-full object-cover rounded"
+              style={{ aspectRatio: '1/1' }}
+            />
+          ) : (
+            <div 
+              className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center rounded"
+              style={{ aspectRatio: '1/1' }}
+            >
+              <img 
+                src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+                alt="Placeholder" 
+                className="w-8 h-8 opacity-40"
+              />
+            </div>
+          )}
+          {/* Status badge on image */}
+          <span className={`absolute top-0 right-0 px-1 py-0.5 text-[10px] font-bold ${
+            char.status === 'Dead' ? 'bg-gray-800 text-white' : 'bg-yellow-600 text-white'
+          }`}>
+            {char.status === 'Dead' ? 'DEAD' : 'INACTIVE'}
+          </span>
+        </Link>
+
+        {/* Character Info */}
+        <div className="flex-1 min-w-0">
+          <Link to={`/character/${char.slug || char.id}`} className="font-semibold text-gray-900 hover:underline">
+            {char.name}{char.surname ? ` ${char.surname}` : ''}
+          </Link>
+          <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className={char.sex === 'Male' ? 'text-blue-600' : char.sex === 'Female' ? 'text-pink-500' : 'text-gray-600'}>
+                {char.sex === 'Male' ? '♂' : char.sex === 'Female' ? '♀' : '—'} {char.sex || 'Unknown'}
+              </span>
+              <span className="text-gray-400">·</span>
+              <span>{char.age}</span>
+            </div>
+            <div className="text-gray-600">Player: {char.playerName}</div>
+            <div className="flex items-center gap-2 text-gray-500">
+              <span>Last post: {formatDate(char.lastPostDate)}</span>
+              {char.daysSinceLastPost > 0 && (
+                <span className="text-gray-400">({char.daysSinceLastPost}d ago)</span>
+              )}
+            </div>
+            <div className="text-gray-500">{char.totalPosts} posts</div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-1 mt-2 flex-wrap">
+            {showInactivateAction ? (
+              <button
+                onClick={() => handleInactivate(char.id)}
+                disabled={processingId === char.id}
+                className="px-3 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50"
+              >
+                {processingId === char.id ? '...' : 'Inactivate'}
+              </button>
+            ) : (
+              <>
+                {char.status !== 'Dead' && (
+                  <button
+                    onClick={() => handleReactivate(char.id)}
+                    disabled={processingId === char.id}
+                    className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                  >
+                    {processingId === char.id ? '...' : 'Reactivate'}
+                  </button>
+                )}
+                {char.status === 'Inactive' && (
+                  <button
+                    onClick={() => setShowDeathModal(char)}
+                    disabled={processingId === char.id}
+                    className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-800 text-white disabled:opacity-50"
+                  >
+                    Mark Dead
+                  </button>
+                )}
+                {char.status === 'Dead' && (
+                  <button
+                    onClick={() => handleReactivate(char.id)}
+                    disabled={processingId === char.id}
+                    className="px-3 py-1 text-xs bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                  >
+                    {processingId === char.id ? '...' : 'Resurrect'}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <section className="bg-white border border-gray-300 shadow">
       <div className="bg-[#2f3a2f] px-4 py-2">
@@ -591,33 +710,35 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-300 bg-gray-200 w-fit">
+        <div className="flex flex-wrap border-b border-gray-300 bg-gray-200 md:w-fit">
           <button
             onClick={() => setActiveTab('inactive')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium ${
               activeTab === 'inactive'
                 ? 'border-b-2 border-[#2f3a2f] text-[#2f3a2f] bg-white -mb-px'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Inactive & Dead Characters
+            <span className="hidden sm:inline">Inactive & Dead</span>
+            <span className="sm:hidden">Inactive</span>
             {inactiveCharacters.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded-full">
+              <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-gray-200 text-gray-700 text-xs rounded-full">
                 {inactiveCharacters.length}
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('pending')}
-            className={`px-6 py-3 text-sm font-medium ${
+            className={`px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium ${
               activeTab === 'pending'
                 ? 'border-b-2 border-[#2f3a2f] text-[#2f3a2f] bg-white -mb-px'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            Pending Inactivation (30+ days)
+            <span className="hidden sm:inline">Pending (30+ days)</span>
+            <span className="sm:hidden">Pending</span>
             {charactersToInactivate.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded-full">
+              <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded-full">
                 {charactersToInactivate.length}
               </span>
             )}
@@ -626,13 +747,14 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
           {isAdmin && (
             <button
               onClick={() => setActiveTab('admin')}
-              className={`px-6 py-3 text-sm font-medium ${
+              className={`px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium ${
                 activeTab === 'admin'
                   ? 'border-b-2 border-[#2f3a2f] text-[#2f3a2f] bg-white -mb-px'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              Administrator Status
+              <span className="hidden sm:inline">Administrator Status</span>
+              <span className="sm:hidden">Admin</span>
             </button>
           )}
         </div>
@@ -647,8 +769,33 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                 No inactive or dead characters found.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border border-gray-300">
+              <div className="border border-gray-300">
+                {/* Mobile Sort Options */}
+                <div className="md:hidden bg-gray-200 px-3 py-2 flex items-center gap-2 text-xs">
+                  <span className="text-gray-600">Sort by:</span>
+                  <select 
+                    value={sortField}
+                    onChange={(e) => setSortField(e.target.value as SortField)}
+                    className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                  >
+                    <option value="name">Name</option>
+                    <option value="sex">Sex</option>
+                    <option value="age">Age</option>
+                    <option value="playerName">Player</option>
+                    <option value="status">Status</option>
+                    <option value="lastPostDate">Last Post</option>
+                    <option value="totalPosts">Posts</option>
+                  </select>
+                  <button 
+                    onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                    className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                  >
+                    {sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
+                  </button>
+                </div>
+
+                {/* Desktop Table View */}
+                <table className="hidden md:table w-full text-sm">
                   <thead>
                     <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                       <SortableHeader field="name" className="text-left w-[200px]">Character</SortableHeader>
@@ -667,6 +814,13 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-300">
+                  {sortedInactiveCharacters.map(char => (
+                    <CharacterCard key={char.id} char={char} />
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -675,7 +829,7 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
         {/* Pending Inactivation Tab */}
         {activeTab === 'pending' && (
           <div className="mt-4">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
               <p className="text-sm text-gray-600">
                 These active characters have not posted in a roleplay region for 30 or more days. 
                 You can mark them as inactive individually or select multiple to inactivate in bulk.
@@ -688,7 +842,7 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                 <button
                   onClick={handleBulkInactivate}
                   disabled={selectedForInactivation.size === 0}
-                  className="px-3 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50 disabled:cursor-not-allowed ml-4 flex-shrink-0"
+                  className="px-3 py-1 text-xs bg-yellow-600 hover:bg-yellow-700 text-white disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 >
                   Inactivate Selected ({selectedForInactivation.size})
                 </button>
@@ -701,8 +855,42 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                 All active characters have posted within the last 30 days. 🎉
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border border-gray-300">
+              <div className="border border-gray-300">
+                {/* Mobile Sort Options & Select All */}
+                <div className="md:hidden bg-gray-200 px-3 py-2 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedForInactivation.size === charactersToInactivate.length && charactersToInactivate.length > 0}
+                      onChange={selectAll}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-gray-600">Select All</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select 
+                      value={sortField}
+                      onChange={(e) => setSortField(e.target.value as SortField)}
+                      className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                    >
+                      <option value="name">Name</option>
+                      <option value="sex">Sex</option>
+                      <option value="age">Age</option>
+                      <option value="playerName">Player</option>
+                      <option value="lastPostDate">Last Post</option>
+                      <option value="totalPosts">Posts</option>
+                    </select>
+                    <button 
+                      onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                      className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                    >
+                      {sortDirection === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Desktop Table View */}
+                <table className="hidden md:table w-full text-sm">
                   <thead>
                     <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                       <th className="px-3 py-2 text-center border-r border-gray-300 w-10">
@@ -734,6 +922,18 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-300">
+                  {sortedCharactersToInactivate.map(char => (
+                    <CharacterCard 
+                      key={char.id} 
+                      char={{...char, status: 'Inactive'}} 
+                      showInactivateAction 
+                      showCheckbox 
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -754,8 +954,30 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                 No users found.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border border-gray-300">
+              <div className="border border-gray-300">
+                {/* Mobile Sort Options */}
+                <div className="md:hidden bg-gray-200 px-3 py-2 flex items-center gap-2 text-xs">
+                  <span className="text-gray-600">Sort by:</span>
+                  <select 
+                    value={userSortField}
+                    onChange={(e) => setUserSortField(e.target.value as UserSortField)}
+                    className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                  >
+                    <option value="username">Username</option>
+                    <option value="characterCount">Characters</option>
+                    <option value="isModerator">Moderator</option>
+                    <option value="isAdmin">Admin</option>
+                  </select>
+                  <button 
+                    onClick={() => setUserSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                    className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                  >
+                    {userSortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
+                  </button>
+                </div>
+
+                {/* Desktop Table View */}
+                <table className="hidden md:table w-full text-sm">
                   <thead>
                     <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
                       <th 
@@ -842,6 +1064,66 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                     ))}
                   </tbody>
                 </table>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-300">
+                  {sortedUsers.map(u => (
+                    <div key={u.id} className="p-3 hover:bg-gray-50">
+                      <div className="flex gap-3">
+                        {/* User Avatar */}
+                        {u.imageUrl ? (
+                          <img src={u.imageUrl} alt={u.username} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg flex-shrink-0">
+                            {u.username.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+
+                        {/* User Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link to={`/user/${u.id}`} className="text-[#2f3a2f] hover:underline font-medium">
+                              {u.username}
+                            </Link>
+                            {u.id === Number(user.id) && (
+                              <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">You</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-0.5 truncate">{u.email}</div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            Characters: {u.activeCharacterCount}/{u.characterCount}
+                          </div>
+                          
+                          {/* Permission Buttons */}
+                          <div className="flex gap-2 mt-2">
+                            <button
+                              onClick={() => handleUpdatePermissions(u.id, 'isModerator', !u.isModerator)}
+                              disabled={processingUserId === u.id}
+                              className={`px-3 py-1 text-xs font-medium border transition-colors ${
+                                u.isModerator
+                                  ? 'bg-green-600 text-white border-green-700 hover:bg-green-700'
+                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
+                              } disabled:opacity-50`}
+                            >
+                              {processingUserId === u.id ? '...' : u.isModerator ? '✓ Mod' : 'Mod'}
+                            </button>
+                            <button
+                              onClick={() => handleUpdatePermissions(u.id, 'isAdmin', !u.isAdmin)}
+                              disabled={processingUserId === u.id || u.id === Number(user.id)}
+                              className={`px-3 py-1 text-xs font-medium border transition-colors ${
+                                u.isAdmin
+                                  ? 'bg-purple-600 text-white border-purple-700 hover:bg-purple-700'
+                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              {processingUserId === u.id ? '...' : u.isAdmin ? '✓ Admin' : 'Admin'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

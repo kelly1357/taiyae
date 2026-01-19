@@ -162,61 +162,108 @@ const ActivityTracker: React.FC = () => {
             No characters currently on the activity list. Great job everyone!
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-300 text-sm">
-              <thead>
-                <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                  <th 
-                    className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'CharacterID' ? 'bg-gray-300' : ''}`}
-                    onClick={() => handleSort('CharacterID')}
-                  >
-                    ID
-                  </th>
-                  <th 
-                    className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'Name' ? 'bg-gray-300' : ''}`}
-                    onClick={() => handleSort('Name')}
-                  >
-                    Username
-                  </th>
-                  <th 
-                    className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'Username' ? 'bg-gray-300' : ''}`}
-                    onClick={() => handleSort('Username')}
-                  >
-                    Player
-                  </th>
-                  <th 
-                    className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'LastICPostAt' ? 'bg-gray-300' : ''}`}
-                    onClick={() => handleSort('LastICPostAt')}
-                  >
-                    Last IC Post
-                  </th>
-                  <th 
-                    className={`px-4 py-2 text-left cursor-pointer hover:bg-gray-300 select-none ${sortField === 'JoinedAt' ? 'bg-gray-300' : ''}`}
-                    onClick={() => handleSort('JoinedAt')}
-                  >
-                    Joined
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full border border-gray-300 text-sm">
+                <thead>
+                  <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'CharacterID' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleSort('CharacterID')}
+                    >
+                      ID
+                    </th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'Name' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleSort('Name')}
+                    >
+                      Username
+                    </th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'Username' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleSort('Username')}
+                    >
+                      Player
+                    </th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${sortField === 'LastICPostAt' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleSort('LastICPostAt')}
+                    >
+                      Last IC Post
+                    </th>
+                    <th 
+                      className={`px-4 py-2 text-left cursor-pointer hover:bg-gray-300 select-none ${sortField === 'JoinedAt' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleSort('JoinedAt')}
+                    >
+                      Joined
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedCharacters.map((char) => (
+                    <tr key={char.CharacterID} className="border-t border-gray-300">
+                      <td className="px-4 py-2 text-gray-600 border-r border-gray-300">{char.CharacterID}</td>
+                      <td className="px-4 py-2 border-r border-gray-300">
+                        <Link to={`/character/${char.CharacterID}`} className="text-gray-900 hover:underline font-semibold">
+                          {char.Name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2 text-gray-700 border-r border-gray-300">{char.Username}</td>
+                      <td className="px-4 py-2 text-gray-700 border-r border-gray-300">
+                        {formatDate(char.LastICPostAt)}
+                      </td>
+                      <td className="px-4 py-2 text-gray-700">{formatDate(char.JoinedAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden border border-gray-300">
+              {/* Mobile Sort Options */}
+              <div className="bg-gray-200 px-3 py-2 flex items-center gap-2 text-xs border-b border-gray-300">
+                <span className="text-gray-600">Sort by:</span>
+                <select 
+                  value={sortField}
+                  onChange={(e) => setSortField(e.target.value as SortField)}
+                  className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                >
+                  <option value="Name">Name</option>
+                  <option value="Username">Player</option>
+                  <option value="LastICPostAt">Last IC Post</option>
+                  <option value="JoinedAt">Joined</option>
+                </select>
+                <button 
+                  onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                  className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
+                >
+                  {sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
+                </button>
+              </div>
+              
+              <div className="divide-y divide-gray-300">
                 {sortedCharacters.map((char) => (
-                  <tr key={char.CharacterID} className="border-t border-gray-300">
-                    <td className="px-4 py-2 text-gray-600 border-r border-gray-300">{char.CharacterID}</td>
-                    <td className="px-4 py-2 border-r border-gray-300">
+                  <div key={char.CharacterID} className="px-4 py-3 hover:bg-gray-50">
+                    <div className="flex justify-between items-start">
                       <Link to={`/character/${char.CharacterID}`} className="text-gray-900 hover:underline font-semibold">
                         {char.Name}
                       </Link>
-                    </td>
-                    <td className="px-4 py-2 text-gray-700 border-r border-gray-300">{char.Username}</td>
-                    <td className="px-4 py-2 text-gray-700 border-r border-gray-300">
-                      {formatDate(char.LastICPostAt)}
-                    </td>
-                    <td className="px-4 py-2 text-gray-700">{formatDate(char.JoinedAt)}</td>
-                  </tr>
+                      <span className="text-xs text-gray-400">#{char.CharacterID}</span>
+                    </div>
+                    <div className="text-xs text-gray-600 mt-1 space-y-0.5">
+                      <div>Player: <span className="text-gray-700">{char.Username}</span></div>
+                      <div className="flex gap-4">
+                        <span>Last IC: <span className="text-gray-700">{formatDate(char.LastICPostAt)}</span></span>
+                        <span>Joined: <span className="text-gray-700">{formatDate(char.JoinedAt)}</span></span>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </section>
