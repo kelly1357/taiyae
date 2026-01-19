@@ -68,19 +68,27 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### Backend updates
 
+[ ] User Status: Active, Joining, Banned
+
+[ ] Create subareas within regions
+
+[ ] Moderator actions (approving new users, deactivating accounts, creating packs)
+
+[ ] Hierarchy management
+
+[ ] Pack management/function
+
+[ ] Discord integration
+
 ✅ Skill Points
 
 ✅ Add header image upload to Region Directory Page
 
 ✅ Character Status: Active, Inactive, Dead (cannot post)
 
-[ ] User Status: Active, Joining, Banned
-
 ✅  Weather update system (manual or somehow automated based on season?)
 
 ✅ Automated calendar system that ages wolves by a month and changes the season every 28 days
-
-[ ] Create subareas within regions
 
 ✅  User registration / approval flow, OAuth implementation
 
@@ -92,21 +100,13 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Character list sorting, grouping, and search to characters list
 
-[ ] Moderator actions (approving new users, deactivating accounts, creating packs)
-
 ✅  Achievements management
-
-[ ] Hierarchy management
-
-[ ] Pack management/function
-
-[ ] Discord integration
 
 ✅ "Online Now" status indicator
 
 ✅  Notifications
 
-[ ] User DMing
+✅  User DMing
 
 ## Authors
 

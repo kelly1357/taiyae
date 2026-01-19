@@ -379,7 +379,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               </DropdownLink>
               <DropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
-                  Inactive Characters
+                  Character Status
                   {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </DropdownLink>
@@ -592,7 +592,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               </MobileDropdownLink>
               <MobileDropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
-                  Inactive Characters
+                  Character Status
                   {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </MobileDropdownLink>
