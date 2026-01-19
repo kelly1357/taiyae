@@ -148,3 +148,30 @@ export interface ThreadlogEntry {
   lastPosterName: string;
   lastPostDate: string;
 }
+
+export interface Conversation {
+  conversationId: number;
+  fromCharacterId: number;
+  toCharacterId: number;
+  fromCharacterLastSeen?: string;
+  toCharacterLastSeen?: string;
+  created: string;
+  archived: boolean;
+  fromCharacterName?: string;
+  fromCharacterImageUrl?: string;
+  toCharacterName?: string;
+  toCharacterImageUrl?: string;
+  lastMessage?: string;
+  lastMessageCreated?: string;
+  unreadCount?: number;
+}
+
+export interface Message {
+  messageId: number;
+  conversationId: number;
+  characterId: number;
+  body: string;
+  created: string;
+  characterName?: string;
+  characterImageUrl?: string;
+}

@@ -28,6 +28,7 @@ import ActivityTracker from './pages/ActivityTracker';
 import InactiveCharacters from './pages/InactiveCharacters';
 import DeadCharacters from './pages/DeadCharacters';
 import StaffPingsAdmin from './pages/StaffPingsAdmin';
+import Conversations from './pages/Conversations';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -248,6 +249,7 @@ const App: React.FC = () => {
         <Route path="plot-news" element={<PlotNews />} />
         <Route path="sitewide-updates" element={<SitewideUpdates />} />
         <Route path="achievements" element={<UserAchievements />} />
+        <Route path="conversations" element={<Conversations />} />
         <Route path="admin/skill-points" element={<SkillPointsApproval />} />
         <Route path="admin/staff-pings" element={<StaffPingsAdmin />} />
         <Route path="admin/plot-news" element={<PlotNewsSubmissions />} />
