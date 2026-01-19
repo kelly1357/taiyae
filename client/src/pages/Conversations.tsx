@@ -26,7 +26,11 @@ const Conversations: React.FC = () => {
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [allCharacters, setAllCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<string>('');
+  const [selectedCharacterName, setSelectedCharacterName] = useState<string>('');
+  const [characterSearch, setCharacterSearch] = useState('');
+  const [showCharacterResults, setShowCharacterResults] = useState(false);
   const [creatingConversation, setCreatingConversation] = useState(false);
+  const characterSearchRef = useRef<HTMLDivElement>(null);
 
   const selectedConversation = conversations.find(
     c => c.conversationId === parseInt(selectedConversationId || '0', 10)
@@ -98,6 +102,24 @@ const Conversations: React.FC = () => {
       console.error('Error fetching characters:', error);
     }
   };
+
+  // Click outside handler for character search results
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (characterSearchRef.current && !characterSearchRef.current.contains(event.target as Node)) {
+        setShowCharacterResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter characters based on search
+  const filteredCharacters = allCharacters.filter((char) => {
+    const fullName = `${char.name} ${char.surname || ''}`.toLowerCase();
+    return fullName.includes(characterSearch.toLowerCase());
+  });
 
   // Initial load
   useEffect(() => {
@@ -197,6 +219,8 @@ const Conversations: React.FC = () => {
         const data = await res.json();
         setShowNewConversation(false);
         setSelectedCharacter('');
+        setSelectedCharacterName('');
+        setCharacterSearch('');
         setNewMessage('');
         // Refresh conversations and navigate to new conversation
         await fetchConversations();
@@ -295,18 +319,69 @@ const Conversations: React.FC = () => {
               {showNewConversation && (
                 <div className="p-3 border-b-2 border-green-600 bg-green-50">
                   <div className="font-semibold text-gray-900 mb-2">New Conversation</div>
-                  <select
-                    value={selectedCharacter}
-                    onChange={(e) => setSelectedCharacter(e.target.value)}
-                    className="w-full border border-gray-300 px-2 py-1.5 text-sm focus:outline-none focus:border-green-600 mb-2"
-                  >
-                    <option value="">Select character...</option>
-                    {allCharacters.map((char) => (
-                      <option key={char.id} value={char.id}>
-                        {char.name} {char.surname ? char.surname : ''}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={characterSearchRef}>
+                    <input
+                      type="text"
+                      placeholder="Search for a character..."
+                      value={selectedCharacter ? selectedCharacterName : characterSearch}
+                      onChange={(e) => {
+                        setCharacterSearch(e.target.value);
+                        setSelectedCharacter('');
+                        setSelectedCharacterName('');
+                        setShowCharacterResults(true);
+                      }}
+                      onFocus={() => setShowCharacterResults(true)}
+                      className="w-full border border-gray-300 bg-white px-2 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-green-600 mb-2"
+                    />
+                    {showCharacterResults && characterSearch && !selectedCharacter && (
+                      <div className="absolute z-10 w-full bg-white border border-gray-300 shadow-lg max-h-48 overflow-y-auto">
+                        {filteredCharacters.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-gray-500">No characters found</div>
+                        ) : (
+                          filteredCharacters.slice(0, 20).map((char) => (
+                            <button
+                              key={char.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedCharacter(String(char.id));
+                                setSelectedCharacterName(`${char.name}${char.surname ? ' ' + char.surname : ''}`);
+                                setCharacterSearch('');
+                                setShowCharacterResults(false);
+                              }}
+                              className="w-full text-left px-3 py-2 text-sm text-gray-900 hover:bg-gray-100 flex items-center gap-2"
+                            >
+                              {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') ? (
+                                <img src={char.imageUrl} alt={char.name} className="w-6 h-6 rounded-full object-cover" />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                                  <img
+                                    src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg"
+                                    alt="Placeholder"
+                                    className="w-4 h-4 opacity-40"
+                                  />
+                                </div>
+                              )}
+                              <span className="text-gray-900">{char.name} {char.surname || ''}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                    {selectedCharacter && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedCharacter('');
+                          setSelectedCharacterName('');
+                          setCharacterSearch('');
+                        }}
+                        className="absolute right-2 top-1.5 text-gray-400 hover:text-gray-600"
+                        title="Clear selection"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
               {conversations.map((conv) => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { User, Character } from '../types';
 
 interface HeaderProps {
@@ -11,6 +11,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters = [], onLogout, onCharacterSelect }) => {
+  const location = useLocation();
   const isModerator = user?.isModerator ?? false;
   const isAdmin = user?.isAdmin ?? false;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -20,11 +21,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
   const [pendingPlotNewsCount, setPendingPlotNewsCount] = useState(0);
   const [pendingAchievementsCount, setPendingAchievementsCount] = useState(0);
   const [pendingInactiveCharactersCount, setPendingInactiveCharactersCount] = useState(0);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [unreadByCharacter, setUnreadByCharacter] = useState<Record<number, number>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Calculate total unread messages across all characters
+  const totalUnreadMessages = Object.values(unreadByCharacter).reduce((sum, count) => sum + count, 0);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Refresh every 60 seconds
     const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
-  }, [isModerator]);
+  }, [isModerator, location.pathname]);
 
   // Fetch pending plot news count for moderators
   useEffect(() => {
@@ -87,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Refresh every 60 seconds
     const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
-  }, [isModerator]);
+  }, [isModerator, location.pathname]);
 
   // Fetch pending achievement requests count for moderators
   useEffect(() => {
@@ -109,7 +113,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Refresh every 60 seconds
     const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
-  }, [isModerator]);
+  }, [isModerator, location.pathname]);
 
   // Fetch pending inactive characters count for moderators
   useEffect(() => {
@@ -131,7 +135,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Refresh every 60 seconds
     const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
-  }, [isModerator]);
+  }, [isModerator, location.pathname]);
 
   // Fetch pending staff pings count for moderators
   const [pendingStaffPingsCount, setPendingStaffPingsCount] = useState(0);
@@ -154,19 +158,18 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Refresh every 30 seconds
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, [isModerator]);
+  }, [isModerator, location.pathname]);
 
-  // Fetch unread messages count
+  // Fetch unread messages count for all user's characters
   useEffect(() => {
-    if (!activeCharacter) return;
+    if (!user) return;
 
     const fetchCount = async () => {
       try {
-        const response = await fetch(`/api/conversations?characterId=${activeCharacter.id}`);
+        const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`);
         if (response.ok) {
           const data = await response.json();
-          const totalUnread = data.reduce((sum: number, conv: any) => sum + (conv.unreadCount || 0), 0);
-          setUnreadMessagesCount(totalUnread);
+          setUnreadByCharacter(data.unreadByCharacter || {});
         }
       } catch (error) {
         console.error('Error fetching unread messages count:', error);
@@ -187,7 +190,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
       clearInterval(interval);
       window.removeEventListener('conversationRead', handleConversationRead);
     };
-  }, [activeCharacter]);
+  }, [user, location.pathname]);
 
   const handleDropdownMouseEnter = (label: string) => {
     // Clear any pending close timeout
@@ -354,12 +357,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
-          {user && activeCharacter && (
-            <Link to="/conversations" className="header-link text-xs uppercase tracking-wide transition-colors flex items-center gap-1">
-              Messages
-              {unreadMessagesCount > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadMessagesCount}</span>}
-            </Link>
-          )}
           {(isModerator || isAdmin) && (
             <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount}</span>}</span>}>
               <DropdownLink to="/admin/skill-points">
@@ -419,6 +416,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                       </div>
                     )}
                     <span className="text-sm font-semibold text-gray-900">{activeCharacter.name}</span>
+                    {totalUnreadMessages > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{totalUnreadMessages}</span>}
                     <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -454,9 +452,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                               />
                             </div>
                           )}
-                          <span className="text-sm text-gray-900">{char.name}</span>
+                          <span className="text-sm text-gray-900 flex-1">{char.name}</span>
+                          {unreadByCharacter[Number(char.id)] > 0 && (
+                            <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadByCharacter[Number(char.id)]}</span>
+                          )}
                           {activeCharacter.id === char.id && (
-                            <svg className="w-4 h-4 text-[#2f3a2f] ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-[#2f3a2f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                             </svg>
                           )}
@@ -469,6 +470,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           Manage Characters
+                        </Link>
+                        <Link 
+                          to="/conversations" 
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center justify-between"
+                          onClick={() => setIsDropdownOpen(false)}
+                        >
+                          <span>My Messages</span>
+                          {totalUnreadMessages > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{totalUnreadMessages}</span>}
                         </Link>
                         <Link 
                           to="/account" 
@@ -561,18 +570,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/ooc-forum/7">IC Archives</MobileDropdownLink>
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
-          {user && activeCharacter && (
-            <div className="border-b border-gray-200">
-              <Link
-                to="/conversations"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-800 hover:bg-gray-100 flex items-center justify-between"
-              >
-                <span>Messages</span>
-                {unreadMessagesCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadMessagesCount}</span>}
-              </Link>
-            </div>
-          )}
           {(isModerator || isAdmin) && (
             <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/skill-points">
@@ -671,7 +668,10 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                           />
                         </div>
                       )}
-                      <span className="text-sm text-gray-900">{char.name}</span>
+                      <span className="text-sm text-gray-900 flex-1">{char.name}</span>
+                      {unreadByCharacter[Number(char.id)] > 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadByCharacter[Number(char.id)]}</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -682,6 +682,14 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Manage Characters
+              </Link>
+              <Link 
+                to="/conversations" 
+                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200 flex items-center justify-between"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <span>My Messages</span>
+                {totalUnreadMessages > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{totalUnreadMessages}</span>}
               </Link>
               <Link 
                 to="/account" 

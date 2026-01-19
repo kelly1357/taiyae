@@ -286,11 +286,77 @@ export async function markConversationRead(request: HttpRequest, context: Invoca
     }
 }
 
+// GET /api/conversations/unread-counts?userId={id} - Get unread message counts for all characters belonging to a user
+export async function getUnreadCountsByCharacter(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const userId = request.query.get('userId');
+
+    if (!userId) {
+        return { status: 400, body: "userId is required" };
+    }
+
+    try {
+        const pool = await getPool();
+
+        // Get all characters for this user
+        const charactersResult = await pool.request()
+            .input('userId', sql.Int, parseInt(userId))
+            .query('SELECT CharacterID FROM Character WHERE UserID = @userId');
+
+        const unreadByCharacter: Record<number, number> = {};
+
+        // For each character, count their unread messages using the same logic as getConversations
+        for (const row of charactersResult.recordset) {
+            const characterId = row.CharacterID;
+            
+            const countResult = await pool.request()
+                .input('characterId', sql.Int, characterId)
+                .query(`
+                    SELECT ISNULL(SUM(unreadCount), 0) as totalUnread
+                    FROM (
+                        SELECT
+                            (
+                                SELECT COUNT(*)
+                                FROM Message m
+                                WHERE m.ConversationID = c.ConversationID
+                                AND m.CharacterID != @characterId
+                                AND m.Created > CASE
+                                    WHEN c.FromCharacterID = @characterId THEN c.FromCharacterLastSeen
+                                    ELSE c.ToCharacterLastSeen
+                                END
+                            ) as unreadCount
+                        FROM Conversation c
+                        WHERE (c.FromCharacterID = @characterId OR c.ToCharacterID = @characterId)
+                        AND c.Archived = 0
+                    ) counts
+                `);
+
+            const totalUnread = countResult.recordset[0]?.totalUnread || 0;
+            if (totalUnread > 0) {
+                unreadByCharacter[characterId] = totalUnread;
+            }
+        }
+
+        return {
+            jsonBody: { unreadByCharacter }
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 app.http('getConversations', {
     methods: ['GET'],
     authLevel: 'anonymous',
     route: 'conversations',
     handler: getConversations
+});
+
+app.http('getUnreadCountsByCharacter', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'conversations/unread-counts',
+    handler: getUnreadCountsByCharacter
 });
 
 app.http('getMessages', {
