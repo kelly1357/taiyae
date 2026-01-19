@@ -13,7 +13,6 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters = [], onLogout, onCharacterSelect }) => {
   const isModerator = user?.isModerator ?? false;
   const isAdmin = user?.isAdmin ?? false;
-  const isAdmin = user?.isAdmin ?? false;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [openNavDropdown, setOpenNavDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -321,7 +320,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
-<<<<<<< HEAD
           {user && activeCharacter && (
             <Link to="/conversations" className="header-link text-xs uppercase tracking-wide transition-colors">
               Messages
@@ -333,35 +331,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <span className="flex items-center justify-between w-full">
                   Skill Points
                   {pendingSkillPointsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}
-                </span>
-              </DropdownLink>
-              <DropdownLink to="/admin/achievements">
-                <span className="flex items-center justify-between w-full">
-                  Achievements
-                  {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
-                </span>
-              </DropdownLink>
-              <DropdownLink to="/admin/plot-news">
-                <span className="flex items-center justify-between w-full">
-                  Plot News
-                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
-                </span>
-              </DropdownLink>
-=======
-          {(isModerator || isAdmin) && (
-            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount}</span>}</span>}>
->>>>>>> de7b9533cf15d0d03a1fea03808387b3b252b260
-              <DropdownLink to="/admin/inactive-characters">
-                <span className="flex items-center justify-between w-full">
-                  Inactive Characters
-                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
-                </span>
-              </DropdownLink>
-              <DropdownLink to="/admin/homepage">Homepage</DropdownLink>
-              <DropdownLink to="/admin/staff-pings">
-                <span className="flex items-center justify-between w-full">
-                  Staff Pings
-                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
                 </span>
               </DropdownLink>
               <DropdownLink to="/admin/achievements">
@@ -557,7 +526,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/ooc-forum/7">IC Archives</MobileDropdownLink>
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
-<<<<<<< HEAD
           {user && activeCharacter && (
             <div className="border-b border-gray-200">
               <Link
@@ -575,35 +543,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <span className="flex items-center justify-between w-full">
                   Skill Points
                   {pendingSkillPointsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount}</span>}
-                </span>
-              </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/achievements">
-                <span className="flex items-center justify-between w-full">
-                  Achievements
-                  {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
-                </span>
-              </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/plot-news">
-                <span className="flex items-center justify-between w-full">
-                  Plot News
-                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
-                </span>
-              </MobileDropdownLink>
-=======
-          {(isModerator || isAdmin) && (
-            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount}</span>}</span>}>
->>>>>>> de7b9533cf15d0d03a1fea03808387b3b252b260
-              <MobileDropdownLink to="/admin/inactive-characters">
-                <span className="flex items-center justify-between w-full">
-                  Inactive Characters
-                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
-                </span>
-              </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/homepage">Homepage</MobileDropdownLink>
-              <MobileDropdownLink to="/admin/staff-pings">
-                <span className="flex items-center justify-between w-full">
-                  Staff Pings
-                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
                 </span>
               </MobileDropdownLink>
               <MobileDropdownLink to="/admin/achievements">
