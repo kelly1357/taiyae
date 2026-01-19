@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { Character, User } from '../types';
 
@@ -26,13 +26,28 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [ageYears, setAgeYears] = useState(0);
   const [ageMonths, setAgeMonths] = useState(0);
+  const [unreadByCharacter, setUnreadByCharacter] = useState<Record<string, number>>({});
+
+  // Fetch unread message counts for inactive/dead characters
+  const fetchUnreadCounts = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUnreadByCharacter(data.unreadByCharacter || {});
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread counts', error);
+    }
+  }, [user.id]);
 
   useEffect(() => {
     fetchCharacters();
     fetchHealthStatuses();
     fetchHeights();
     fetchBuilds();
-  }, [user.id]);
+    fetchUnreadCounts();
+  }, [user.id, fetchUnreadCounts]);
 
   // Check for ?new=true query param to open create form
   useEffect(() => {
@@ -882,6 +897,15 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
                           }`}>
                             {char.status}
                           </span>
+                          {/* Unread messages badge */}
+                          {unreadByCharacter[char.id] > 0 && (
+                            <span 
+                              className="absolute top-8 right-0 bg-red-500 text-white text-xs font-bold rounded-l-full min-w-[20px] h-5 flex items-center justify-center px-1.5 pl-2 shadow-lg"
+                              title={`${unreadByCharacter[char.id]} unread message${unreadByCharacter[char.id] > 1 ? 's' : ''}`}
+                            >
+                              ✉ {unreadByCharacter[char.id]}
+                            </span>
+                          )}
                           <div className="absolute bottom-2 right-2 flex gap-1">
                             {char.status !== 'Dead' && (
                               <button 

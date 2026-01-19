@@ -115,10 +115,12 @@ const Conversations: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Filter characters based on search
+  // Filter characters based on search (matches from start of first or last name)
   const filteredCharacters = allCharacters.filter((char) => {
-    const fullName = `${char.name} ${char.surname || ''}`.toLowerCase();
-    return fullName.includes(characterSearch.toLowerCase());
+    const search = characterSearch.toLowerCase();
+    const firstName = (char.name || '').toLowerCase();
+    const lastName = (char.surname || '').toLowerCase();
+    return firstName.startsWith(search) || lastName.startsWith(search);
   });
 
   // Initial load
@@ -288,7 +290,7 @@ const Conversations: React.FC = () => {
   return (
     <div className="bg-white shadow h-[calc(100vh-200px)] flex">
       {/* Sidebar - Conversations List */}
-      <div className="w-80 border-r border-gray-300 flex flex-col">
+      <div className={`w-full md:w-80 border-r border-gray-300 flex flex-col ${selectedConversationId && !showNewConversation ? 'hidden md:flex' : 'flex'}`}>
         {/* Header */}
         <div className="bg-[#2f3a2f] text-white p-4 flex justify-between items-center flex-shrink-0">
           <h2 className="text-lg font-semibold">Messages</h2>
@@ -435,9 +437,37 @@ const Conversations: React.FC = () => {
       </div>
 
       {/* Main Content - Messages */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 ${selectedConversationId && !showNewConversation ? 'flex' : 'hidden md:flex'}`}>
         {selectedConversationId && selectedConversation && !showNewConversation ? (
           <>
+            {/* Mobile Back Button + Header */}
+            <div className="md:hidden bg-[#2f3a2f] text-white p-3 flex items-center gap-3 flex-shrink-0">
+              <button
+                onClick={() => setSearchParams({})}
+                className="text-white hover:text-gray-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/30 flex-shrink-0">
+                  {renderAvatar(
+                    selectedConversation.fromCharacterId === parseInt(String(activeCharacter.id), 10)
+                      ? selectedConversation.toCharacterImageUrl
+                      : selectedConversation.fromCharacterImageUrl,
+                    selectedConversation.fromCharacterId === parseInt(String(activeCharacter.id), 10)
+                      ? selectedConversation.toCharacterName
+                      : selectedConversation.fromCharacterName
+                  )}
+                </div>
+                <span className="font-semibold truncate">
+                  {selectedConversation.fromCharacterId === parseInt(String(activeCharacter.id), 10)
+                    ? selectedConversation.toCharacterName
+                    : selectedConversation.fromCharacterName}
+                </span>
+              </div>
+            </div>
             {/* Messages */}
             <div
               ref={messagesContainerRef}
@@ -473,7 +503,7 @@ const Conversations: React.FC = () => {
 
                         {/* Message Bubble */}
                         <div
-                          className={`max-w-md px-4 py-2 rounded-lg ${
+                          className={`max-w-[85%] md:max-w-md px-4 py-2 rounded-lg ${
                             isActiveChar
                               ? 'bg-green-600 text-white'
                               : 'bg-white border border-gray-300 text-gray-900'
@@ -497,13 +527,13 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-300 bg-white flex-shrink-0">
+            <form onSubmit={handleSendMessage} className="p-3 md:p-4 border-t border-gray-300 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600 text-black"
+                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600 text-black text-base"
                   rows={2}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -515,18 +545,30 @@ const Conversations: React.FC = () => {
                 <button
                   type="submit"
                   disabled={sending || !newMessage.trim()}
-                  className="bg-green-600 text-white px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
+                  className="bg-green-600 text-white px-4 md:px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
                 >
-                  {sending ? 'Sending...' : 'Send'}
+                  {sending ? '...' : 'Send'}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
+              <p className="text-xs text-gray-500 mt-2 hidden md:block">Press Enter to send, Shift+Enter for new line</p>
             </form>
           </>
         ) : showNewConversation && selectedCharacter ? (
           <>
             {/* New Conversation Header */}
             <div className="bg-[#2f3a2f] text-white p-4 flex items-center gap-3 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setSelectedCharacter('');
+                  setSelectedCharacterName('');
+                  setCharacterSearch('');
+                }}
+                className="md:hidden text-white hover:text-gray-200"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
               <div className="w-10 h-10 rounded-full overflow-hidden border border-white flex-shrink-0">
                 {renderAvatar(
                   allCharacters.find(c => String(c.id) === selectedCharacter)?.imageUrl,
@@ -542,7 +584,7 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Empty state */}
-            <div className="flex-1 bg-gray-50 flex items-center justify-center">
+            <div className="flex-1 bg-gray-50 flex items-center justify-center p-4">
               <div className="text-center text-gray-500">
                 <p className="text-lg mb-2">Start your conversation</p>
                 <p className="text-sm">Send a message below to begin</p>
@@ -550,13 +592,13 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Message Input */}
-            <form onSubmit={handleStartConversation} className="p-4 border-t border-gray-300 bg-white flex-shrink-0">
+            <form onSubmit={handleStartConversation} className="p-3 md:p-4 border-t border-gray-300 bg-white flex-shrink-0">
               <div className="flex gap-2">
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your first message..."
-                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600 text-black"
+                  className="flex-1 border border-gray-300 px-3 py-2 resize-none focus:outline-none focus:border-green-600 text-black text-base"
                   rows={2}
                   autoFocus
                   onKeyDown={(e) => {
@@ -569,12 +611,12 @@ const Conversations: React.FC = () => {
                 <button
                   type="submit"
                   disabled={creatingConversation || !newMessage.trim()}
-                  className="bg-green-600 text-white px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
+                  className="bg-green-600 text-white px-4 md:px-6 py-2 font-semibold hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors self-end"
                 >
-                  {creatingConversation ? 'Starting...' : 'Start'}
+                  {creatingConversation ? '...' : 'Start'}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
+              <p className="text-xs text-gray-500 mt-2 hidden md:block">Press Enter to send, Shift+Enter for new line</p>
             </form>
           </>
         ) : (
