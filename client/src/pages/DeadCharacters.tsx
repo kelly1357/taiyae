@@ -49,9 +49,9 @@ const DeadCharacters: React.FC = () => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(query) ||
-        (c.username || '').toLowerCase().includes(query) ||
-        (c.packName || '').toLowerCase().includes(query)
+        c.name.toLowerCase().startsWith(query) ||
+        (c.username || '').toLowerCase().startsWith(query) ||
+        (c.packName || '').toLowerCase().startsWith(query)
       );
     }
     

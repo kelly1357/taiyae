@@ -340,10 +340,10 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(query) ||
-        (c.surname || '').toLowerCase().includes(query) ||
-        (c.playerName || '').toLowerCase().includes(query) ||
-        (c.packName || '').toLowerCase().includes(query)
+        c.name.toLowerCase().startsWith(query) ||
+        (c.surname || '').toLowerCase().startsWith(query) ||
+        (c.playerName || '').toLowerCase().startsWith(query) ||
+        (c.packName || '').toLowerCase().startsWith(query)
       );
     }
     return sortCharacters(filtered);
@@ -354,10 +354,10 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(query) ||
-        (c.surname || '').toLowerCase().includes(query) ||
-        (c.playerName || '').toLowerCase().includes(query) ||
-        (c.packName || '').toLowerCase().includes(query)
+        c.name.toLowerCase().startsWith(query) ||
+        (c.surname || '').toLowerCase().startsWith(query) ||
+        (c.playerName || '').toLowerCase().startsWith(query) ||
+        (c.packName || '').toLowerCase().startsWith(query)
       );
     }
     return sortCharacters(filtered);
@@ -369,8 +369,8 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     if (userSearchQuery.trim()) {
       const query = userSearchQuery.toLowerCase();
       filtered = filtered.filter(u => 
-        u.username.toLowerCase().includes(query) ||
-        (u.email || '').toLowerCase().includes(query)
+        u.username.toLowerCase().startsWith(query) ||
+        (u.email || '').toLowerCase().startsWith(query)
       );
     }
     return [...filtered].sort((a, b) => {
