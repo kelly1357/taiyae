@@ -85,7 +85,7 @@ const OOCPlayerInfoPanel: React.FC<{
   }, [userId]);
 
   return (
-    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
+    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 md:border-l border-b md:border-b-0' : 'border-b md:border-b-0 md:border-r'} border-gray-300`}>
       {/* Avatar - same width as table, rectangular like character panel */}
       <div className="mb-2 w-full">
         {userLoading ? (
@@ -221,7 +221,7 @@ const formatAge = (monthsAge: string | number | undefined): string => {
 // Character info panel component with table styling
 const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
   return (
-    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 border-l' : 'border-r'} border-gray-300`}>
+    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 md:border-l border-b md:border-b-0' : 'border-b md:border-b-0 md:border-r'} border-gray-300`}>
       {/* Avatar - same width as table */}
       <Link to={`/character/${author.slug || author.id}`} className="mb-2 w-full">
         <img 
@@ -1245,7 +1245,7 @@ const ThreadView: React.FC = () => {
             <div className="bg-gray-100 px-3 py-1 border-b border-gray-300 text-xs text-gray-600">
               {new Date(thread.createdAt).toLocaleString()}
             </div>
-            <div className="flex flex-col md:flex-row">
+            <div className="flex flex-col-reverse md:flex-row">
               {/* Content on LEFT */}
               <div className="flex-grow p-4 relative bg-white md:order-1">
                 {/* Edit button - only for post owner (character match OR user match for OOC) */}
