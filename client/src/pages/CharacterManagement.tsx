@@ -27,6 +27,8 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   const [ageYears, setAgeYears] = useState(0);
   const [ageMonths, setAgeMonths] = useState(0);
   const [unreadByCharacter, setUnreadByCharacter] = useState<Record<string, number>>({});
+  const [inactiveSortField, setInactiveSortField] = useState<SortField>('name');
+  const [inactiveSortDirection, setInactiveSortDirection] = useState<SortDirection>('asc');
 
   // Fetch unread message counts for inactive/dead characters
   const fetchUnreadCounts = useCallback(async () => {
@@ -121,6 +123,15 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     }
   };
 
+  const handleInactiveSort = (field: SortField) => {
+    if (inactiveSortField === field) {
+      setInactiveSortDirection(inactiveSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setInactiveSortField(field);
+      setInactiveSortDirection('asc');
+    }
+  };
+
   const handleToggleShowInDropdown = async (char: Character) => {
     console.log('Toggle clicked for character:', char.id, char.name);
     try {
@@ -196,10 +207,45 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     [sortedCharacters]
   );
   
-  const inactiveCharacters = useMemo(() => 
-    sortedCharacters.filter(c => c.status === 'Inactive' || c.status === 'Dead'), 
-    [sortedCharacters]
-  );
+  const sortedInactiveCharacters = useMemo(() => {
+    const inactive = characters.filter(c => c.status === 'Inactive' || c.status === 'Dead');
+    return [...inactive].sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+
+      switch (inactiveSortField) {
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        case 'sex':
+          aVal = (a.sex || '').toLowerCase();
+          bVal = (b.sex || '').toLowerCase();
+          break;
+        case 'packName':
+          aVal = (a.packName || 'Rogue').toLowerCase();
+          bVal = (b.packName || 'Rogue').toLowerCase();
+          break;
+        case 'age':
+          aVal = a.monthsAge || 0;
+          bVal = b.monthsAge || 0;
+          break;
+        case 'totalSkill':
+          aVal = a.totalSkill || 0;
+          bVal = b.totalSkill || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aVal < bVal) return inactiveSortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return inactiveSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [characters, inactiveSortField, inactiveSortDirection]);
+
+  // Keep inactiveCharacters alias for backward compatibility
+  const inactiveCharacters = sortedInactiveCharacters;
 
   const handleCreate = () => {
     setMessage({ type: '', text: '' });
@@ -945,24 +991,39 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
               <table className="hidden md:table w-full border border-gray-300 text-sm bg-white">
                 <thead>
                   <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                    <th className="px-4 py-2 text-left border-r border-gray-300 w-[25%]">Character</th>
-                    <th className="px-4 py-2 text-left border-r border-gray-300">Sex</th>
-                    <th className="px-4 py-2 text-left border-r border-gray-300">Pack</th>
-                    <th className="px-4 py-2 text-left border-r border-gray-300">Age</th>
-                    <th className="px-4 py-2 text-center">Skill Score</th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 w-[25%] cursor-pointer hover:bg-gray-300 select-none ${inactiveSortField === 'name' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleInactiveSort('name')}
+                    >Character</th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${inactiveSortField === 'sex' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleInactiveSort('sex')}
+                    >Sex</th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${inactiveSortField === 'packName' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleInactiveSort('packName')}
+                    >Pack</th>
+                    <th 
+                      className={`px-4 py-2 text-left border-r border-gray-300 cursor-pointer hover:bg-gray-300 select-none ${inactiveSortField === 'age' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleInactiveSort('age')}
+                    >Age</th>
+                    <th 
+                      className={`px-4 py-2 text-center cursor-pointer hover:bg-gray-300 select-none ${inactiveSortField === 'totalSkill' ? 'bg-gray-300' : ''}`}
+                      onClick={() => handleInactiveSort('totalSkill')}
+                    >Skill Score</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {inactiveCharacters.map(char => (
+                  {sortedInactiveCharacters.map(char => (
                     <tr key={char.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors align-top">
-                      <td className="p-0 w-[25%] border-r border-gray-300 relative">
-                        <div className="relative">
-                          <Link to={`/character/${char.slug || char.id}`}>
-                            {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
-                              <img 
-                                src={char.imageUrl} 
-                                alt={char.name} 
-                                className="w-full object-cover block hover:opacity-90 transition-opacity"
+                          <td className="p-0 w-[25%] border-r border-gray-300 relative">
+                            <div className="relative">
+                              <Link to={`/character/${char.slug || char.id}`}>
+                                {char.imageUrl && char.imageUrl.trim() !== '' && !char.imageUrl.includes('via.placeholder') && !imageErrors.has(char.id) ? (
+                                  <img 
+                                    src={char.imageUrl} 
+                                    alt={char.name} 
+                                    className="w-full object-cover block hover:opacity-90 transition-opacity"
                                 style={{ aspectRatio: '16/9' }}
                                 onError={() => setImageErrors(prev => new Set(prev).add(char.id))}
                               />
