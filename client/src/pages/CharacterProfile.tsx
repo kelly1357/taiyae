@@ -251,11 +251,13 @@ const CharacterProfile: React.FC = () => {
         // Get all characters belonging to the same user
         if (found) {
           const foundUserId = (found as any).odUserId;
-          // Fetch user's other characters separately
+          // Fetch user's other characters separately (only active ones)
           fetch(`/api/characters?userId=${foundUserId}`)
             .then(res => res.json())
             .then((userChars: Character[]) => {
-              setUserCharacters(userChars);
+              // Filter out inactive and dead characters
+              const activeChars = userChars.filter(c => c.status === 'Active');
+              setUserCharacters(activeChars);
             })
             .catch(() => {});
         }
