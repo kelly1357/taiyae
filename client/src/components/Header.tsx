@@ -371,19 +371,18 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
                 </span>
               </DropdownLink>
-              <DropdownLink to="/admin/plot-news">
-                <span className="flex items-center justify-between w-full">
-                  Plot News
-                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
-                </span>
-              </DropdownLink>
               <DropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
                   Character Status
                   {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </DropdownLink>
-              <DropdownLink to="/admin/homepage">Homepage</DropdownLink>
+              <DropdownLink to="/admin/homepage">
+                <span className="flex items-center justify-between w-full">
+                  Homepage
+                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
+                </span>
+              </DropdownLink>
               <DropdownLink to="/admin/staff-pings">
                 <span className="flex items-center justify-between w-full">
                   Staff Pings
@@ -584,19 +583,18 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {pendingAchievementsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingAchievementsCount}</span>}
                 </span>
               </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/plot-news">
-                <span className="flex items-center justify-between w-full">
-                  Plot News
-                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
-                </span>
-              </MobileDropdownLink>
               <MobileDropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
                   Character Status
                   {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </MobileDropdownLink>
-              <MobileDropdownLink to="/admin/homepage">Homepage</MobileDropdownLink>
+              <MobileDropdownLink to="/admin/homepage">
+                <span className="flex items-center justify-between w-full">
+                  Homepage
+                  {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
+                </span>
+              </MobileDropdownLink>
               <MobileDropdownLink to="/admin/staff-pings">
                 <span className="flex items-center justify-between w-full">
                   Staff Pings

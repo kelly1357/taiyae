@@ -17,7 +17,6 @@ import UserManagement from './pages/UserManagement';
 import SpiritSymbolQuiz from './pages/SpiritSymbolQuiz';
 import Weather from './pages/Weather';
 import SkillPointsApproval from './pages/SkillPointsApproval';
-import PlotNewsSubmissions from './pages/PlotNewsSubmissions';
 import PlotNews from './pages/PlotNews';
 import UserAchievements from './pages/Achievements';
 import AchievementAdmin from './pages/AchievementAdmin';
@@ -252,7 +251,6 @@ const App: React.FC = () => {
         <Route path="conversations" element={<Conversations />} />
         <Route path="admin/skill-points" element={<SkillPointsApproval />} />
         <Route path="admin/staff-pings" element={<StaffPingsAdmin />} />
-        <Route path="admin/plot-news" element={<PlotNewsSubmissions />} />
         <Route path="admin/achievements" element={<AchievementAdmin />} />
         <Route path="admin/homepage" element={<HomepageAdmin />} />
         <Route path="admin/inactive-characters" element={user ? <InactiveCharacters user={user} /> : <div className="text-center mt-20">Please log in to access this page.</div>} />
