@@ -530,7 +530,7 @@ const Home: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 border border-gray-300 mx-0.5">
               {/* Setting */}
               <div className="md:border-r border-b md:border-b-0 border-gray-300">
-                <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                <div className="px-4 py-2 border-b border-gray-300" style={{ backgroundColor: '#f2f2f2' }}>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Setting
                   </h4>
@@ -568,7 +568,7 @@ const Home: React.FC = () => {
 
               {/* Population */}
               <div className="md:border-r border-b md:border-b-0 border-gray-300">
-                <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                <div className="px-4 py-2 border-b border-gray-300" style={{ backgroundColor: '#f2f2f2' }}>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Population
                   </h4>
@@ -605,7 +605,7 @@ const Home: React.FC = () => {
 
               {/* Packs */}
               <div>
-                <div className="bg-gray-200 px-4 py-2 border-b border-gray-300">
+                <div className="px-4 py-2 border-b border-gray-300" style={{ backgroundColor: '#f2f2f2' }}>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">
                     Packs
                   </h4>
