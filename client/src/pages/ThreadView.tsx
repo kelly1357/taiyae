@@ -85,7 +85,7 @@ const OOCPlayerInfoPanel: React.FC<{
   }, [userId]);
 
   return (
-    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col ${isOriginalPost ? 'md:order-2 md:border-l border-b md:border-b-0' : 'border-b md:border-b-0 md:border-r'} border-gray-300`}>
+    <div className={`w-full md:w-72 bg-white p-3 flex flex-col ${isOriginalPost ? 'md:order-2' : ''}`}>
       {/* Avatar - same width as table, rectangular like character panel */}
       <div className="mb-2 w-full">
         {userLoading ? (
@@ -114,7 +114,7 @@ const OOCPlayerInfoPanel: React.FC<{
       <table className="w-full text-xs border border-gray-300 mb-2">
         <tbody>
           <tr>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Player</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 text-center" style={{ backgroundColor: '#f2f2f2' }}>Player</td>
           </tr>
           <tr>
             <td className="px-2 py-2 text-gray-700">
@@ -133,7 +133,7 @@ const OOCPlayerInfoPanel: React.FC<{
       <table className="w-full text-xs border border-gray-300">
         <tbody>
           <tr>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Characters</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 text-center" style={{ backgroundColor: '#f2f2f2' }}>Characters</td>
           </tr>
           <tr>
             <td className="px-2 py-2 text-gray-700">
@@ -163,7 +163,7 @@ const OOCPlayerInfoPanel: React.FC<{
       <table className="w-full text-xs border border-gray-300 mt-2">
         <tbody>
           <tr>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 text-center" style={{ backgroundColor: '#f2f2f2' }}>
               Achievements
               <Link to="/wiki/achievements" className="ml-1 text-gray-500 hover:text-gray-700" title="View all achievements">(?)</Link>
             </td>
@@ -221,7 +221,7 @@ const formatAge = (monthsAge: string | number | undefined): string => {
 // Character info panel component with table styling
 const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
   return (
-    <div className={`w-full md:w-72 bg-gray-50 p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2 md:border-l border-b md:border-b-0' : 'border-b md:border-b-0 md:border-r'} border-gray-300`}>
+    <div className={`w-full md:w-72 bg-white p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2' : ''}`}>
       {/* Avatar - same width as table */}
       <Link to={`/character/${author.slug || author.id}`} className="mb-2 w-full">
         <img 
@@ -243,8 +243,8 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
       <table className="w-full text-xs border border-gray-300 mb-2">
         <tbody>
           <tr className="border-b border-gray-300">
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300 w-1/2">Name</td>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 w-1/2">Player</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300 w-1/2" style={{ backgroundColor: '#f2f2f2' }}>Name</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 w-1/2" style={{ backgroundColor: '#f2f2f2' }}>Player</td>
           </tr>
           <tr className="border-b border-gray-300">
             <td className="px-2 py-2 border-r border-gray-300">
@@ -263,23 +263,23 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
             </td>
           </tr>
           <tr className="border-b border-gray-300">
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300">Age</td>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600">Sex</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300" style={{ backgroundColor: '#f2f2f2' }}>Age</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600" style={{ backgroundColor: '#f2f2f2' }}>Sex</td>
           </tr>
           <tr className="border-b border-gray-300">
             <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{formatAge(author.age)}</td>
             <td className={`px-2 py-2 ${author.sex === 'Male' ? 'text-blue-600' : author.sex === 'Female' ? 'text-pink-500' : 'text-gray-700'}`}>{author.sex}</td>
           </tr>
           <tr className="border-b border-gray-300">
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300">Status</td>
-            <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600">Skill Points</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600 border-r border-gray-300" style={{ backgroundColor: '#f2f2f2' }}>Status</td>
+            <td className="px-2 py-2 font-semibold uppercase text-gray-600" style={{ backgroundColor: '#f2f2f2' }}>Skill Points</td>
           </tr>
           <tr className="border-b border-gray-300">
             <td className="px-2 py-2 border-r border-gray-300 text-gray-700">{author.healthStatus}</td>
             <td className="px-2 py-2 text-gray-700">{author.skillPoints} SP</td>
           </tr>
           <tr className="border-b border-gray-300">
-            <td colSpan={2} className="bg-gray-200 px-2 py-2 font-semibold uppercase text-gray-600 text-center">Pack</td>
+            <td colSpan={2} className="px-2 py-2 font-semibold uppercase text-gray-600 text-center" style={{ backgroundColor: '#f2f2f2' }}>Pack</td>
           </tr>
           <tr>
             <td colSpan={2} className="px-2 py-2 text-center">
@@ -782,8 +782,8 @@ const ThreadView: React.FC = () => {
         `}</style>
       )}
 
-      {/* Show Photo Button - rendered via portal to body */}
-      {createPortal(
+      {/* Show Photo Button - rendered via portal to body (only for IC/roleplay threads) */}
+      {!isOOCThread && createPortal(
         <button
           onClick={() => setShowPhotoMode(!showPhotoMode)}
           className="show-photo-btn"
@@ -1240,12 +1240,8 @@ const ThreadView: React.FC = () => {
           )}
 
           {/* Original Post - avatar on RIGHT */}
-          <div className="border border-gray-300 mx-0.5 mb-4">
-            {/* Post header with date */}
-            <div className="bg-gray-100 px-3 py-1 border-b border-gray-300 text-xs text-gray-600">
-              {new Date(thread.createdAt).toLocaleString()}
-            </div>
-            <div className="flex flex-col-reverse md:flex-row">
+          <div className="p-4 mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
+            <div className="flex flex-col-reverse md:flex-row gap-4">
               {/* Content on LEFT */}
               <div className="flex-grow p-4 relative bg-white md:order-1">
                 {/* Edit button - only for post owner (character match OR user match for OOC) */}
@@ -1258,12 +1254,6 @@ const ThreadView: React.FC = () => {
                       Edit
                     </button>
                   </div>
-                )}
-                
-                {thread.modifiedAt && thread.createdAt !== thread.modifiedAt && (
-                   <div className="text-xs text-gray-500 mb-2 italic border-b border-gray-200 pb-2">
-                      Edited by {thread.modifiedByName || 'Unknown'} on {new Date(thread.modifiedAt).toLocaleString()}
-                   </div>
                 )}
 
                 {editingPostId === thread.postId ? (
@@ -1290,6 +1280,15 @@ const ThreadView: React.FC = () => {
                 />
               ) : (
                 <CharacterInfoPanel author={mainAuthor} isOriginalPost={true} />
+              )}
+            </div>
+            {/* Post footer with date */}
+            <div className="px-1 py-2 text-xs text-gray-600 mt-2">
+              {new Date(thread.createdAt).toLocaleString()}
+              {thread.modifiedAt && thread.createdAt !== thread.modifiedAt && (
+                <span className="block md:inline md:ml-4 italic mt-1 md:mt-0">
+                  Edited by {thread.modifiedByName || 'Unknown'} on {new Date(thread.modifiedAt).toLocaleString()}
+                </span>
               )}
             </div>
           </div>
@@ -1319,12 +1318,8 @@ const ThreadView: React.FC = () => {
             };
     
             return (
-              <div key={reply.id} className="border border-gray-300 mx-0.5 mb-4">
-                {/* Post header with date and post number */}
-                <div className="bg-gray-100 px-3 py-1 border-b border-gray-300 text-xs text-gray-600 flex justify-between">
-                  <span>{new Date(reply.createdAt).toLocaleString()} — Post #{index + 1}</span>
-                </div>
-                <div className="flex flex-col md:flex-row">
+              <div key={reply.id} className="p-4 mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
+                <div className="flex flex-col md:flex-row gap-4">
                   {/* Character/Player info on LEFT */}
                   {isOOCThread ? (
                     <OOCPlayerInfoPanel 
@@ -1358,12 +1353,6 @@ const ThreadView: React.FC = () => {
                       )}
                     </div>
 
-                    {reply.modifiedAt && reply.createdAt !== reply.modifiedAt && (
-                       <div className="text-xs text-gray-500 mb-2 italic">
-                          Edited by {reply.modifiedByName || 'Unknown'} on {new Date(reply.modifiedAt).toLocaleString()}
-                       </div>
-                    )}
-
                     {editingPostId === reply.id ? (
                       <div className="bg-gray-50 p-4 border border-gray-200">
                         <RichTextEditor value={editContent} onChange={setEditContent} />
@@ -1379,6 +1368,15 @@ const ThreadView: React.FC = () => {
                       />
                     )}
                   </div>
+                </div>
+                {/* Post footer with date and post number */}
+                <div className="px-1 py-2 text-xs text-gray-600 mt-2">
+                  {new Date(reply.createdAt).toLocaleString()} — Post #{index + 1}
+                  {reply.modifiedAt && reply.createdAt !== reply.modifiedAt && (
+                    <span className="block md:inline md:ml-4 italic mt-1 md:mt-0">
+                      Edited by {reply.modifiedByName || 'Unknown'} on {new Date(reply.modifiedAt).toLocaleString()}
+                    </span>
+                  )}
                 </div>
               </div>
             );
