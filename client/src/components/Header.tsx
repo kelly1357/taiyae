@@ -49,116 +49,60 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     };
   }, []);
 
-  // Fetch pending skill points count for moderators
-  useEffect(() => {
-    if (!isModerator) return;
-    
-    const fetchCount = async () => {
-      try {
-        const response = await fetch('/api/skill-points-approval/count');
-        if (response.ok) {
-          const data = await response.json();
-          setPendingSkillPointsCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching pending skill points count:', error);
-      }
-    };
-    
-    fetchCount();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchCount, 60000);
-    return () => clearInterval(interval);
-  }, [isModerator, location.pathname]);
-
-  // Fetch pending plot news count for moderators
-  useEffect(() => {
-    if (!isModerator) return;
-    
-    const fetchCount = async () => {
-      try {
-        const response = await fetch('/api/plot-news/pending/count');
-        if (response.ok) {
-          const data = await response.json();
-          setPendingPlotNewsCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching pending plot news count:', error);
-      }
-    };
-    
-    fetchCount();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchCount, 60000);
-    return () => clearInterval(interval);
-  }, [isModerator, location.pathname]);
-
-  // Fetch pending achievement requests count for moderators
-  useEffect(() => {
-    if (!isModerator) return;
-    
-    const fetchCount = async () => {
-      try {
-        const response = await fetch('/api/achievements/requests/pending/count');
-        if (response.ok) {
-          const data = await response.json();
-          setPendingAchievementsCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching pending achievements count:', error);
-      }
-    };
-    
-    fetchCount();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchCount, 60000);
-    return () => clearInterval(interval);
-  }, [isModerator, location.pathname]);
-
-  // Fetch pending inactive characters count for moderators
-  useEffect(() => {
-    if (!isModerator) return;
-    
-    const fetchCount = async () => {
-      try {
-        const response = await fetch('/api/moderation/characters-to-inactivate/count');
-        if (response.ok) {
-          const data = await response.json();
-          setPendingInactiveCharactersCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching pending inactive characters count:', error);
-      }
-    };
-    
-    fetchCount();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchCount, 60000);
-    return () => clearInterval(interval);
-  }, [isModerator, location.pathname]);
-
-  // Fetch pending staff pings count for moderators
+  // Fetch pending staff pings count (state declaration moved here)
   const [pendingStaffPingsCount, setPendingStaffPingsCount] = useState(0);
-  useEffect(() => {
-    if (!isModerator) return;
 
-    const fetchCount = async () => {
+  // Fetch admin counts and listen for SignalR updates
+  useEffect(() => {
+    if (!isModerator && !isAdmin) return;
+
+    // Fetch all admin counts
+    const fetchAllCounts = async () => {
       try {
-        const response = await fetch('/api/staff-pings/count');
-        if (response.ok) {
-          const data = await response.json();
-          setPendingStaffPingsCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching pending staff pings count:', error);
+        const [skillPoints, plotNews, achievements, inactiveChars, staffPings] = await Promise.all([
+          fetch('/api/skill-points-approval/count').then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/plot-news/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/achievements/requests/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/moderation/characters-to-inactivate/count').then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/staff-pings/count').then(r => r.ok ? r.json() : { count: 0 })
+        ]);
+        setPendingSkillPointsCount(skillPoints.count || 0);
+        setPendingPlotNewsCount(plotNews.count || 0);
+        setPendingAchievementsCount(achievements.count || 0);
+        setPendingInactiveCharactersCount(inactiveChars.count || 0);
+        setPendingStaffPingsCount(staffPings.count || 0);
+      } catch {
+        // Silently fail
       }
     };
 
-    fetchCount();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchCount, 30000);
-    return () => clearInterval(interval);
-  }, [isModerator, location.pathname]);
+    // Initial fetch
+    fetchAllCounts();
+
+    // Listen for SignalR admin count updates
+    const handleAdminCountUpdate = (event: Event) => {
+      const data = (event as CustomEvent).detail;
+      if (data.type === 'all' && data.counts) {
+        setPendingSkillPointsCount(data.counts.skillPoints);
+        setPendingAchievementsCount(data.counts.achievements);
+        setPendingPlotNewsCount(data.counts.plotNews);
+        setPendingStaffPingsCount(data.counts.staffPings);
+      } else if (data.type === 'skillPoints' && data.count !== undefined) {
+        setPendingSkillPointsCount(data.count);
+      } else if (data.type === 'achievements' && data.count !== undefined) {
+        setPendingAchievementsCount(data.count);
+      } else if (data.type === 'plotNews' && data.count !== undefined) {
+        setPendingPlotNewsCount(data.count);
+      } else if (data.type === 'staffPings' && data.count !== undefined) {
+        setPendingStaffPingsCount(data.count);
+      }
+    };
+    window.addEventListener('signalr:adminCountUpdate', handleAdminCountUpdate);
+
+    return () => {
+      window.removeEventListener('signalr:adminCountUpdate', handleAdminCountUpdate);
+    };
+  }, [isModerator, isAdmin]);
 
   // Fetch unread messages count for all user's characters
   useEffect(() => {

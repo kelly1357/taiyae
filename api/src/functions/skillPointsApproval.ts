@@ -1,5 +1,23 @@
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
+
+// SignalR output binding for broadcasting admin count updates
+const signalROutput = output.generic({
+    type: 'signalR',
+    name: 'signalRMessages',
+    hubName: 'messaging',
+});
+
+// Helper to get current pending count
+async function getCurrentPendingCount(): Promise<number> {
+    const pool = await getPool();
+    const result = await pool.request().query(`
+        SELECT COUNT(*) AS count
+        FROM CharacterSkillPointsAssignment
+        WHERE IsModeratorApproved IS NULL
+    `);
+    return result.recordset[0].count;
+}
 
 // GET: Get all pending skill point assignments (IsModeratorApproved = 0 or NULL)
 async function getPendingSkillPointAssignments(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -129,6 +147,14 @@ async function approveSkillPointAssignment(request: HttpRequest, context: Invoca
                 `);
         }
 
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'skillPoints', count: newCount }]
+        }]);
+
         return {
             status: 200,
             jsonBody: { message: 'Skill point assignment approved successfully' }
@@ -165,6 +191,14 @@ async function rejectSkillPointAssignment(request: HttpRequest, context: Invocat
                 WHERE AssignmentID = @assignmentId
             `);
 
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'skillPoints', count: newCount }]
+        }]);
+
         return {
             status: 200,
             jsonBody: { message: 'Skill point assignment rejected' }
@@ -196,6 +230,7 @@ app.http('approveSkillPointAssignment', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'skill-points-approval/approve',
+    extraOutputs: [signalROutput],
     handler: approveSkillPointAssignment
 });
 
@@ -203,5 +238,6 @@ app.http('rejectSkillPointAssignment', {
     methods: ['DELETE'],
     authLevel: 'anonymous',
     route: 'skill-points-approval/{assignmentId}',
+    extraOutputs: [signalROutput],
     handler: rejectSkillPointAssignment
 });

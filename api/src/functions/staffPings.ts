@@ -1,6 +1,22 @@
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+
+// SignalR output binding for broadcasting admin count updates
+const signalROutput = output.generic({
+    type: 'signalR',
+    name: 'signalRMessages',
+    hubName: 'messaging',
+});
+
+// Helper to get current unresolved count
+async function getCurrentUnresolvedCount(): Promise<number> {
+    const pool = await getPool();
+    const result = await pool.request().query(`
+        SELECT COUNT(*) as count FROM StaffPing WHERE IsResolved = 0
+    `);
+    return result.recordset[0].count;
+}
 
 // Create a new staff ping
 export async function createStaffPing(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -13,7 +29,7 @@ export async function createStaffPing(request: HttpRequest, context: InvocationC
         }
 
         const pool = await getPool();
-        
+
         await pool.request()
             .input('userId', sql.Int, isAnonymous ? null : userId)
             .input('isAnonymous', sql.Bit, isAnonymous ? 1 : 0)
@@ -23,6 +39,14 @@ export async function createStaffPing(request: HttpRequest, context: InvocationC
                 INSERT INTO StaffPing (UserID, IsAnonymous, Message, PageUrl)
                 VALUES (@userId, @isAnonymous, @message, @pageUrl)
             `);
+
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentUnresolvedCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'staffPings', count: newCount }]
+        }]);
 
         return {
             status: 201,
@@ -112,19 +136,27 @@ export async function resolveStaffPing(request: HttpRequest, context: Invocation
         }
 
         const pool = await getPool();
-        
+
         await pool.request()
             .input('pingId', sql.Int, parseInt(pingId))
             .input('resolvedByUserId', sql.Int, parseInt(resolvedByUserId))
             .input('resolutionNote', sql.NVarChar, resolutionNote || null)
             .query(`
-                UPDATE StaffPing 
+                UPDATE StaffPing
                 SET IsResolved = 1,
                     ResolvedAt = GETDATE(),
                     ResolvedByUserID = @resolvedByUserId,
                     ResolutionNote = @resolutionNote
                 WHERE PingID = @pingId
             `);
+
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentUnresolvedCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'staffPings', count: newCount }]
+        }]);
 
         return {
             status: 200,
@@ -147,17 +179,25 @@ export async function unresolveStaffPing(request: HttpRequest, context: Invocati
 
     try {
         const pool = await getPool();
-        
+
         await pool.request()
             .input('pingId', sql.Int, parseInt(pingId))
             .query(`
-                UPDATE StaffPing 
+                UPDATE StaffPing
                 SET IsResolved = 0,
                     ResolvedAt = NULL,
                     ResolvedByUserID = NULL,
                     ResolutionNote = NULL
                 WHERE PingID = @pingId
             `);
+
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentUnresolvedCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'staffPings', count: newCount }]
+        }]);
 
         return {
             status: 200,
@@ -180,10 +220,18 @@ export async function deleteStaffPing(request: HttpRequest, context: InvocationC
 
     try {
         const pool = await getPool();
-        
+
         await pool.request()
             .input('pingId', sql.Int, parseInt(pingId))
             .query(`DELETE FROM StaffPing WHERE PingID = @pingId`);
+
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentUnresolvedCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'staffPings', count: newCount }]
+        }]);
 
         return {
             status: 200,
@@ -201,6 +249,7 @@ app.http('createStaffPing', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'staff-pings',
+    extraOutputs: [signalROutput],
     handler: createStaffPing
 });
 
@@ -222,6 +271,7 @@ app.http('resolveStaffPing', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'staff-pings/{pingId}/resolve',
+    extraOutputs: [signalROutput],
     handler: resolveStaffPing
 });
 
@@ -229,6 +279,7 @@ app.http('unresolveStaffPing', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'staff-pings/{pingId}/unresolve',
+    extraOutputs: [signalROutput],
     handler: unresolveStaffPing
 });
 
@@ -236,5 +287,6 @@ app.http('deleteStaffPing', {
     methods: ['DELETE'],
     authLevel: 'anonymous',
     route: 'staff-pings/{pingId}',
+    extraOutputs: [signalROutput],
     handler: deleteStaffPing
 });

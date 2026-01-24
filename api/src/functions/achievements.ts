@@ -1,6 +1,22 @@
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+
+// SignalR output binding for broadcasting admin count updates
+const signalROutput = output.generic({
+    type: 'signalR',
+    name: 'signalRMessages',
+    hubName: 'messaging',
+});
+
+// Helper to get current pending count
+async function getCurrentPendingCount(): Promise<number> {
+    const pool = await getPool();
+    const result = await pool.request().query(`
+        SELECT COUNT(*) as count FROM AchievementRequest WHERE Status = 'pending'
+    `);
+    return result.recordset[0].count;
+}
 
 // GET /api/achievements - Get all achievements
 export async function getAchievements(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -255,6 +271,14 @@ export async function submitAchievementRequest(request: HttpRequest, context: In
                 VALUES (@userId, @achievementId, @note)
             `);
 
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'achievements', count: newCount }]
+        }]);
+
         return { status: 200, body: "Request submitted successfully" };
     } catch (error: any) {
         context.error(error);
@@ -356,10 +380,18 @@ export async function approveAchievementRequest(request: HttpRequest, context: I
             .input('requestId', sql.Int, parseInt(requestId))
             .input('moderatorUserId', sql.Int, parseInt(moderatorUserId))
             .query(`
-                UPDATE AchievementRequest 
+                UPDATE AchievementRequest
                 SET Status = 'approved', ReviewedByUserID = @moderatorUserId, ReviewedAt = GETDATE()
                 WHERE RequestID = @requestId
             `);
+
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'achievements', count: newCount }]
+        }]);
 
         return { status: 200, body: "Request approved" };
     } catch (error: any) {
@@ -397,10 +429,18 @@ export async function rejectAchievementRequest(request: HttpRequest, context: In
             .input('moderatorUserId', sql.Int, parseInt(moderatorUserId))
             .input('reviewNote', sql.NVarChar, reviewNote || null)
             .query(`
-                UPDATE AchievementRequest 
+                UPDATE AchievementRequest
                 SET Status = 'rejected', ReviewedByUserID = @moderatorUserId, ReviewedAt = GETDATE(), ReviewNote = @reviewNote
                 WHERE RequestID = @requestId AND Status = 'pending'
             `);
+
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'achievements', count: newCount }]
+        }]);
 
         return { status: 200, body: "Request rejected" };
     } catch (error: any) {
@@ -482,6 +522,7 @@ app.http('submitAchievementRequest', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'achievements/request',
+    extraOutputs: [signalROutput],
     handler: submitAchievementRequest
 });
 
@@ -503,6 +544,7 @@ app.http('approveAchievementRequest', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'achievements/requests/{id}/approve',
+    extraOutputs: [signalROutput],
     handler: approveAchievementRequest
 });
 
@@ -510,6 +552,7 @@ app.http('rejectAchievementRequest', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'achievements/requests/{id}/reject',
+    extraOutputs: [signalROutput],
     handler: rejectAchievementRequest
 });
 

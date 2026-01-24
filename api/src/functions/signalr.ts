@@ -99,6 +99,64 @@ export async function leaveCharacterGroup(
     }
 }
 
+// POST /api/signalr/join-staff-group - Join the staff group for admin notifications
+export async function joinStaffGroup(
+    request: HttpRequest,
+    context: InvocationContext
+): Promise<HttpResponseInit> {
+    try {
+        const body = await request.json() as { userId: string };
+        const { userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "userId is required" };
+        }
+
+        context.extraOutputs.set(signalRGroupOutput, [{
+            userId: String(userId),
+            groupName: 'staff',
+            action: 'add'
+        }]);
+
+        return {
+            status: 200,
+            jsonBody: { success: true, group: 'staff' }
+        };
+    } catch (error) {
+        context.error('Join staff group error:', error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+// POST /api/signalr/leave-staff-group - Leave the staff group
+export async function leaveStaffGroup(
+    request: HttpRequest,
+    context: InvocationContext
+): Promise<HttpResponseInit> {
+    try {
+        const body = await request.json() as { userId: string };
+        const { userId } = body;
+
+        if (!userId) {
+            return { status: 400, body: "userId is required" };
+        }
+
+        context.extraOutputs.set(signalRGroupOutput, [{
+            userId: String(userId),
+            groupName: 'staff',
+            action: 'remove'
+        }]);
+
+        return {
+            status: 200,
+            jsonBody: { success: true, group: 'staff' }
+        };
+    } catch (error) {
+        context.error('Leave staff group error:', error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
 // Register HTTP triggers
 app.http('negotiate', {
     methods: ['POST'],
@@ -122,4 +180,20 @@ app.http('leaveCharacterGroup', {
     route: 'signalr/leave-group',
     extraOutputs: [signalRGroupOutput],
     handler: leaveCharacterGroup
+});
+
+app.http('joinStaffGroup', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'signalr/join-staff-group',
+    extraOutputs: [signalRGroupOutput],
+    handler: joinStaffGroup
+});
+
+app.http('leaveStaffGroup', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'signalr/leave-staff-group',
+    extraOutputs: [signalRGroupOutput],
+    handler: leaveStaffGroup
 });

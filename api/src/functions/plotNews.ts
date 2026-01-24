@@ -1,6 +1,22 @@
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+
+// SignalR output binding for broadcasting admin count updates
+const signalROutput = output.generic({
+    type: 'signalR',
+    name: 'signalRMessages',
+    hubName: 'messaging',
+});
+
+// Helper to get current pending count
+async function getCurrentPendingCount(): Promise<number> {
+    const pool = await getPool();
+    const result = await pool.request().query(`
+        SELECT COUNT(*) as count FROM PlotNews WHERE IsApproved = 0
+    `);
+    return result.recordset[0].count;
+}
 
 // POST /api/plot-news
 // Submit a new plot news item
@@ -36,6 +52,14 @@ export async function submitPlotNews(request: HttpRequest, context: InvocationCo
                 VALUES (@packName, @newsText, @threadURL, @threadTitle, @userId, GETDATE(), 0)
             `);
 
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'plotNews', count: newCount }]
+        }]);
+
         return {
             status: 201,
             jsonBody: { message: "Plot news submitted successfully" }
@@ -50,6 +74,7 @@ app.http('submitPlotNews', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'plot-news',
+    extraOutputs: [signalROutput],
     handler: submitPlotNews
 });
 
@@ -260,6 +285,14 @@ export async function approvePlotNews(request: HttpRequest, context: InvocationC
                 WHERE PlotNewsID = @plotNewsId
             `);
 
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'plotNews', count: newCount }]
+        }]);
+
         return {
             status: 200,
             jsonBody: { message: "Plot news approved" }
@@ -274,6 +307,7 @@ app.http('approvePlotNews', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'plot-news/approve',
+    extraOutputs: [signalROutput],
     handler: approvePlotNews
 });
 
@@ -350,6 +384,14 @@ export async function deletePlotNews(request: HttpRequest, context: InvocationCo
                 WHERE PlotNewsID = @plotNewsId
             `);
 
+        // Broadcast updated count to staff group
+        const newCount = await getCurrentPendingCount();
+        context.extraOutputs.set(signalROutput, [{
+            target: 'adminCountUpdate',
+            groupName: 'staff',
+            arguments: [{ type: 'plotNews', count: newCount }]
+        }]);
+
         return {
             status: 200,
             jsonBody: { message: "Plot news deleted" }
@@ -364,5 +406,6 @@ app.http('deletePlotNews', {
     methods: ['DELETE'],
     authLevel: 'anonymous',
     route: 'plot-news/{id}',
+    extraOutputs: [signalROutput],
     handler: deletePlotNews
 });
