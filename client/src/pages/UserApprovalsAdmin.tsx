@@ -47,6 +47,7 @@ const UserApprovalsAdmin: React.FC = () => {
   const [userSortField, setUserSortField] = useState<UserSortField>('username');
   const [userSortDirection, setUserSortDirection] = useState<SortDirection>('asc');
   const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [approvalsSearchQuery, setApprovalsSearchQuery] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showAllUsers, setShowAllUsers] = useState(false);
 
@@ -284,6 +285,18 @@ const UserApprovalsAdmin: React.FC = () => {
     });
   }, [allUsers, userSortField, userSortDirection, userSearchQuery]);
 
+  // Filter pending users for approvals tab
+  const filteredPendingUsers = useMemo(() => {
+    if (!approvalsSearchQuery.trim()) {
+      return pendingUsers;
+    }
+    const query = approvalsSearchQuery.toLowerCase();
+    return pendingUsers.filter(u =>
+      u.Username.toLowerCase().startsWith(query) ||
+      u.Email.toLowerCase().startsWith(query)
+    );
+  }, [pendingUsers, approvalsSearchQuery]);
+
   const handleUserSort = (field: UserSortField) => {
     if (userSortField === field) {
       setUserSortDirection(d => d === 'asc' ? 'desc' : 'asc');
@@ -350,9 +363,9 @@ const UserApprovalsAdmin: React.FC = () => {
             >
               <span className="hidden sm:inline">User Approvals</span>
               <span className="sm:hidden">Approvals</span>
-              {pendingUsers.length > 0 && (
+              {pendingUsers.filter(u => u.UserStatusID === 1).length > 0 && (
                 <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full">
-                  {pendingUsers.length}
+                  {pendingUsers.filter(u => u.UserStatusID === 1).length}
                 </span>
               )}
             </button>
@@ -374,6 +387,17 @@ const UserApprovalsAdmin: React.FC = () => {
           {/* User Approvals Tab */}
           {activeTab === 'approvals' && (
             <div className="mt-4">
+              {/* Search Bar */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search users by name or email..."
+                  value={approvalsSearchQuery}
+                  onChange={(e) => setApprovalsSearchQuery(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
+                />
+              </div>
+
               {/* Toggle for showing all users */}
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -388,23 +412,28 @@ const UserApprovalsAdmin: React.FC = () => {
                       <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showAllUsers ? 'translate-x-4' : ''}`} />
                     </div>
                   </div>
-                  <span className="text-sm text-gray-700">Show all users (Joining + Joined)</span>
+                  <span className="text-sm text-gray-700">Show all users</span>
                 </label>
                 {showAllUsers && (
                   <span className="text-xs text-gray-500">
-                    {pendingUsers.filter(u => u.UserStatusID === 1).length} pending, {pendingUsers.filter(u => u.UserStatusID === 2).length} joined
+                    {pendingUsers.filter(u => u.UserStatusID === 1).length} pending, {pendingUsers.filter(u => u.UserStatusID === 2).length} joined, {pendingUsers.filter(u => u.UserStatusID === 4).length} rejected
                   </span>
                 )}
               </div>
 
               {loading ? (
                 <p className="text-gray-500 text-center py-8">Loading...</p>
-              ) : pendingUsers.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">{showAllUsers ? 'No users found!' : 'No pending user approvals!'}</p>
+              ) : filteredPendingUsers.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  {approvalsSearchQuery ? 'No users match your search.' : showAllUsers ? 'No users found!' : 'No pending user approvals!'}
+                </p>
               ) : (
                 <div className="space-y-3">
-                  {pendingUsers.map(pendingUser => {
+                  {filteredPendingUsers.map(pendingUser => {
+                    const isPending = pendingUser.UserStatusID === 1;
                     const isJoined = pendingUser.UserStatusID === 2;
+                    const isRejected = pendingUser.UserStatusID === 4;
+                    const statusLabel = isJoined ? 'Joined' : isRejected ? 'Rejected' : 'Joining';
                     return (
                       <div key={pendingUser.UserID} className="border border-gray-200 bg-gray-50">
                         <div className="px-4 py-3">
@@ -426,15 +455,15 @@ const UserApprovalsAdmin: React.FC = () => {
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium text-gray-900">{pendingUser.Username}</span>
-                                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-200 text-red-800">
-                                    {isJoined ? 'Joined' : 'Joining'}
+                                  <span className={`text-xs px-1.5 py-0.5 rounded ${isJoined ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                                    {statusLabel}
                                   </span>
                                 </div>
                                 <div className="text-xs text-gray-500">{pendingUser.Email}</div>
                               </div>
                             </div>
                             <div className="flex gap-1">
-                              {!isJoined && (
+                              {isPending && (
                                 <>
                                   <button
                                     onClick={() => handleApprove(pendingUser.UserID)}
@@ -451,6 +480,15 @@ const UserApprovalsAdmin: React.FC = () => {
                                     Reject
                                   </button>
                                 </>
+                              )}
+                              {isRejected && (
+                                <button
+                                  onClick={() => handleApprove(pendingUser.UserID)}
+                                  disabled={processingId === pendingUser.UserID}
+                                  className="text-xs px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                >
+                                  {processingId === pendingUser.UserID ? 'Processing...' : 'Approve'}
+                                </button>
                               )}
                             </div>
                           </div>
@@ -567,9 +605,6 @@ const UserApprovalsAdmin: React.FC = () => {
                               {u.id === Number(user?.id) && (
                                 <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">You</span>
                               )}
-                              {u.isBanned && (
-                                <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded">Banned</span>
-                              )}
                             </div>
                           </td>
                           <td className="px-3 py-3 border-r border-gray-300 text-gray-600">
@@ -653,9 +688,6 @@ const UserApprovalsAdmin: React.FC = () => {
                               {u.id === Number(user?.id) && (
                                 <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">You</span>
                               )}
-                              {u.isBanned && (
-                                <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded">Banned</span>
-                              )}
                             </div>
                             <div className="text-xs text-gray-500 mt-0.5 truncate">{u.email}</div>
                             <div className="text-xs text-gray-600 mt-1">
@@ -712,37 +744,6 @@ const UserApprovalsAdmin: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </section>
-
-      <section className="bg-white border border-gray-300 shadow">
-        <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
-          <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">About User Management</h2>
-        </div>
-        <div className="p-4 text-sm text-gray-600 space-y-2">
-          <p>
-            <strong>User Approvals:</strong> New users register with a "Joining" status and cannot create characters until approved.
-          </p>
-          <p>
-            <strong>Approve:</strong> Changes the user's status to "Joined", allowing them to create characters and participate fully.
-          </p>
-          <p>
-            <strong>Reject:</strong> Changes the user's status to "Banned", preventing them from accessing the site.
-          </p>
-          {isAdmin && (
-            <>
-              <hr className="my-3" />
-              <p>
-                <strong>Administrator Status:</strong> Manage moderator and admin permissions, and ban/unban users.
-              </p>
-              <p>
-                <strong>Ban:</strong> Prevents a user from logging in. Banned users cannot access the site.
-              </p>
-              <p>
-                <strong>Unban:</strong> Restores a user's access to the site by changing their status back to "Joined".
-              </p>
-            </>
           )}
         </div>
       </section>

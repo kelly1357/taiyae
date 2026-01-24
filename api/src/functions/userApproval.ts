@@ -71,7 +71,7 @@ async function getPendingUserApprovalsCount(request: HttpRequest, context: Invoc
     }
 }
 
-// POST: Approve a user (change status from Joining to Joined)
+// POST: Approve a user (change status from Joining or Rejected to Joined)
 async function approveUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const body = await request.json() as { userId: number };
@@ -86,13 +86,13 @@ async function approveUser(request: HttpRequest, context: InvocationContext): Pr
 
         const pool = await getPool();
 
-        // Update the user status to Joined (2)
+        // Update the user status to Joined (2) - works for Joining (1) or Rejected (4)
         await pool.request()
             .input('userId', sql.Int, userId)
             .query(`
                 UPDATE [User]
                 SET UserStatusID = 2
-                WHERE UserID = @userId AND UserStatusID = 1
+                WHERE UserID = @userId AND UserStatusID IN (1, 4)
             `);
 
         // Broadcast updated count to staff group
@@ -116,7 +116,7 @@ async function approveUser(request: HttpRequest, context: InvocationContext): Pr
     }
 }
 
-// DELETE: Reject a user (ban them - change status to Banned)
+// DELETE: Reject a user (change status to Rejected)
 async function rejectUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const userId = request.params.userId;
@@ -130,12 +130,12 @@ async function rejectUser(request: HttpRequest, context: InvocationContext): Pro
 
         const pool = await getPool();
 
-        // Update the user status to Banned (3)
+        // Update the user status to Rejected (4)
         await pool.request()
             .input('userId', sql.Int, parseInt(userId))
             .query(`
                 UPDATE [User]
-                SET UserStatusID = 3
+                SET UserStatusID = 4
                 WHERE UserID = @userId AND UserStatusID = 1
             `);
 
@@ -149,7 +149,7 @@ async function rejectUser(request: HttpRequest, context: InvocationContext): Pro
 
         return {
             status: 200,
-            jsonBody: { message: 'User rejected (banned)' }
+            jsonBody: { message: 'User rejected' }
         };
     } catch (error) {
         context.error('Error rejecting user:', error);
@@ -204,7 +204,7 @@ async function banUser(request: HttpRequest, context: InvocationContext): Promis
     }
 }
 
-// GET: Get all users with Joining or Joined status (for toggle view)
+// GET: Get all users with Joining, Joined, or Rejected status (for toggle view)
 async function getJoiningAndJoinedUsers(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const pool = await getPool();
@@ -221,7 +221,7 @@ async function getJoiningAndJoinedUsers(request: HttpRequest, context: Invocatio
                 us.StatusID as UserStatusID
             FROM [User] u
             INNER JOIN UserStatus us ON u.UserStatusID = us.StatusID
-            WHERE u.UserStatusID IN (1, 2)
+            WHERE u.UserStatusID IN (1, 2, 4)
             ORDER BY u.UserStatusID ASC, u.Created DESC
         `);
 

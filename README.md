@@ -75,7 +75,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅ Moderator actions (approving new users)
 
-✅ Admin actions: account banning )
+✅ Admin actions: account banning
 
 [ ] Hierarchy management
 
