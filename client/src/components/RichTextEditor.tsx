@@ -167,7 +167,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       Image,
     ],
     content: value,
-    onUpdate: ({ editor }) => {
+    onUpdate: ({ editor }: { editor: any }) => {
       onChangeRef.current(editor.getHTML());
     },
   }, []);  // Empty deps array - only create editor once

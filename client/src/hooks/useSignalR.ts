@@ -57,7 +57,7 @@ export function useSignalR({
                 headers: { 'x-user-id': String(userId) }
             })
             .withAutomaticReconnect({
-                nextRetryDelayInMilliseconds: (retryContext) => {
+                nextRetryDelayInMilliseconds: (retryContext: signalR.RetryContext) => {
                     // Exponential backoff: 0s, 2s, 10s, 30s, then every 30s
                     if (retryContext.previousRetryCount < 4) {
                         return [0, 2000, 10000, 30000][retryContext.previousRetryCount];
@@ -87,12 +87,12 @@ export function useSignalR({
         });
 
         // Connection lifecycle handlers
-        newConnection.onreconnecting((error) => {
+        newConnection.onreconnecting((error: Error | undefined) => {
             console.log('[SignalR] Reconnecting...', error);
             setIsConnected(false);
         });
 
-        newConnection.onreconnected((connectionId) => {
+        newConnection.onreconnected((connectionId: string | undefined) => {
             console.log('[SignalR] Reconnected with id:', connectionId);
             setIsConnected(true);
             // Rejoin all groups after reconnection
@@ -105,7 +105,7 @@ export function useSignalR({
             });
         });
 
-        newConnection.onclose((error) => {
+        newConnection.onclose((error: Error | undefined) => {
             console.log('[SignalR] Connection closed', error);
             setIsConnected(false);
         });
@@ -116,7 +116,7 @@ export function useSignalR({
                 console.log('[SignalR] Connected successfully');
                 setIsConnected(true);
             })
-            .catch(err => {
+            .catch((err: Error) => {
                 console.error('[SignalR] Connection error:', err);
             });
 
