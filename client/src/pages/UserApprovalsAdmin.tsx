@@ -32,6 +32,7 @@ interface LayoutContext {
 }
 
 type UserSortField = 'username' | 'isModerator' | 'isAdmin' | 'isBanned' | 'characterCount';
+type ApprovalsSortField = 'username' | 'email' | 'created' | 'status';
 type SortDirection = 'asc' | 'desc';
 type TabType = 'approvals' | 'admin';
 
@@ -46,6 +47,8 @@ const UserApprovalsAdmin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('approvals');
   const [userSortField, setUserSortField] = useState<UserSortField>('username');
   const [userSortDirection, setUserSortDirection] = useState<SortDirection>('asc');
+  const [approvalsSortField, setApprovalsSortField] = useState<ApprovalsSortField>('username');
+  const [approvalsSortDirection, setApprovalsSortDirection] = useState<SortDirection>('asc');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [approvalsSearchQuery, setApprovalsSearchQuery] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -55,6 +58,7 @@ const UserApprovalsAdmin: React.FC = () => {
   const isAdmin = user?.isAdmin;
 
   const fetchPendingUsers = async (includeJoined: boolean = false) => {
+    setLoading(true);
     try {
       const endpoint = includeJoined ? '/api/user-approval/all' : '/api/user-approval';
       const response = await fetch(endpoint);
@@ -287,15 +291,60 @@ const UserApprovalsAdmin: React.FC = () => {
 
   // Filter pending users for approvals tab
   const filteredPendingUsers = useMemo(() => {
-    if (!approvalsSearchQuery.trim()) {
-      return pendingUsers;
+    let filtered = pendingUsers;
+    
+    if (approvalsSearchQuery.trim()) {
+      const query = approvalsSearchQuery.toLowerCase();
+      filtered = filtered.filter(u =>
+        u.Username.toLowerCase().startsWith(query) ||
+        u.Email.toLowerCase().startsWith(query)
+      );
     }
-    const query = approvalsSearchQuery.toLowerCase();
-    return pendingUsers.filter(u =>
-      u.Username.toLowerCase().startsWith(query) ||
-      u.Email.toLowerCase().startsWith(query)
-    );
-  }, [pendingUsers, approvalsSearchQuery]);
+    
+    // Sort users when showAllUsers is enabled
+    if (showAllUsers) {
+      filtered = [...filtered].sort((a, b) => {
+        let aVal: string | number;
+        let bVal: string | number;
+        
+        switch (approvalsSortField) {
+          case 'username':
+            aVal = a.Username.toLowerCase();
+            bVal = b.Username.toLowerCase();
+            break;
+          case 'email':
+            aVal = a.Email.toLowerCase();
+            bVal = b.Email.toLowerCase();
+            break;
+          case 'created':
+            aVal = new Date(a.Created).getTime();
+            bVal = new Date(b.Created).getTime();
+            break;
+          case 'status':
+            aVal = a.UserStatusID || 0;
+            bVal = b.UserStatusID || 0;
+            break;
+          default:
+            return 0;
+        }
+        
+        if (aVal < bVal) return approvalsSortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return approvalsSortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return filtered;
+  }, [pendingUsers, approvalsSearchQuery, showAllUsers, approvalsSortField, approvalsSortDirection]);
+
+  const handleApprovalSort = (field: ApprovalsSortField) => {
+    if (approvalsSortField === field) {
+      setApprovalsSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setApprovalsSortField(field);
+      setApprovalsSortDirection('asc');
+    }
+  };
 
   const handleUserSort = (field: UserSortField) => {
     if (userSortField === field) {
@@ -351,6 +400,18 @@ const UserApprovalsAdmin: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'approvals' && (
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="Search users by name or email..."
+                value={approvalsSearchQuery}
+                onChange={(e) => setApprovalsSearchQuery(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
+              />
+            </div>
+          )}
+
           {/* Tab Navigation */}
           <div className="flex flex-wrap border-b border-gray-300 bg-gray-200 md:w-fit">
             <button
@@ -387,17 +448,6 @@ const UserApprovalsAdmin: React.FC = () => {
           {/* User Approvals Tab */}
           {activeTab === 'approvals' && (
             <div className="mt-4">
-              {/* Search Bar */}
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Search users by name or email..."
-                  value={approvalsSearchQuery}
-                  onChange={(e) => setApprovalsSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
-                />
-              </div>
-
               {/* Toggle for showing all users */}
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -427,13 +477,189 @@ const UserApprovalsAdmin: React.FC = () => {
                 <p className="text-gray-500 text-center py-8">
                   {approvalsSearchQuery ? 'No users match your search.' : showAllUsers ? 'No users found!' : 'No pending user approvals!'}
                 </p>
+              ) : showAllUsers ? (
+                /* Table view when showing all users */
+                <div className="border border-gray-300">
+                  {/* Desktop Table View */}
+                  <table className="hidden md:table w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
+                        <th 
+                          className={`px-3 py-2 border-r border-gray-300 text-left cursor-pointer hover:bg-gray-300 ${approvalsSortField === 'username' ? 'bg-gray-300' : ''}`}
+                          onClick={() => handleApprovalSort('username')}
+                        >
+                          USER
+                        </th>
+                        <th 
+                          className={`px-3 py-2 border-r border-gray-300 text-left cursor-pointer hover:bg-gray-300 ${approvalsSortField === 'email' ? 'bg-gray-300' : ''}`}
+                          onClick={() => handleApprovalSort('email')}
+                        >
+                          EMAIL
+                        </th>
+                        <th 
+                          className={`px-3 py-2 border-r border-gray-300 text-center w-28 cursor-pointer hover:bg-gray-300 ${approvalsSortField === 'status' ? 'bg-gray-300' : ''}`}
+                          onClick={() => handleApprovalSort('status')}
+                        >
+                          STATUS
+                        </th>
+                        <th 
+                          className={`px-3 py-2 border-r border-gray-300 text-center w-32 cursor-pointer hover:bg-gray-300 ${approvalsSortField === 'created' ? 'bg-gray-300' : ''}`}
+                          onClick={() => handleApprovalSort('created')}
+                        >
+                          REGISTERED
+                        </th>
+                        <th className="px-3 py-2 text-center w-32">ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPendingUsers.map(pendingUser => {
+                        const isPending = pendingUser.UserStatusID === 1;
+                        const isJoined = pendingUser.UserStatusID === 2;
+                        const isRejected = pendingUser.UserStatusID === 4;
+                        const statusLabel = isJoined ? 'Joined' : isRejected ? 'Rejected' : 'Pending';
+                        return (
+                          <tr key={pendingUser.UserID} className={`border-t border-gray-300 hover:bg-gray-50 ${isRejected ? 'bg-red-50' : ''}`}>
+                            <td className="px-3 py-3 border-r border-gray-300">
+                              <div className="flex items-center gap-2">
+                                {pendingUser.ImageURL ? (
+                                  <img src={pendingUser.ImageURL} alt={pendingUser.Username} className="w-8 h-8 rounded-full object-cover" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
+                                    {pendingUser.Username.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <span className="font-medium text-gray-900">{pendingUser.Username}</span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-300 text-gray-600">
+                              {pendingUser.Email}
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-300 text-center">
+                              <span className={`text-xs px-2 py-1 rounded ${
+                                isJoined ? 'bg-green-200 text-green-800' : 
+                                isRejected ? 'bg-red-200 text-red-800' : 
+                                'bg-yellow-200 text-yellow-800'
+                              }`}>
+                                {statusLabel}
+                              </span>
+                            </td>
+                            <td className="px-3 py-3 border-r border-gray-300 text-center text-gray-600 text-xs">
+                              {formatDate(pendingUser.Created)}
+                            </td>
+                            <td className="px-3 py-3 text-center">
+                              <div className="flex gap-1 justify-center">
+                                {isPending && (
+                                  <>
+                                    <button
+                                      onClick={() => handleApprove(pendingUser.UserID)}
+                                      disabled={processingId === pendingUser.UserID}
+                                      className="text-xs px-2 py-1 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                      {processingId === pendingUser.UserID ? '...' : 'Approve'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleReject(pendingUser.UserID, pendingUser.Username)}
+                                      disabled={processingId === pendingUser.UserID}
+                                      className="text-xs px-2 py-1 bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                    >
+                                      Reject
+                                    </button>
+                                  </>
+                                )}
+                                {isRejected && (
+                                  <button
+                                    onClick={() => handleApprove(pendingUser.UserID)}
+                                    disabled={processingId === pendingUser.UserID}
+                                    className="text-xs px-2 py-1 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                  >
+                                    {processingId === pendingUser.UserID ? '...' : 'Approve'}
+                                  </button>
+                                )}
+                                {isJoined && (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+
+                  {/* Mobile Card View */}
+                  <div className="md:hidden divide-y divide-gray-300">
+                    {filteredPendingUsers.map(pendingUser => {
+                      const isPending = pendingUser.UserStatusID === 1;
+                      const isJoined = pendingUser.UserStatusID === 2;
+                      const isRejected = pendingUser.UserStatusID === 4;
+                      const statusLabel = isJoined ? 'Joined' : isRejected ? 'Rejected' : 'Pending';
+                      return (
+                        <div key={pendingUser.UserID} className={`p-3 hover:bg-gray-50 ${isRejected ? 'bg-red-50' : ''}`}>
+                          <div className="flex gap-3">
+                            {pendingUser.ImageURL ? (
+                              <img src={pendingUser.ImageURL} alt={pendingUser.Username} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg flex-shrink-0">
+                                {pendingUser.Username.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-gray-900">{pendingUser.Username}</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  isJoined ? 'bg-green-200 text-green-800' : 
+                                  isRejected ? 'bg-red-200 text-red-800' : 
+                                  'bg-yellow-200 text-yellow-800'
+                                }`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-0.5 truncate">{pendingUser.Email}</div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {formatDate(pendingUser.Created)} • {pendingUser.AuthProvider === 'google' ? 'Google' : 'Email'}
+                              </div>
+                              <div className="flex gap-2 mt-2">
+                                {isPending && (
+                                  <>
+                                    <button
+                                      onClick={() => handleApprove(pendingUser.UserID)}
+                                      disabled={processingId === pendingUser.UserID}
+                                      className="text-xs px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                    >
+                                      {processingId === pendingUser.UserID ? '...' : 'Approve'}
+                                    </button>
+                                    <button
+                                      onClick={() => handleReject(pendingUser.UserID, pendingUser.Username)}
+                                      disabled={processingId === pendingUser.UserID}
+                                      className="text-xs px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                    >
+                                      Reject
+                                    </button>
+                                  </>
+                                )}
+                                {isRejected && (
+                                  <button
+                                    onClick={() => handleApprove(pendingUser.UserID)}
+                                    disabled={processingId === pendingUser.UserID}
+                                    className="text-xs px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                  >
+                                    {processingId === pendingUser.UserID ? '...' : 'Approve'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               ) : (
+                /* Card view for pending users only */
                 <div className="space-y-3">
                   {filteredPendingUsers.map(pendingUser => {
                     const isPending = pendingUser.UserStatusID === 1;
-                    const isJoined = pendingUser.UserStatusID === 2;
                     const isRejected = pendingUser.UserStatusID === 4;
-                    const statusLabel = isJoined ? 'Joined' : isRejected ? 'Rejected' : 'Joining';
                     return (
                       <div key={pendingUser.UserID} className="border border-gray-200 bg-gray-50">
                         <div className="px-4 py-3">
@@ -455,8 +681,8 @@ const UserApprovalsAdmin: React.FC = () => {
                               <div>
                                 <div className="flex items-center gap-2">
                                   <span className="font-medium text-gray-900">{pendingUser.Username}</span>
-                                  <span className={`text-xs px-1.5 py-0.5 rounded ${isJoined ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
-                                    {statusLabel}
+                                  <span className="text-xs px-1.5 py-0.5 rounded bg-yellow-200 text-yellow-800">
+                                    Pending
                                   </span>
                                 </div>
                                 <div className="text-xs text-gray-500">{pendingUser.Email}</div>
