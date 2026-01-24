@@ -59,39 +59,37 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Editable character fields
 
-✅ Display online characters on sidebar
+✅  Display online characters on sidebar
 
 ✅  Avatar upload option for Player Accounts
 
-✅ Place to edit user fields
+✅  Place to edit user fields
 
-✅ Editable user fields to include: Biography (HTML), Social Media Links (HTML?)
+✅  Editable user fields to include: Biography (HTML), Social Media Links (HTML?)
 
 ### Backend updates
 
-✅ User Status: Active, Joining, Banned
+[ ] Subareas within regions
 
-[ ] Create subareas within regions
+[ ] Pack management: creating, editing, and function, hierarchy
 
-✅ Moderator actions (approving new users)
+[ ] Skill points enhancement (quantity, verifications)
 
-✅ Admin actions: account banning
+✅  User Status: Active, Joining, Banned
 
-[ ] Hierarchy management
+✅  Moderator actions (approving new users)
 
-[ ] Pack management/function / creating packs
+✅  Admin actions: account banning
 
-[ ] Discord integration
+✅  Skill Points
 
-✅ Skill Points
+✅  Add header image upload to Region Directory Page
 
-✅ Add header image upload to Region Directory Page
-
-✅ Character Status: Active, Inactive, Dead (cannot post)
+✅  Character Status: Active, Inactive, Dead (cannot post)
 
 ✅  Weather update system (manual or somehow automated based on season?)
 
-✅ Automated calendar system that ages wolves by a month and changes the season every 28 days
+✅  Automated calendar system that ages wolves by a month and changes the season every 28 days
 
 ✅  User registration / approval flow, OAuth implementation
 
@@ -105,7 +103,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Achievements management
 
-✅ "Online Now" status indicator
+✅  "Online Now" status indicator
 
 ✅  Notifications
 
@@ -121,4 +119,4 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 🐺 Chelsie - **Developer TBD**
 
-🦾 Claude Opus 4.5 - **Code architect and implementation**
+🦾 Claude Code - **Code architect and implementation**
