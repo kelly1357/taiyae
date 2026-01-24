@@ -28,6 +28,7 @@ import ActivityTracker from './pages/ActivityTracker';
 import InactiveCharacters from './pages/InactiveCharacters';
 import DeadCharacters from './pages/DeadCharacters';
 import StaffPingsAdmin from './pages/StaffPingsAdmin';
+import UserApprovalsAdmin from './pages/UserApprovalsAdmin';
 import Conversations from './pages/Conversations';
 import type { User, Character } from './types';
 
@@ -253,6 +254,7 @@ const App: React.FC = () => {
         <Route path="conversations" element={<Conversations />} />
         <Route path="admin/skill-points" element={<SkillPointsApproval />} />
         <Route path="admin/staff-pings" element={<StaffPingsAdmin />} />
+        <Route path="admin/user-approvals" element={<UserApprovalsAdmin />} />
         <Route path="admin/achievements" element={<AchievementAdmin />} />
         <Route path="admin/homepage" element={<HomepageAdmin />} />
         <Route path="admin/inactive-characters" element={user ? <InactiveCharacters user={user} /> : <div className="text-center mt-20">Please log in to access this page.</div>} />

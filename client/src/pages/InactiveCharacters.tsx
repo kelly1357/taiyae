@@ -22,60 +22,33 @@ interface InactiveCharacter {
   daysSinceLastPost: number;
 }
 
-interface UserWithStatus {
-  id: number;
-  username: string;
-  email: string;
-  imageUrl?: string;
-  isModerator: boolean;
-  isAdmin: boolean;
-  createdAt: string;
-  characterCount: number;
-  activeCharacterCount: number;
-}
-
 interface InactiveCharactersProps {
   user: User;
 }
 
 type SortField = 'name' | 'sex' | 'age' | 'playerName' | 'status' | 'lastPostDate' | 'totalPosts';
 type SortDirection = 'asc' | 'desc';
-type UserSortField = 'username' | 'isModerator' | 'isAdmin' | 'characterCount';
 
 const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
   const [inactiveCharacters, setInactiveCharacters] = useState<InactiveCharacter[]>([]);
   const [charactersToInactivate, setCharactersToInactivate] = useState<InactiveCharacter[]>([]);
-  const [allUsers, setAllUsers] = useState<UserWithStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'inactive' | 'pending' | 'admin'>('inactive');
+  const [activeTab, setActiveTab] = useState<'inactive' | 'pending'>('inactive');
   const [selectedForInactivation, setSelectedForInactivation] = useState<Set<number>>(new Set());
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const [processingUserId, setProcessingUserId] = useState<number | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showDeathModal, setShowDeathModal] = useState<InactiveCharacter | null>(null);
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [userSortField, setUserSortField] = useState<UserSortField>('username');
-  const [userSortDirection, setUserSortDirection] = useState<SortDirection>('asc');
   const [searchQuery, setSearchQuery] = useState('');
-  const [userSearchQuery, setUserSearchQuery] = useState('');
 
   const isModerator = user?.isModerator || user?.isAdmin;
-  const isAdmin = user?.isAdmin;
 
   useEffect(() => {
     if (isModerator) {
       fetchData();
     }
   }, [user.id, isModerator]);
-
-  // Fetch users when admin tab is selected
-  useEffect(() => {
-    if (activeTab === 'admin' && isAdmin && allUsers.length === 0) {
-      fetchUsers();
-    }
-  }, [activeTab, isAdmin]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -106,60 +79,6 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    setUsersLoading(true);
-    try {
-      const response = await fetch('/api/moderation/user-permissions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAllUsers(data);
-      } else {
-        const error = await response.text();
-        setMessage({ type: 'error', text: error || 'Failed to fetch users' });
-      }
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      setMessage({ type: 'error', text: 'Failed to fetch users' });
-    } finally {
-      setUsersLoading(false);
-    }
-  };
-
-  const handleUpdatePermissions = async (targetUserId: number, field: 'isModerator' | 'isAdmin', value: boolean) => {
-    setProcessingUserId(targetUserId);
-    try {
-      const response = await fetch(`/api/moderation/user-permissions/${targetUserId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user.id, 
-          [field]: value 
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setMessage({ type: 'success', text: result.message });
-        // Update local state
-        setAllUsers(prev => prev.map(u => 
-          u.id === targetUserId ? { ...u, [field]: value } : u
-        ));
-      } else {
-        const error = await response.text();
-        setMessage({ type: 'error', text: error || 'Failed to update permissions' });
-      }
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update permissions' });
-    } finally {
-      setProcessingUserId(null);
     }
   };
 
@@ -362,53 +281,6 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     }
     return sortCharacters(filtered);
   }, [charactersToInactivate, sortField, sortDirection, searchQuery]);
-
-  // Sort and filter users for admin tab
-  const sortedUsers = useMemo(() => {
-    let filtered = allUsers;
-    if (userSearchQuery.trim()) {
-      const query = userSearchQuery.toLowerCase();
-      filtered = filtered.filter(u => 
-        u.username.toLowerCase().startsWith(query) ||
-        (u.email || '').toLowerCase().startsWith(query)
-      );
-    }
-    return [...filtered].sort((a, b) => {
-      let aVal: any, bVal: any;
-      switch (userSortField) {
-        case 'username':
-          aVal = a.username.toLowerCase();
-          bVal = b.username.toLowerCase();
-          break;
-        case 'isModerator':
-          aVal = a.isModerator ? 1 : 0;
-          bVal = b.isModerator ? 1 : 0;
-          break;
-        case 'isAdmin':
-          aVal = a.isAdmin ? 1 : 0;
-          bVal = b.isAdmin ? 1 : 0;
-          break;
-        case 'characterCount':
-          aVal = a.characterCount;
-          bVal = b.characterCount;
-          break;
-        default:
-          return 0;
-      }
-      if (aVal < bVal) return userSortDirection === 'asc' ? -1 : 1;
-      if (aVal > bVal) return userSortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [allUsers, userSortField, userSortDirection, userSearchQuery]);
-
-  const handleUserSort = (field: UserSortField) => {
-    if (userSortField === field) {
-      setUserSortDirection(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setUserSortField(field);
-      setUserSortDirection('asc');
-    }
-  };
 
   if (!isModerator) {
     return (
@@ -690,23 +562,13 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
 
         {/* Search Bar */}
         <div className="mb-4">
-          {activeTab === 'admin' ? (
-            <input
-              type="text"
-              placeholder="Search users by name or email..."
-              value={userSearchQuery}
-              onChange={(e) => setUserSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
-            />
-          ) : (
-            <input
-              type="text"
-              placeholder="Search characters, players, or packs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
-            />
-          )}
+          <input
+            type="text"
+            placeholder="Search characters, players, or packs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 text-sm text-gray-800 focus:outline-none focus:border-gray-500"
+          />
         </div>
 
         {/* Tab Navigation */}
@@ -743,20 +605,6 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
               </span>
             )}
           </button>
-          {/* Administrator Status Tab - Admin only */}
-          {isAdmin && (
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium ${
-                activeTab === 'admin'
-                  ? 'border-b-2 border-[#2f3a2f] text-[#2f3a2f] bg-white -mb-px'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <span className="hidden sm:inline">Administrator Status</span>
-              <span className="sm:hidden">Admin</span>
-            </button>
-          )}
         </div>
 
         {/* Inactive/Dead Characters Tab */}
@@ -932,196 +780,6 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
                       showInactivateAction 
                       showCheckbox 
                     />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Administrator Status Tab - Admin only */}
-        {activeTab === 'admin' && isAdmin && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Manage administrator and moderator permissions for all users. 
-              <span className="text-red-600 font-medium"> Changes take effect immediately.</span>
-            </p>
-
-            {usersLoading ? (
-              <div className="text-center py-8 text-gray-500">Loading users...</div>
-            ) : sortedUsers.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No users found.
-              </div>
-            ) : (
-              <div className="border border-gray-300">
-                {/* Mobile Sort Options */}
-                <div className="md:hidden bg-gray-200 px-3 py-2 flex items-center gap-2 text-xs">
-                  <span className="text-gray-600">Sort by:</span>
-                  <select 
-                    value={userSortField}
-                    onChange={(e) => setUserSortField(e.target.value as UserSortField)}
-                    className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
-                  >
-                    <option value="username">Username</option>
-                    <option value="characterCount">Characters</option>
-                    <option value="isModerator">Moderator</option>
-                    <option value="isAdmin">Admin</option>
-                  </select>
-                  <button 
-                    onClick={() => setUserSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
-                    className="bg-white border border-gray-300 px-2 py-1 text-gray-700"
-                  >
-                    {userSortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}
-                  </button>
-                </div>
-
-                {/* Desktop Table View */}
-                <table className="hidden md:table w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-200 text-gray-700 uppercase tracking-wide text-xs">
-                      <th 
-                        className={`px-3 py-2 border-r border-gray-300 cursor-pointer hover:bg-gray-300 text-left ${userSortField === 'username' ? 'bg-gray-300' : ''}`}
-                        onClick={() => handleUserSort('username')}
-                      >
-                        User
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-300 text-left">Email</th>
-                      <th 
-                        className={`px-3 py-2 border-r border-gray-300 cursor-pointer hover:bg-gray-300 text-center w-32 ${userSortField === 'characterCount' ? 'bg-gray-300' : ''}`}
-                        onClick={() => handleUserSort('characterCount')}
-                      >
-                        Characters
-                      </th>
-                      <th 
-                        className={`px-3 py-2 border-r border-gray-300 cursor-pointer hover:bg-gray-300 text-center w-32 ${userSortField === 'isModerator' ? 'bg-gray-300' : ''}`}
-                        onClick={() => handleUserSort('isModerator')}
-                      >
-                        Moderator
-                      </th>
-                      <th 
-                        className={`px-3 py-2 cursor-pointer hover:bg-gray-300 text-center w-32 ${userSortField === 'isAdmin' ? 'bg-gray-300' : ''}`}
-                        onClick={() => handleUserSort('isAdmin')}
-                      >
-                        Admin
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedUsers.map(u => (
-                      <tr key={u.id} className="border-t border-gray-300 hover:bg-gray-50">
-                        <td className="px-3 py-3 border-r border-gray-300">
-                          <div className="flex items-center gap-2">
-                            {u.imageUrl ? (
-                              <img src={u.imageUrl} alt={u.username} className="w-8 h-8 rounded-full object-cover" />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs">
-                                {u.username.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <Link to={`/user/${u.id}`} className="text-[#2f3a2f] hover:underline font-medium">
-                              {u.username}
-                            </Link>
-                            {u.id === Number(user.id) && (
-                              <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">You</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 border-r border-gray-300 text-gray-600">
-                          {u.email}
-                        </td>
-                        <td className="px-3 py-3 border-r border-gray-300 text-center text-gray-600">
-                          {u.activeCharacterCount}/{u.characterCount}
-                        </td>
-                        <td className="px-3 py-3 border-r border-gray-300 text-center">
-                          <button
-                            onClick={() => handleUpdatePermissions(u.id, 'isModerator', !u.isModerator)}
-                            disabled={processingUserId === u.id}
-                            className={`px-3 py-1 text-xs font-medium border transition-colors ${
-                              u.isModerator
-                                ? 'bg-green-600 text-white border-green-700 hover:bg-green-700'
-                                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                            } disabled:opacity-50`}
-                          >
-                            {processingUserId === u.id ? '...' : u.isModerator ? '✓ Yes' : 'No'}
-                          </button>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <button
-                            onClick={() => handleUpdatePermissions(u.id, 'isAdmin', !u.isAdmin)}
-                            disabled={processingUserId === u.id || u.id === Number(user.id)}
-                            className={`px-3 py-1 text-xs font-medium border transition-colors ${
-                              u.isAdmin
-                                ? 'bg-purple-600 text-white border-purple-700 hover:bg-purple-700'
-                                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title={u.id === Number(user.id) ? "You cannot remove your own admin status" : ""}
-                          >
-                            {processingUserId === u.id ? '...' : u.isAdmin ? '✓ Yes' : 'No'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* Mobile Card View */}
-                <div className="md:hidden divide-y divide-gray-300">
-                  {sortedUsers.map(u => (
-                    <div key={u.id} className="p-3 hover:bg-gray-50">
-                      <div className="flex gap-3">
-                        {/* User Avatar */}
-                        {u.imageUrl ? (
-                          <img src={u.imageUrl} alt={u.username} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-lg flex-shrink-0">
-                            {u.username.charAt(0).toUpperCase()}
-                          </div>
-                        )}
-
-                        {/* User Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Link to={`/user/${u.id}`} className="text-[#2f3a2f] hover:underline font-medium">
-                              {u.username}
-                            </Link>
-                            {u.id === Number(user.id) && (
-                              <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">You</span>
-                            )}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5 truncate">{u.email}</div>
-                          <div className="text-xs text-gray-600 mt-1">
-                            Characters: {u.activeCharacterCount}/{u.characterCount}
-                          </div>
-                          
-                          {/* Permission Buttons */}
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={() => handleUpdatePermissions(u.id, 'isModerator', !u.isModerator)}
-                              disabled={processingUserId === u.id}
-                              className={`px-3 py-1 text-xs font-medium border transition-colors ${
-                                u.isModerator
-                                  ? 'bg-green-600 text-white border-green-700 hover:bg-green-700'
-                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                              } disabled:opacity-50`}
-                            >
-                              {processingUserId === u.id ? '...' : u.isModerator ? '✓ Mod' : 'Mod'}
-                            </button>
-                            <button
-                              onClick={() => handleUpdatePermissions(u.id, 'isAdmin', !u.isAdmin)}
-                              disabled={processingUserId === u.id || u.id === Number(user.id)}
-                              className={`px-3 py-1 text-xs font-medium border transition-colors ${
-                                u.isAdmin
-                                  ? 'bg-purple-600 text-white border-purple-700 hover:bg-purple-700'
-                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'
-                              } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            >
-                              {processingUserId === u.id ? '...' : u.isAdmin ? '✓ Admin' : 'Admin'}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   ))}
                 </div>
               </div>

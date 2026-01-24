@@ -16,6 +16,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [isBanned, setIsBanned] = useState(false);
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
@@ -30,6 +31,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsBanned(false);
 
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
@@ -83,7 +85,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
         navigate('/');
       } else {
         console.error('Auth failed response:', data);
-        setError(data.body || 'Authentication failed');
+        if (data.error === 'banned') {
+          setIsBanned(true);
+          setError(data.message || 'Your account has been banned.');
+        } else {
+          setError(data.body || data.message || 'Authentication failed');
+        }
       }
     } catch (err) {
       console.error('Auth exception:', err);
@@ -92,6 +99,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
   };
 
   const handleGoogleSuccess = async (credentialResponse: any) => {
+    setError('');
+    setIsBanned(false);
     try {
       const response = await fetch('/api/auth-google', {
         method: 'POST',
@@ -130,7 +139,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
         navigate('/');
       } else {
         console.error('Google login failed response:', data);
-        setError(data.body || 'Google login failed');
+        if (data.error === 'banned') {
+          setIsBanned(true);
+          setError(data.message || 'Your account has been banned.');
+        } else {
+          setError(data.body || data.message || 'Google login failed');
+        }
       }
     } catch (err) {
       console.error('Google login exception:', err);
@@ -143,7 +157,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
     return (
       <div className="text-gray-900">
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 p-2 rounded mb-3 text-xs">
+          <div className={`p-2 rounded mb-3 text-xs ${
+            isBanned
+              ? 'bg-red-600 border border-red-700 text-white font-medium'
+              : 'bg-red-100 border border-red-400 text-red-700'
+          }`}>
             {error}
           </div>
         )}
@@ -235,7 +253,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
         </h2>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded mb-4 text-sm">
+          <div className={`p-3 rounded mb-4 text-sm ${
+            isBanned
+              ? 'bg-red-600 border border-red-700 text-white font-medium'
+              : 'bg-red-100 border border-red-400 text-red-700'
+          }`}>
             {error}
           </div>
         )}

@@ -1,5 +1,7 @@
 export type UserRole = 'admin' | 'moderator' | 'member';
 
+export type UserStatus = 'Joining' | 'Joined' | 'Banned';
+
 export interface User {
   id: number | string;
   username: string;
@@ -15,6 +17,8 @@ export interface User {
   isModerator?: boolean; // Is_Moderator column - true if user is a moderator
   isAdmin?: boolean; // Is_Admin column - true if user is an admin
   role?: UserRole; // 'admin', 'moderator', or 'member'
+  userStatus?: UserStatus; // 'Joining', 'Joined', or 'Banned'
+  userStatusId?: number; // 1=Joining, 2=Joined, 3=Banned
 }
 
 export interface Achievement {

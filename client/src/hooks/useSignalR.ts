@@ -3,13 +3,14 @@ import * as signalR from '@microsoft/signalr';
 import type { Message } from '../types';
 
 export interface AdminCountUpdate {
-    type: 'skillPoints' | 'achievements' | 'plotNews' | 'staffPings' | 'all';
+    type: 'skillPoints' | 'achievements' | 'plotNews' | 'staffPings' | 'userApprovals' | 'all';
     count?: number;
     counts?: {
         skillPoints: number;
         achievements: number;
         plotNews: number;
         staffPings: number;
+        userApprovals?: number;
     };
 }
 

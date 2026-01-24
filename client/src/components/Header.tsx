@@ -51,6 +51,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
   // Fetch pending staff pings count (state declaration moved here)
   const [pendingStaffPingsCount, setPendingStaffPingsCount] = useState(0);
+  const [pendingUserApprovalsCount, setPendingUserApprovalsCount] = useState(0);
 
   // Fetch admin counts and listen for SignalR updates
   useEffect(() => {
@@ -59,18 +60,20 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Fetch all admin counts
     const fetchAllCounts = async () => {
       try {
-        const [skillPoints, plotNews, achievements, inactiveChars, staffPings] = await Promise.all([
+        const [skillPoints, plotNews, achievements, inactiveChars, staffPings, userApprovals] = await Promise.all([
           fetch('/api/skill-points-approval/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/plot-news/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/achievements/requests/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/moderation/characters-to-inactivate/count').then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/staff-pings/count').then(r => r.ok ? r.json() : { count: 0 })
+          fetch('/api/staff-pings/count').then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/user-approval/count').then(r => r.ok ? r.json() : { count: 0 })
         ]);
         setPendingSkillPointsCount(skillPoints.count || 0);
         setPendingPlotNewsCount(plotNews.count || 0);
         setPendingAchievementsCount(achievements.count || 0);
         setPendingInactiveCharactersCount(inactiveChars.count || 0);
         setPendingStaffPingsCount(staffPings.count || 0);
+        setPendingUserApprovalsCount(userApprovals.count || 0);
       } catch {
         // Silently fail
       }
@@ -87,6 +90,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         setPendingAchievementsCount(data.counts.achievements);
         setPendingPlotNewsCount(data.counts.plotNews);
         setPendingStaffPingsCount(data.counts.staffPings);
+        if (data.counts.userApprovals !== undefined) setPendingUserApprovalsCount(data.counts.userApprovals);
       } else if (data.type === 'skillPoints' && data.count !== undefined) {
         setPendingSkillPointsCount(data.count);
       } else if (data.type === 'achievements' && data.count !== undefined) {
@@ -95,6 +99,8 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         setPendingPlotNewsCount(data.count);
       } else if (data.type === 'staffPings' && data.count !== undefined) {
         setPendingStaffPingsCount(data.count);
+      } else if (data.type === 'userApprovals' && data.count !== undefined) {
+        setPendingUserApprovalsCount(data.count);
       }
     };
     window.addEventListener('signalr:adminCountUpdate', handleAdminCountUpdate);
@@ -308,7 +314,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {(isModerator || isAdmin) && (
-            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount}</span>}</span>}>
+            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
               <DropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
@@ -337,6 +343,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <span className="flex items-center justify-between w-full">
                   Staff Pings
                   {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                </span>
+              </DropdownLink>
+              <DropdownLink to="/admin/user-approvals">
+                <span className="flex items-center justify-between w-full">
+                  User Approvals
+                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
                 </span>
               </DropdownLink>
             </NavDropdown>
@@ -413,23 +425,25 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                         </button>
                       ))}
                       <div className="py-1">
-                        <Link 
-                          to="/my-characters" 
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Manage Characters
-                        </Link>
-                        <Link 
-                          to="/conversations" 
+                        {user?.userStatus !== 'Joining' && (
+                          <Link
+                            to="/my-characters"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            Manage Characters
+                          </Link>
+                        )}
+                        <Link
+                          to="/conversations"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex items-center justify-between"
                           onClick={() => setIsDropdownOpen(false)}
                         >
                           <span>My Messages</span>
                           {totalUnreadMessages > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{totalUnreadMessages}</span>}
                         </Link>
-                        <Link 
-                          to="/account" 
+                        <Link
+                          to="/account"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           onClick={() => setIsDropdownOpen(false)}
                         >
@@ -441,7 +455,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 </div>
               ) : (
                 <div className="relative" ref={dropdownRef}>
-                  <button 
+                  <button
                     onClick={handleUserDropdownClick}
                     className="flex items-center space-x-2 bg-white/35 px-3 py-1 hover:bg-white/50 transition-colors border border-white/20"
                   >
@@ -459,15 +473,17 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-300 shadow-lg z-50">
                       <div className="py-1">
-                        <Link 
-                          to="/my-characters" 
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                          onClick={() => setIsDropdownOpen(false)}
-                        >
-                          Manage Characters
-                        </Link>
-                        <Link 
-                          to="/account" 
+                        {user?.userStatus !== 'Joining' && (
+                          <Link
+                            to="/my-characters"
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            Manage Characters
+                          </Link>
+                        )}
+                        <Link
+                          to="/account"
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                           onClick={() => setIsDropdownOpen(false)}
                         >
@@ -520,7 +536,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {(isModerator || isAdmin) && (
-            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount}</span>}</span>}>
+            <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
               <MobileDropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
@@ -549,6 +565,12 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <span className="flex items-center justify-between w-full">
                   Staff Pings
                   {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                </span>
+              </MobileDropdownLink>
+              <MobileDropdownLink to="/admin/user-approvals">
+                <span className="flex items-center justify-between w-full">
+                  User Approvals
+                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
                 </span>
               </MobileDropdownLink>
             </MobileNavSection>
@@ -624,15 +646,17 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                   ))}
                 </div>
               )}
-              <Link 
-                to="/my-characters" 
-                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Manage Characters
-              </Link>
-              <Link 
-                to="/conversations" 
+              {user?.userStatus !== 'Joining' && (
+                <Link
+                  to="/my-characters"
+                  className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Manage Characters
+                </Link>
+              )}
+              <Link
+                to="/conversations"
                 className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200 flex items-center justify-between"
                 onClick={() => setIsMobileMenuOpen(false)}
               >

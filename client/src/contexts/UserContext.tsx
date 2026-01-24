@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import type { User, UserRole } from '../types';
+import type { User, UserRole, UserStatus } from '../types';
 
 // NoUser context for unauthenticated/guest users
 interface NoUserContextType {
@@ -83,6 +83,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const isAdmin = userData.Is_Admin === true || userData.Is_Admin === 1;
       const role: UserRole = isAdmin ? ('admin' as UserRole) : isModerator ? ('moderator' as UserRole) : ('member' as UserRole);
 
+      // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
+      const statusMap: Record<number, UserStatus> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
+      const userStatus: UserStatus = statusMap[userData.UserStatusID] || 'Joining';
+      const userStatusId: number = userData.UserStatusID || 1;
+
       // Extend User type locally to allow role property
       type UserWithRole = User & { role: UserRole };
       const userWithRole: UserWithRole = {
@@ -98,6 +103,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         isModerator,
         isAdmin,
         role,
+        userStatus,
+        userStatusId,
       };
       setUser(userWithRole);
     } catch (err) {

@@ -29,7 +29,7 @@ export async function getUser(request: HttpRequest, context: InvocationContext):
         const pool = await getPool();
         const userResult = await pool.request()
             .input('UserID', sql.Int, id)
-            .query('SELECT UserID, Username, Email, Description, Facebook, Instagram, Discord, ImageURL, Is_Moderator, Is_Admin FROM [User] WHERE UserID = @UserID');
+            .query('SELECT UserID, Username, Email, Description, Facebook, Instagram, Discord, ImageURL, Is_Moderator, Is_Admin, UserStatusID FROM [User] WHERE UserID = @UserID');
         const user = userResult.recordset[0];
         if (!user) {
             return { status: 404, jsonBody: { body: "User not found" } };
@@ -93,13 +93,14 @@ export async function getAllUsersWithStatus(request: HttpRequest, context: Invoc
         // Get all users with their status
         const result = await pool.request()
             .query(`
-                SELECT 
+                SELECT
                     u.UserID as id,
                     u.Username as username,
                     u.Email as email,
                     u.ImageURL as imageUrl,
                     u.Is_Moderator as isModerator,
                     u.Is_Admin as isAdmin,
+                    u.UserStatusID as userStatusId,
                     u.Created as createdAt,
                     (SELECT COUNT(*) FROM Character c WHERE c.UserID = u.UserID) as characterCount,
                     (SELECT COUNT(*) FROM Character c WHERE c.UserID = u.UserID AND COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active') as activeCharacterCount
@@ -107,11 +108,12 @@ export async function getAllUsersWithStatus(request: HttpRequest, context: Invoc
                 ORDER BY u.Username
             `);
 
-        // Convert bit fields to booleans
+        // Convert bit fields to booleans and add isBanned
         const users = result.recordset.map(u => ({
             ...u,
             isModerator: u.isModerator === true || u.isModerator === 1,
-            isAdmin: u.isAdmin === true || u.isAdmin === 1
+            isAdmin: u.isAdmin === true || u.isAdmin === 1,
+            isBanned: u.userStatusId === 3
         }));
 
         return { status: 200, jsonBody: users };

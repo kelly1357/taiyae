@@ -45,11 +45,10 @@ export async function register(request: HttpRequest, context: InvocationContext)
             .input('PasswordHash', sql.VarChar, hashedPassword)
             .input('Auth_Provider', sql.NVarChar, 'email')
             .input('Created', sql.DateTime, new Date())
-            .input('Is_Active', sql.Bit, 1)
             .query(`
-                INSERT INTO [User] (Username, Email, PasswordHash, Auth_Provider, Created, Is_Active)
-                OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider
-                VALUES (@Username, @Email, @PasswordHash, @Auth_Provider, @Created, @Is_Active)
+                INSERT INTO [User] (Username, Email, PasswordHash, Auth_Provider, Created)
+                OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.UserStatusID
+                VALUES (@Username, @Email, @PasswordHash, @Auth_Provider, @Created)
             `);
 
         const user = result.recordset[0];
@@ -91,15 +90,29 @@ export async function login(request: HttpRequest, context: InvocationContext): P
             return { status: 401, body: "Invalid credentials" };
         }
 
+        // Check if user is banned
+        if (user.UserStatusID === 3) {
+            return {
+                status: 403,
+                jsonBody: {
+                    error: 'banned',
+                    message: 'Your account has been banned. Please contact staff if you believe this is an error.'
+                }
+            };
+        }
+
         const token = generateToken(user);
-        
+
         // Remove sensitive data
         delete user.PasswordHash;
 
         // Add isModerator and isAdmin fields based on database columns
         const isModerator = user.Is_Moderator === true || user.Is_Moderator === 1;
         const isAdmin = user.Is_Admin === true || user.Is_Admin === 1;
-        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member' };
+        // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
+        const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
+        const userStatus = statusMap[user.UserStatusID] || 'Joining';
+        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member', userStatus, userStatusId: user.UserStatusID };
 
         return {
             status: 200,
@@ -166,17 +179,23 @@ export async function googleLogin(request: HttpRequest, context: InvocationConte
                 .input('Email', sql.NVarChar, email)
                 .input('Auth_Provider', sql.NVarChar, 'google')
                 .input('Created', sql.DateTime, new Date())
-                .input('Is_Active', sql.Bit, 1)
                 .query(`
-                    INSERT INTO [User] (Username, Email, Auth_Provider, Created, Is_Active)
-                    OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider
-                    VALUES (@Username, @Email, @Auth_Provider, @Created, @Is_Active)
+                    INSERT INTO [User] (Username, Email, Auth_Provider, Created)
+                    OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.UserStatusID
+                    VALUES (@Username, @Email, @Auth_Provider, @Created)
                 `);
             user = insertResult.recordset[0];
         } else {
-            // Update auth provider if it was null or different? 
-            // For now, let's just respect the existing user.
-            // Maybe update Last_Login_IP if we had it.
+            // Check if existing user is banned
+            if (user.UserStatusID === 3) {
+                return {
+                    status: 403,
+                    jsonBody: {
+                        error: 'banned',
+                        message: 'Your account has been banned. Please contact staff if you believe this is an error.'
+                    }
+                };
+            }
         }
 
         const token = generateToken(user);
@@ -185,7 +204,10 @@ export async function googleLogin(request: HttpRequest, context: InvocationConte
         // Add isModerator and isAdmin fields based on database columns
         const isModerator = user.Is_Moderator === true || user.Is_Moderator === 1;
         const isAdmin = user.Is_Admin === true || user.Is_Admin === 1;
-        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member' };
+        // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
+        const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
+        const userStatus = statusMap[user.UserStatusID] || 'Joining';
+        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member', userStatus, userStatusId: user.UserStatusID };
 
         return {
             status: 200,
