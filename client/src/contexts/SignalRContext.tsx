@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
-import { useSignalR, NewConversationPayload } from '../hooks/useSignalR';
+import { useSignalR } from '../hooks/useSignalR';
+import type { NewConversationPayload } from '../hooks/useSignalR';
 import type { Message, User, Character } from '../types';
 
 interface SignalRContextValue {
