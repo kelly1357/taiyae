@@ -313,7 +313,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     <header className="bg-white/35 border-b border-white/20 relative z-20">
       <div className="max-w-[1325px] mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
         <div className="logo">
-          <Link to="/" className="header-link text-2xl md:text-4xl font-normal tracking-widest transition-colors" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>HORIZON</Link>
+          <Link to="/" className="logo-link text-2xl md:text-4xl font-normal tracking-widest transition-colors" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>HORIZON</Link>
         </div>
 
         {/* Mobile hamburger button */}
@@ -535,7 +535,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 </div>
               )}
               
-              <button onClick={onLogout} className="text-xs uppercase tracking-wide font-bold hover:text-white" style={{ color: 'black' }}>Logout</button>
+              <button onClick={onLogout} className="header-link text-xs uppercase tracking-wide font-bold">Logout</button>
             </div>
           ) : (
             <div className="space-x-4">

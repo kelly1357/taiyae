@@ -21,8 +21,32 @@ a {
 /* Header link styles */
 .header-link {
   color: black !important;
+  position: relative;
+  padding-bottom: 2px;
+}
+.header-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #374151, #6b7280);
+  transition: width 0.3s ease;
+}
+.header-link:hover::after {
+  width: 100%;
 }
 .header-link:hover {
+  color: #374151 !important;
+}
+
+/* Logo link styles */
+.logo-link {
+  color: black !important;
+  transition: color 0.2s ease;
+}
+.logo-link:hover {
   color: white !important;
 }
 
