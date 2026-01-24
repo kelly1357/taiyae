@@ -187,7 +187,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
     // Listen for SignalR real-time updates
     const handleSignalRNewMessage = () => {
-      // When we receive a new message via SignalR, refresh the unread counts
       fetchCount();
     };
     window.addEventListener('signalr:newMessage', handleSignalRNewMessage);

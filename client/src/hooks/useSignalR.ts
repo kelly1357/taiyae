@@ -51,9 +51,8 @@ export function useSignalR({
     // Build and manage connection
     useEffect(() => {
         if (!userId) return;
-
         const newConnection = new signalR.HubConnectionBuilder()
-            .withUrl('/api/negotiate', {
+            .withUrl('/api', {
                 headers: { 'x-user-id': String(userId) }
             })
             .withAutomaticReconnect({
@@ -72,28 +71,23 @@ export function useSignalR({
 
         // Set up event handlers
         newConnection.on('newMessage', (message: Message) => {
-            console.log('[SignalR] Received new message:', message);
             callbacksRef.current.onNewMessage?.(message);
         });
 
         newConnection.on('newConversation', (data: NewConversationPayload) => {
-            console.log('[SignalR] Received new conversation:', data);
             callbacksRef.current.onNewConversation?.(data);
         });
 
         newConnection.on('unreadCountUpdate', (data: { characterId: number; unreadCount: number }) => {
-            console.log('[SignalR] Received unread count update:', data);
             callbacksRef.current.onUnreadCountUpdate?.(data);
         });
 
         // Connection lifecycle handlers
-        newConnection.onreconnecting((error: Error | undefined) => {
-            console.log('[SignalR] Reconnecting...', error);
+        newConnection.onreconnecting(() => {
             setIsConnected(false);
         });
 
-        newConnection.onreconnected((connectionId: string | undefined) => {
-            console.log('[SignalR] Reconnected with id:', connectionId);
+        newConnection.onreconnected(() => {
             setIsConnected(true);
             // Rejoin all groups after reconnection
             currentGroupsRef.current.forEach(characterId => {
@@ -101,27 +95,22 @@ export function useSignalR({
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ characterId, userId: String(userId) })
-                }).catch(err => console.error('[SignalR] Failed to rejoin group:', err));
+                }).catch(() => {});
             });
         });
 
-        newConnection.onclose((error: Error | undefined) => {
-            console.log('[SignalR] Connection closed', error);
+        newConnection.onclose(() => {
             setIsConnected(false);
         });
 
         // Start connection
         newConnection.start()
             .then(() => {
-                console.log('[SignalR] Connected successfully');
                 setIsConnected(true);
             })
-            .catch((err: Error) => {
-                console.error('[SignalR] Connection error:', err);
-            });
+            .catch(() => {});
 
         return () => {
-            console.log('[SignalR] Stopping connection...');
             newConnection.stop();
         };
     }, [userId]);

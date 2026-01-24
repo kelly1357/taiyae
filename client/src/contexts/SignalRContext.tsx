@@ -50,7 +50,6 @@ export function SignalRProvider({
     useEffect(() => {
         if (!isConnected || !userCharacters.length) return;
 
-        // Join groups for all characters owned by this user
         userCharacters.forEach(char => {
             joinCharacterGroup(Number(char.id));
         });
