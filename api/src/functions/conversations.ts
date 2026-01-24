@@ -1,6 +1,13 @@
-import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+
+// SignalR output binding for broadcasting messages
+const signalROutput = output.generic({
+    type: 'signalR',
+    name: 'signalRMessages',
+    hubName: 'messaging',
+});
 
 // GET /api/conversations?characterId={id} - Get all conversations for a character
 export async function getConversations(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -139,8 +146,9 @@ export async function createConversation(request: HttpRequest, context: Invocati
                 .query(checkQuery);
 
             let conversationId;
+            const isNewConversation = checkResult.recordset.length === 0;
 
-            if (checkResult.recordset.length > 0) {
+            if (!isNewConversation) {
                 // Conversation exists, use it
                 conversationId = checkResult.recordset[0].conversationId;
             } else {
@@ -162,7 +170,7 @@ export async function createConversation(request: HttpRequest, context: Invocati
             // Insert the initial message
             const insertMessageQuery = `
                 INSERT INTO Message (ConversationID, CharacterID, Body, Created)
-                OUTPUT INSERTED.MessageID
+                OUTPUT INSERTED.MessageID, INSERTED.Created
                 VALUES (@conversationId, @characterId, @body, GETDATE())
             `;
 
@@ -174,10 +182,54 @@ export async function createConversation(request: HttpRequest, context: Invocati
 
             await transaction.commit();
 
+            const messageId = messageResult.recordset[0].MessageID;
+            const messageCreated = messageResult.recordset[0].Created;
+
+            // Get sender character info for the real-time notification
+            const senderQuery = `
+                SELECT CharacterName, AvatarImage
+                FROM Character
+                WHERE CharacterID = @characterId
+            `;
+            const senderResult = await pool.request()
+                .input('characterId', sql.Int, parseInt(fromCharacterId))
+                .query(senderQuery);
+
+            const sender = senderResult.recordset[0];
+
+            // Broadcast to recipient via SignalR
+            context.extraOutputs.set(signalROutput, [{
+                target: isNewConversation ? 'newConversation' : 'newMessage',
+                groupName: `character-${toCharacterId}`,
+                arguments: [isNewConversation ? {
+                    conversationId,
+                    fromCharacterId: parseInt(fromCharacterId),
+                    toCharacterId: parseInt(toCharacterId),
+                    fromCharacterName: sender?.CharacterName,
+                    fromCharacterImageUrl: sender?.AvatarImage,
+                    initialMessage: {
+                        messageId,
+                        body: initialMessage,
+                        created: messageCreated,
+                        characterId: parseInt(fromCharacterId),
+                        characterName: sender?.CharacterName,
+                        characterImageUrl: sender?.AvatarImage,
+                    }
+                } : {
+                    messageId,
+                    conversationId,
+                    characterId: parseInt(fromCharacterId),
+                    body: initialMessage,
+                    created: messageCreated,
+                    characterName: sender?.CharacterName,
+                    characterImageUrl: sender?.AvatarImage,
+                }]
+            }]);
+
             return {
                 jsonBody: {
                     conversationId: conversationId,
-                    messageId: messageResult.recordset[0].MessageID
+                    messageId
                 }
             };
         } catch (error) {
@@ -225,6 +277,11 @@ export async function sendMessage(request: HttpRequest, context: InvocationConte
             return { status: 403, body: "Character is not part of this conversation" };
         }
 
+        // Determine the recipient character ID
+        const recipientCharacterId = conversation.FromCharacterID === charId
+            ? conversation.ToCharacterID
+            : conversation.FromCharacterID;
+
         // Insert the message
         const insertQuery = `
             INSERT INTO Message (ConversationID, CharacterID, Body, Created)
@@ -238,10 +295,42 @@ export async function sendMessage(request: HttpRequest, context: InvocationConte
             .input('body', sql.NVarChar(sql.MAX), message)
             .query(insertQuery);
 
+        const messageId = result.recordset[0].MessageID;
+        const created = result.recordset[0].Created;
+
+        // Get sender character info for the real-time message
+        const senderQuery = `
+            SELECT CharacterName, AvatarImage
+            FROM Character
+            WHERE CharacterID = @characterId
+        `;
+        const senderResult = await pool.request()
+            .input('characterId', sql.Int, charId)
+            .query(senderQuery);
+
+        const sender = senderResult.recordset[0];
+
+        // Broadcast new message to recipient's character group via SignalR
+        const newMessagePayload = {
+            messageId,
+            conversationId: parseInt(conversationId),
+            characterId: charId,
+            body: message,
+            created,
+            characterName: sender?.CharacterName,
+            characterImageUrl: sender?.AvatarImage,
+        };
+
+        context.extraOutputs.set(signalROutput, [{
+            target: 'newMessage',
+            groupName: `character-${recipientCharacterId}`,
+            arguments: [newMessagePayload]
+        }]);
+
         return {
             jsonBody: {
-                messageId: result.recordset[0].MessageID,
-                created: result.recordset[0].Created
+                messageId,
+                created
             }
         };
     } catch (error) {
@@ -370,6 +459,7 @@ app.http('createConversation', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'conversations',
+    extraOutputs: [signalROutput],
     handler: createConversation
 });
 
@@ -377,6 +467,7 @@ app.http('sendMessage', {
     methods: ['POST'],
     authLevel: 'anonymous',
     route: 'conversations/{conversationId}/messages',
+    extraOutputs: [signalROutput],
     handler: sendMessage
 });
 

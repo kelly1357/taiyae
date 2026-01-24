@@ -20,6 +20,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 - **Azure Functions**: Serverless compute (Node.js v4)
 - **Azure SQL Database**: Relational database (MSSQL)
 - **Azure Blob Storage**: Containerized file hosting for images and videos
+- **SignalR**: Real-time messaging using a server-first approach
 
 ### Infrastructure
 - **Azure Static Web Apps**: Hosting and CI/CD
@@ -107,6 +108,8 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 ✅  Notifications
 
 ✅  User DMing
+
+✅  Implement SignalR for real-time messaging
 
 ## Authors
 

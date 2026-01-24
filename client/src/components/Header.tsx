@@ -176,19 +176,27 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
       }
     };
 
+    // Initial fetch
     fetchCount();
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchCount, 60000);
 
-    // Listen for conversation read events
+    // Listen for conversation read events (local updates)
     const handleConversationRead = () => {
       fetchCount();
     };
     window.addEventListener('conversationRead', handleConversationRead);
 
+    // Listen for SignalR real-time updates
+    const handleSignalRNewMessage = () => {
+      // When we receive a new message via SignalR, refresh the unread counts
+      fetchCount();
+    };
+    window.addEventListener('signalr:newMessage', handleSignalRNewMessage);
+    window.addEventListener('signalr:newConversation', handleSignalRNewMessage);
+
     return () => {
-      clearInterval(interval);
       window.removeEventListener('conversationRead', handleConversationRead);
+      window.removeEventListener('signalr:newMessage', handleSignalRNewMessage);
+      window.removeEventListener('signalr:newConversation', handleSignalRNewMessage);
     };
   }, [user, location.pathname]);
 

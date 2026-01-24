@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { BackgroundProvider } from './contexts/BackgroundContext';
+import { SignalRProvider } from './contexts/SignalRContext';
 import Layout from './components/Layout';
 import ScrollToTop from './components/ScrollToTop';
 import { useUser } from './contexts/UserContext';
@@ -208,6 +209,7 @@ const App: React.FC = () => {
 
   return (
     <BackgroundProvider>
+    <SignalRProvider user={user} userCharacters={userCharacters}>
     <ScrollToTop />
     <Routes>
       <Route path="/" element={
@@ -283,6 +285,7 @@ const App: React.FC = () => {
         <Route path="*" element={<div className="text-center mt-20">Page not found</div>} />
       </Route>
     </Routes>
+    </SignalRProvider>
     </BackgroundProvider>
   );
 };

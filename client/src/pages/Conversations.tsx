@@ -147,22 +147,58 @@ const Conversations: React.FC = () => {
     }
   }, [selectedConversationId, activeCharacter]);
 
-  // TODO: Optimize message polling - currently disabled to reduce API hits
-  // Poll for new messages
-  // useEffect(() => {
-  //   if (selectedConversationId && activeCharacter) {
-  //     // Poll every 5 seconds for new messages
-  //     pollingIntervalRef.current = window.setInterval(() => {
-  //       fetchMessages(parseInt(selectedConversationId, 10), true);
-  //     }, 5000);
+  // Handle real-time messages via SignalR
+  useEffect(() => {
+    const handleNewMessage = (event: CustomEvent<Message>) => {
+      const newMsg = event.detail;
 
-  //     return () => {
-  //       if (pollingIntervalRef.current) {
-  //         clearInterval(pollingIntervalRef.current);
-  //       }
-  //     };
-  //   }
-  // }, [selectedConversationId, activeCharacter]);
+      // If this message is for the current conversation, add it to messages
+      if (selectedConversationId && newMsg.conversationId === parseInt(selectedConversationId, 10)) {
+        setMessages(prev => {
+          // Avoid duplicates
+          if (prev.some(m => m.messageId === newMsg.messageId)) {
+            return prev;
+          }
+          return [...prev, newMsg];
+        });
+
+        // Scroll to bottom
+        setTimeout(() => {
+          if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+          }
+        }, 100);
+
+        // Mark as read since we're viewing it
+        if (activeCharacter) {
+          fetch(`/api/conversations/${newMsg.conversationId}/mark-read`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ characterId: activeCharacter.id }),
+          }).catch(err => console.error('Failed to mark as read:', err));
+
+          // Dispatch event to update header badge
+          window.dispatchEvent(new CustomEvent('conversationRead'));
+        }
+      }
+
+      // Refresh conversations list to update last message preview
+      fetchConversations();
+    };
+
+    const handleNewConversation = () => {
+      // Refresh conversations list when a new conversation starts
+      fetchConversations();
+    };
+
+    window.addEventListener('signalr:newMessage', handleNewMessage as EventListener);
+    window.addEventListener('signalr:newConversation', handleNewConversation as EventListener);
+
+    return () => {
+      window.removeEventListener('signalr:newMessage', handleNewMessage as EventListener);
+      window.removeEventListener('signalr:newConversation', handleNewConversation as EventListener);
+    };
+  }, [selectedConversationId, activeCharacter]);
 
   // Send message
   const handleSendMessage = async (e: React.FormEvent) => {
