@@ -175,12 +175,13 @@ async function banUser(request: HttpRequest, context: InvocationContext): Promis
         const pool = await getPool();
 
         // Update the user status to Banned (3) - only if not already banned
+        // Handle NULL UserStatusID values (treat as not banned)
         const result = await pool.request()
             .input('userId', sql.Int, parseInt(userId))
             .query(`
                 UPDATE [User]
                 SET UserStatusID = 3
-                WHERE UserID = @userId AND UserStatusID != 3
+                WHERE UserID = @userId AND (UserStatusID IS NULL OR UserStatusID != 3)
             `);
 
         if (result.rowsAffected[0] === 0) {
