@@ -330,7 +330,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               <DropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
                   Character Status
-                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
+                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </DropdownLink>
               <DropdownLink to="/admin/homepage">
@@ -342,13 +342,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               <DropdownLink to="/admin/staff-pings">
                 <span className="flex items-center justify-between w-full">
                   Staff Pings
-                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
                 </span>
               </DropdownLink>
               <DropdownLink to="/admin/user-approvals">
                 <span className="flex items-center justify-between w-full">
                   User Approvals
-                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
+                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
                 </span>
               </DropdownLink>
             </NavDropdown>
@@ -552,7 +552,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               <MobileDropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
                   Character Status
-                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-yellow-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
+                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </MobileDropdownLink>
               <MobileDropdownLink to="/admin/homepage">
@@ -564,13 +564,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               <MobileDropdownLink to="/admin/staff-pings">
                 <span className="flex items-center justify-between w-full">
                   Staff Pings
-                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
                 </span>
               </MobileDropdownLink>
               <MobileDropdownLink to="/admin/user-approvals">
                 <span className="flex items-center justify-between w-full">
                   User Approvals
-                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-blue-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
+                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
                 </span>
               </MobileDropdownLink>
             </MobileNavSection>

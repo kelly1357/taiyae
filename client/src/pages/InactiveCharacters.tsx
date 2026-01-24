@@ -600,7 +600,7 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
             <span className="hidden sm:inline">Pending (30+ days)</span>
             <span className="sm:hidden">Pending</span>
             {charactersToInactivate.length > 0 && (
-              <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs rounded-full">
+              <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full">
                 {charactersToInactivate.length}
               </span>
             )}

@@ -35,7 +35,7 @@ async function getPendingUserApprovals(request: HttpRequest, context: Invocation
                 u.ImageURL,
                 us.StatusName as UserStatus
             FROM [User] u
-            INNER JOIN UserStatus us ON u.UserStatusID = us.UserStatusID
+            INNER JOIN UserStatus us ON u.UserStatusID = us.StatusID
             WHERE u.UserStatusID = 1
             ORDER BY u.Created DESC
         `);
@@ -204,6 +204,40 @@ async function banUser(request: HttpRequest, context: InvocationContext): Promis
     }
 }
 
+// GET: Get all users with Joining or Joined status (for toggle view)
+async function getJoiningAndJoinedUsers(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+
+        const result = await pool.request().query(`
+            SELECT
+                u.UserID,
+                u.Username,
+                u.Email,
+                u.Created,
+                u.Auth_Provider as AuthProvider,
+                u.ImageURL,
+                us.StatusName as UserStatus,
+                us.StatusID as UserStatusID
+            FROM [User] u
+            INNER JOIN UserStatus us ON u.UserStatusID = us.StatusID
+            WHERE u.UserStatusID IN (1, 2)
+            ORDER BY u.UserStatusID ASC, u.Created DESC
+        `);
+
+        return {
+            status: 200,
+            jsonBody: result.recordset
+        };
+    } catch (error) {
+        context.error('Error fetching users:', error);
+        return {
+            status: 500,
+            body: 'Failed to fetch users'
+        };
+    }
+}
+
 // POST: Unban a user (change status from Banned to Joined)
 async function unbanUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
@@ -289,4 +323,11 @@ app.http('unbanUser', {
     authLevel: 'anonymous',
     route: 'user-approval/unban/{userId}',
     handler: unbanUser
+});
+
+app.http('getJoiningAndJoinedUsers', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'user-approval/all',
+    handler: getJoiningAndJoinedUsers
 });

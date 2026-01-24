@@ -10,6 +10,7 @@ interface PendingUser {
   AuthProvider: string;
   ImageURL: string | null;
   UserStatus: string;
+  UserStatusID?: number;
 }
 
 interface UserWithStatus {
@@ -47,13 +48,15 @@ const UserApprovalsAdmin: React.FC = () => {
   const [userSortDirection, setUserSortDirection] = useState<SortDirection>('asc');
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
   const isModerator = user?.isModerator || user?.isAdmin;
   const isAdmin = user?.isAdmin;
 
-  const fetchPendingUsers = async () => {
+  const fetchPendingUsers = async (includeJoined: boolean = false) => {
     try {
-      const response = await fetch('/api/user-approval');
+      const endpoint = includeJoined ? '/api/user-approval/all' : '/api/user-approval';
+      const response = await fetch(endpoint);
       if (response.ok) {
         const data = await response.json();
         setPendingUsers(data);
@@ -90,8 +93,8 @@ const UserApprovalsAdmin: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPendingUsers();
-  }, []);
+    fetchPendingUsers(showAllUsers);
+  }, [showAllUsers]);
 
   // Fetch users when admin tab is selected
   useEffect(() => {
@@ -197,7 +200,7 @@ const UserApprovalsAdmin: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchPendingUsers();
+        fetchPendingUsers(showAllUsers);
       }
     } catch (error) {
       console.error('Error approving user:', error);
@@ -218,7 +221,7 @@ const UserApprovalsAdmin: React.FC = () => {
       });
 
       if (response.ok) {
-        fetchPendingUsers();
+        fetchPendingUsers(showAllUsers);
       }
     } catch (error) {
       console.error('Error rejecting user:', error);
@@ -348,7 +351,7 @@ const UserApprovalsAdmin: React.FC = () => {
               <span className="hidden sm:inline">User Approvals</span>
               <span className="sm:hidden">Approvals</span>
               {pendingUsers.length > 0 && (
-                <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-blue-200 text-blue-800 text-xs rounded-full">
+                <span className="ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 bg-red-200 text-red-800 text-xs rounded-full">
                   {pendingUsers.length}
                 </span>
               )}
@@ -371,66 +374,101 @@ const UserApprovalsAdmin: React.FC = () => {
           {/* User Approvals Tab */}
           {activeTab === 'approvals' && (
             <div className="mt-4">
+              {/* Toggle for showing all users */}
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={showAllUsers}
+                      onChange={(e) => setShowAllUsers(e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`w-10 h-6 rounded-full transition-colors ${showAllUsers ? 'bg-[#2f3a2f]' : 'bg-gray-300'}`}>
+                      <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showAllUsers ? 'translate-x-4' : ''}`} />
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-700">Show all users (Joining + Joined)</span>
+                </label>
+                {showAllUsers && (
+                  <span className="text-xs text-gray-500">
+                    {pendingUsers.filter(u => u.UserStatusID === 1).length} pending, {pendingUsers.filter(u => u.UserStatusID === 2).length} joined
+                  </span>
+                )}
+              </div>
+
               {loading ? (
                 <p className="text-gray-500 text-center py-8">Loading...</p>
               ) : pendingUsers.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No pending user approvals!</p>
+                <p className="text-gray-500 text-center py-8">{showAllUsers ? 'No users found!' : 'No pending user approvals!'}</p>
               ) : (
                 <div className="space-y-3">
-                  {pendingUsers.map(pendingUser => (
-                    <div key={pendingUser.UserID} className="border border-blue-200 bg-blue-50">
-                      <div className="px-4 py-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            {pendingUser.ImageURL ? (
-                              <img
-                                src={pendingUser.ImageURL}
-                                alt={pendingUser.Username}
-                                className="w-10 h-10 object-cover border border-gray-300"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-200 border border-gray-300 flex items-center justify-center">
-                                <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
+                  {pendingUsers.map(pendingUser => {
+                    const isJoined = pendingUser.UserStatusID === 2;
+                    return (
+                      <div key={pendingUser.UserID} className="border border-gray-200 bg-gray-50">
+                        <div className="px-4 py-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                              {pendingUser.ImageURL ? (
+                                <img
+                                  src={pendingUser.ImageURL}
+                                  alt={pendingUser.Username}
+                                  className="w-10 h-10 object-cover border border-gray-300"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 bg-gray-200 border border-gray-300 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                  </svg>
+                                </div>
+                              )}
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-900">{pendingUser.Username}</span>
+                                  <span className="text-xs px-1.5 py-0.5 rounded bg-red-200 text-red-800">
+                                    {isJoined ? 'Joined' : 'Joining'}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-500">{pendingUser.Email}</div>
                               </div>
-                            )}
-                            <div>
-                              <div className="font-medium text-gray-900">{pendingUser.Username}</div>
-                              <div className="text-xs text-gray-500">{pendingUser.Email}</div>
+                            </div>
+                            <div className="flex gap-1">
+                              {!isJoined && (
+                                <>
+                                  <button
+                                    onClick={() => handleApprove(pendingUser.UserID)}
+                                    disabled={processingId === pendingUser.UserID}
+                                    className="text-xs px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+                                  >
+                                    {processingId === pendingUser.UserID ? 'Processing...' : 'Approve'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleReject(pendingUser.UserID, pendingUser.Username)}
+                                    disabled={processingId === pendingUser.UserID}
+                                    className="text-xs px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
                             </div>
                           </div>
-                          <div className="flex gap-1">
-                            <button
-                              onClick={() => handleApprove(pendingUser.UserID)}
-                              disabled={processingId === pendingUser.UserID}
-                              className="text-xs px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-                            >
-                              {processingId === pendingUser.UserID ? 'Processing...' : 'Approve'}
-                            </button>
-                            <button
-                              onClick={() => handleReject(pendingUser.UserID, pendingUser.Username)}
-                              disabled={processingId === pendingUser.UserID}
-                              className="text-xs px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        </div>
 
-                        <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-gray-500 flex gap-4">
-                          <div>
-                            <span className="font-medium">Registered: </span>
-                            {formatDate(pendingUser.Created)}
-                          </div>
-                          <div>
-                            <span className="font-medium">Auth: </span>
-                            {pendingUser.AuthProvider === 'google' ? 'Google' : 'Email'}
+                          <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500 flex gap-4">
+                            <div>
+                              <span className="font-medium">Registered: </span>
+                              {formatDate(pendingUser.Created)}
+                            </div>
+                            <div>
+                              <span className="font-medium">Auth: </span>
+                              {pendingUser.AuthProvider === 'google' ? 'Google' : 'Email'}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

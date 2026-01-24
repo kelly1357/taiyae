@@ -73,11 +73,13 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [ ] Create subareas within regions
 
-[ ] Moderator actions (approving new users, deactivating accounts, creating packs)
+✅ Moderator actions (approving new users)
+
+✅ Admin actions: account banning )
 
 [ ] Hierarchy management
 
-[ ] Pack management/function
+[ ] Pack management/function / creating packs
 
 [ ] Discord integration
 
