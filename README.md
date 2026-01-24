@@ -69,7 +69,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### Backend updates
 
-[ ] User Status: Active, Joining, Banned
+✅ User Status: Active, Joining, Banned
 
 [ ] Create subareas within regions
 
