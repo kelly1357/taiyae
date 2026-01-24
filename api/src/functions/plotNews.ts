@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
+import { verifyAuth, verifyStaffAuth } from "../auth";
 import * as sql from 'mssql';
 
 // SignalR output binding for broadcasting admin count updates
@@ -21,6 +22,12 @@ async function getCurrentPendingCount(): Promise<number> {
 // POST /api/plot-news
 // Submit a new plot news item
 export async function submitPlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify user is authenticated
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as {
             packName: string;
@@ -193,6 +200,12 @@ app.http('getAllApprovedPlotNews', {
 // GET /api/plot-news/pending
 // Get pending plot news submissions (for admin page)
 export async function getPendingPlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         const result = await pool.request()
@@ -232,6 +245,12 @@ app.http('getPendingPlotNews', {
 // GET /api/plot-news/pending/count
 // Get count of pending plot news (for notification badge)
 export async function getPendingPlotNewsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         const result = await pool.request()
@@ -261,6 +280,12 @@ app.http('getPendingPlotNewsCount', {
 // POST /api/plot-news/approve
 // Approve a plot news item
 export async function approvePlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as {
             plotNewsId: number;
@@ -314,6 +339,12 @@ app.http('approvePlotNews', {
 // PUT /api/plot-news/:id
 // Update a plot news item (edit pack, text, URL before approving)
 export async function updatePlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const plotNewsId = request.params.id;
         const body = await request.json() as {
@@ -369,6 +400,12 @@ app.http('updatePlotNews', {
 // DELETE /api/plot-news/:id
 // Delete a plot news item
 export async function deletePlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const plotNewsId = request.params.id;
 

@@ -34,7 +34,10 @@ const StaffPingsAdmin: React.FC = () => {
 
   const fetchPings = async () => {
     try {
-      const response = await fetch(`/api/staff-pings/list?showResolved=${showResolved}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/staff-pings/list?showResolved=${showResolved}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setPings(data);
@@ -54,9 +57,13 @@ const StaffPingsAdmin: React.FC = () => {
     if (!user) return;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/staff-pings/${pingId}/resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           resolvedByUserId: user.id,
           resolutionNote: resolutionNote.trim() || null
@@ -75,8 +82,10 @@ const StaffPingsAdmin: React.FC = () => {
 
   const handleUnresolve = async (pingId: number) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/staff-pings/${pingId}/unresolve`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
@@ -91,8 +100,10 @@ const StaffPingsAdmin: React.FC = () => {
     if (!confirm('Are you sure you want to permanently delete this ping?')) return;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/staff-pings/${pingId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {

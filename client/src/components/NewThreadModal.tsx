@@ -34,11 +34,12 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Replace with your actual API call
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/threads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           regionId,

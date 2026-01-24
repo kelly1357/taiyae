@@ -30,7 +30,10 @@ const SkillPointsApproval: React.FC = () => {
 
   const fetchAssignments = async () => {
     try {
-      const response = await fetch('/api/skill-points-approval');
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/skill-points-approval', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setAssignments(data);
@@ -49,9 +52,13 @@ const SkillPointsApproval: React.FC = () => {
   const handleApprove = async (assignmentId: number) => {
     setApproving(assignmentId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/skill-points-approval/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ assignmentId })
       });
       
@@ -72,8 +79,10 @@ const SkillPointsApproval: React.FC = () => {
   const handleReject = async (assignmentId: number) => {
     setRejecting(assignmentId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/skill-points-approval/${assignmentId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {

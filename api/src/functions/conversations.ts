@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { verifyAuth, verifyCharacterOwnershipOrStaff } from "../auth";
 
 // SignalR output binding for broadcasting messages
 const signalROutput = output.generic({
@@ -15,6 +16,12 @@ export async function getConversations(request: HttpRequest, context: Invocation
 
     if (!characterId) {
         return { status: 400, body: "characterId is required" };
+    }
+
+    // Verify user owns this character or is staff
+    const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(characterId));
+    if (!auth.authorized) {
+        return auth.error!;
     }
 
     try {
@@ -74,6 +81,12 @@ export async function getConversations(request: HttpRequest, context: Invocation
 
 // GET /api/conversations/{conversationId}/messages - Get all messages in a conversation
 export async function getMessages(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify basic authentication first
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const conversationId = request.params.conversationId;
 
     if (!conversationId) {
@@ -82,6 +95,22 @@ export async function getMessages(request: HttpRequest, context: InvocationConte
 
     try {
         const pool = await getPool();
+
+        // Verify user owns one of the characters in this conversation (or is staff)
+        if (!auth.isAdmin && !auth.isModerator) {
+            const ownershipCheck = await pool.request()
+                .input('conversationId', sql.Int, parseInt(conversationId))
+                .input('userId', sql.Int, auth.userId)
+                .query(`
+                    SELECT 1 FROM Conversation c
+                    INNER JOIN Character ch ON ch.CharacterID = c.FromCharacterID OR ch.CharacterID = c.ToCharacterID
+                    WHERE c.ConversationID = @conversationId AND ch.UserID = @userId
+                `);
+
+            if (ownershipCheck.recordset.length === 0) {
+                return { status: 403, jsonBody: { error: 'You do not have access to this conversation' } };
+            }
+        }
 
         const query = `
             SELECT
@@ -119,6 +148,12 @@ export async function createConversation(request: HttpRequest, context: Invocati
 
         if (!fromCharacterId || !toCharacterId || !initialMessage) {
             return { status: 400, body: "fromCharacterId, toCharacterId, and initialMessage are required" };
+        }
+
+        // Verify user owns the "from" character (they can only send as their own character)
+        const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(fromCharacterId));
+        if (!auth.authorized) {
+            return auth.error!;
         }
 
         // Ensure fromCharacterId and toCharacterId are different
@@ -253,6 +288,12 @@ export async function sendMessage(request: HttpRequest, context: InvocationConte
             return { status: 400, body: "conversationId, characterId, and message are required" };
         }
 
+        // Verify user owns this character (they can only send as their own character)
+        const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(characterId));
+        if (!auth.authorized) {
+            return auth.error!;
+        }
+
         const pool = await getPool();
 
         // Verify the character is part of this conversation
@@ -350,6 +391,12 @@ export async function markConversationRead(request: HttpRequest, context: Invoca
             return { status: 400, body: "conversationId and characterId are required" };
         }
 
+        // Verify user owns this character
+        const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(characterId));
+        if (!auth.authorized) {
+            return auth.error!;
+        }
+
         const pool = await getPool();
 
         // Update the appropriate LastSeen timestamp
@@ -377,10 +424,21 @@ export async function markConversationRead(request: HttpRequest, context: Invoca
 
 // GET /api/conversations/unread-counts?userId={id} - Get unread message counts for all characters belonging to a user
 export async function getUnreadCountsByCharacter(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const userId = request.query.get('userId');
 
     if (!userId) {
         return { status: 400, body: "userId is required" };
+    }
+
+    // Users can only get their own unread counts (staff can access any)
+    if (!auth.isAdmin && !auth.isModerator && auth.userId !== parseInt(userId)) {
+        return { status: 403, jsonBody: { error: 'You can only access your own unread counts' } };
     }
 
     try {

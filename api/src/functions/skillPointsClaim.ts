@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { verifyCharacterOwnershipOrStaff, verifyStaffAuth } from "../auth";
 
 // POST /api/skill-points-claim
 // Submit skill point claims for a character on a thread
@@ -11,6 +12,12 @@ export async function submitSkillPointsClaim(request: HttpRequest, context: Invo
 
         if (!characterId || !threadId || !skillPointIds || !Array.isArray(skillPointIds) || skillPointIds.length === 0) {
             return { status: 400, body: "characterId, threadId, and skillPointIds array are required" };
+        }
+
+        // Verify user owns this character
+        const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(characterId));
+        if (!auth.authorized) {
+            return auth.error!;
         }
 
         const pool = await getPool();
@@ -86,6 +93,12 @@ export async function getSkillPointsClaims(request: HttpRequest, context: Invoca
 
         if (!characterId || !threadId) {
             return { status: 400, body: "characterId and threadId are required" };
+        }
+
+        // Verify user owns this character or is staff
+        const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(characterId));
+        if (!auth.authorized) {
+            return auth.error!;
         }
 
         const pool = await getPool();
@@ -180,34 +193,20 @@ app.http('getCharacterSkillPoints', {
 // POST /api/skill-points-undo/:assignmentId
 // Undo an approved skill point claim - reverses points and sets back to pending (moderator only)
 export async function undoSkillPointApproval(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const assignmentId = request.params.assignmentId;
-        const body = await request.json() as any;
-        const { userId } = body;
 
         if (!assignmentId) {
             return { status: 400, body: "assignmentId is required" };
         }
 
-        if (!userId) {
-            return { status: 400, body: "userId is required" };
-        }
-
         const pool = await getPool();
-
-        // Verify the user is a moderator or admin
-        const modCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(userId))
-            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-        
-        if (modCheck.recordset.length === 0) {
-            return { status: 404, body: "User not found" };
-        }
-        
-        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-        if (!isModerator) {
-            return { status: 403, body: "Only moderators can undo skill point approvals" };
-        }
 
         // Get the assignment details
         const assignmentResult = await pool.request()

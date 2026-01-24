@@ -54,8 +54,11 @@ export default function AchievementAdmin() {
   async function loadData() {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const [requestsRes, achievementsRes] = await Promise.all([
-        fetch('/api/achievements/requests/pending'),
+        fetch('/api/achievements/requests/pending', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
         fetch('/api/achievements')
       ]);
 
@@ -73,9 +76,13 @@ export default function AchievementAdmin() {
 
     setProcessingId(requestId);
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/achievements/requests/${requestId}/approve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ moderatorUserId: moderatorId })
       });
 
@@ -97,12 +104,16 @@ export default function AchievementAdmin() {
 
     setProcessingId(rejectRequest.RequestID);
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/achievements/requests/${rejectRequest.RequestID}/reject`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
           moderatorUserId: moderatorId,
-          reviewNote: rejectNote 
+          reviewNote: rejectNote
         })
       });
 
@@ -137,9 +148,13 @@ export default function AchievementAdmin() {
 
     setIsAwarding(true);
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/achievements/award', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           userId: parseInt(awardUserId),
           achievementId: parseInt(awardAchievementId),

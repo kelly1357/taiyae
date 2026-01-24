@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { verifyStaffAuth } from "../auth";
 
 // GET /api/sitewide-updates - Get sitewide updates (with pagination)
 export async function getSitewideUpdates(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -44,19 +45,25 @@ export async function getSitewideUpdates(request: HttpRequest, context: Invocati
 
 // POST /api/sitewide-updates - Create a new sitewide update
 export async function createSitewideUpdate(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as any;
-        const { content, userId } = body;
+        const { content } = body;
 
         if (!content) {
             return { status: 400, body: "Content is required" };
         }
 
         const pool = await getPool();
-        
+
         const result = await pool.request()
             .input('content', sql.NVarChar(sql.MAX), content)
-            .input('userId', sql.Int, userId || null)
+            .input('userId', sql.Int, auth.userId)
             .query(`
                 INSERT INTO SitewideUpdates (Content, CreatedByUserID)
                 OUTPUT INSERTED.UpdateID, INSERTED.Content, INSERTED.CreatedAt, INSERTED.CreatedByUserID
@@ -72,6 +79,12 @@ export async function createSitewideUpdate(request: HttpRequest, context: Invoca
 
 // DELETE /api/sitewide-updates/:id - Delete a sitewide update
 export async function deleteSitewideUpdate(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const id = request.params.id;
 
@@ -80,7 +93,7 @@ export async function deleteSitewideUpdate(request: HttpRequest, context: Invoca
         }
 
         const pool = await getPool();
-        
+
         await pool.request()
             .input('id', sql.Int, parseInt(id))
             .query('DELETE FROM SitewideUpdates WHERE UpdateID = @id');

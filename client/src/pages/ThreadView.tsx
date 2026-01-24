@@ -390,7 +390,10 @@ const ThreadView: React.FC = () => {
   const fetchExistingClaims = async () => {
     if (!threadId || !activeCharacter) return;
     try {
-      const response = await fetch(`/api/skill-points-claim?characterId=${activeCharacter.id}&threadId=${threadId}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/skill-points-claim?characterId=${activeCharacter.id}&threadId=${threadId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setExistingClaims(data);
@@ -429,12 +432,16 @@ const ThreadView: React.FC = () => {
   // Save thread title/subheader
   const handleSaveThread = async () => {
     if (!editTitle.trim()) return;
-    
+
     setIsSavingThread(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/threads/${threadId}/details`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           title: editTitle.trim(),
           subheader: editSubheader.trim() || null
@@ -483,9 +490,13 @@ const ThreadView: React.FC = () => {
 
     setIsPosting(true);
     try {
+        const token = localStorage.getItem('token');
         const response = await fetch(`/api/threads/${threadId}/replies`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({
                 content: replyContent,
                 authorId: isOOC ? user!.id : activeCharacter!.id
@@ -522,9 +533,13 @@ const ThreadView: React.FC = () => {
     const isOOCEdit = thread && thread.oocForumId && !thread.originalRegionId;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/posts/${postId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           content: editContent,
           // Use user ID for OOC forums, character ID for roleplay
@@ -548,12 +563,16 @@ const ThreadView: React.FC = () => {
 
   const handleDeletePost = async () => {
     if (!showDeleteConfirm || (!activeCharacter && !user)) return;
-    
+
     setIsDeleting(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/posts/${showDeleteConfirm}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           characterId: activeCharacter?.id,
           userId: user?.id,
@@ -578,13 +597,17 @@ const ThreadView: React.FC = () => {
 
   const handleArchive = async () => {
     if (!threadId || !user) return;
-    
+
     setIsArchiving(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/threads/${threadId}/archive`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
           userId: user.id,
           isModerator: user.isModerator || user.isAdmin
         })
@@ -607,12 +630,16 @@ const ThreadView: React.FC = () => {
 
   const handleDeleteThread = async () => {
     if (!threadId || !user) return;
-    
+
     setIsDeletingThread(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/threads/${threadId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user.id })
       });
       
@@ -640,12 +667,16 @@ const ThreadView: React.FC = () => {
 
   const handleUnarchive = async () => {
     if (!threadId || !user) return;
-    
+
     setIsUnarchiving(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/threads/${threadId}/unarchive`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user.id })
       });
       
@@ -698,9 +729,13 @@ const ThreadView: React.FC = () => {
     
     setIsSubmittingClaim(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/skill-points-claim', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           characterId: activeCharacter.id,
           threadId: parseInt(threadId),

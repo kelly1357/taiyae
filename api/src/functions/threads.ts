@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { verifyAuth, verifyStaffAuth, verifyCharacterOwnershipOrStaff } from "../auth";
 
 export async function getThreads(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const regionId = request.query.get('regionId');
@@ -100,6 +101,24 @@ export async function createThread(request: HttpRequest, context: InvocationCont
             return { status: 400, body: "Missing required fields" };
         }
 
+        // For region threads, verify user owns the character (authorId is characterId)
+        // For OOC threads, verify user is authenticated and authorId matches their userId
+        if (regionId) {
+            const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(authorId));
+            if (!auth.authorized) {
+                return auth.error!;
+            }
+        } else {
+            const auth = await verifyAuth(request);
+            if (!auth.authorized) {
+                return auth.error!;
+            }
+            // For OOC, authorId is userId - verify it matches logged in user (or staff)
+            if (!auth.isAdmin && !auth.isModerator && auth.userId !== parseInt(authorId)) {
+                return { status: 403, jsonBody: { error: 'You can only post as yourself' } };
+            }
+        }
+
         const pool = await getPool();
         const transaction = new sql.Transaction(pool);
         
@@ -182,25 +201,25 @@ app.http('createNewThread', {
 
 export async function createReply(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const threadId = request.params.threadId;
-    
+
     if (!threadId) {
         return { status: 400, body: "threadId is required" };
     }
 
     try {
         const body = await request.json() as any;
-        const { content, authorId } = body; 
+        const { content, authorId } = body;
 
         if (!content) {
             return { status: 400, body: "Content is required" };
         }
 
         const pool = await getPool();
-        
+
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
             .query("SELECT RegionId, OOCForumID, IsArchived FROM Thread WHERE ThreadID = @threadId");
-            
+
         const thread = threadResult.recordset[0];
         if (!thread) {
              return { status: 404, body: "Thread not found" };
@@ -209,6 +228,24 @@ export async function createReply(request: HttpRequest, context: InvocationConte
         // Check if thread is archived
         if (thread.IsArchived) {
             return { status: 403, body: "This thread has been archived and is closed for new replies" };
+        }
+
+        // Verify auth based on thread type
+        if (thread.RegionId) {
+            // For region threads, verify user owns the character
+            const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(authorId || 1));
+            if (!auth.authorized) {
+                return auth.error!;
+            }
+        } else {
+            // For OOC threads, verify user is authenticated and authorId matches
+            const auth = await verifyAuth(request);
+            if (!auth.authorized) {
+                return auth.error!;
+            }
+            if (!auth.isAdmin && !auth.isModerator && auth.userId !== parseInt(authorId || 1)) {
+                return { status: 403, jsonBody: { error: 'You can only post as yourself' } };
+            }
         }
 
         const req = pool.request()
@@ -266,8 +303,14 @@ app.http('createReply', {
 });
 
 export async function updatePost(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const postId = request.params.postId;
-    
+
     if (!postId) {
         return { status: 400, body: "postId is required" };
     }
@@ -281,6 +324,28 @@ export async function updatePost(request: HttpRequest, context: InvocationContex
         }
 
         const pool = await getPool();
+
+        // Verify user owns this post (or is staff)
+        if (!auth.isAdmin && !auth.isModerator) {
+            const postResult = await pool.request()
+                .input('postId', sql.Int, parseInt(postId))
+                .query(`
+                    SELECT p.CharacterID, p.UserID, c.UserID as characterOwnerUserId
+                    FROM Post p
+                    LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                    WHERE p.PostID = @postId
+                `);
+
+            if (postResult.recordset.length === 0) {
+                return { status: 404, body: "Post not found" };
+            }
+
+            const post = postResult.recordset[0];
+            const isOwner = (post.UserID === auth.userId) || (post.characterOwnerUserId === auth.userId);
+            if (!isOwner) {
+                return { status: 403, jsonBody: { error: 'You can only edit your own posts' } };
+            }
+        }
         
         // Use different update based on whether it's a character or user edit
         if (modifiedByCharacterId) {
@@ -330,33 +395,21 @@ app.http('updatePost', {
 });
 
 export async function deletePost(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication via JWT
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const postId = request.params.postId;
-    
+
     if (!postId) {
         return { status: 400, body: "postId is required" };
     }
 
     try {
-        const body = await request.json() as any;
-        const { characterId, userId, isModerator } = body;
-
-        if (!characterId && !userId) {
-            return { status: 400, body: "characterId or userId is required" };
-        }
-
         const pool = await getPool();
-        
-        // Verify moderator status if claimed
-        let isActuallyModerator = false;
-        if (isModerator && userId) {
-            const modCheck = await pool.request()
-                .input('userId', sql.Int, parseInt(userId))
-                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-            if (modCheck.recordset.length > 0) {
-                isActuallyModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-            }
-        }
-        
+
         // Get the post to verify ownership
         const postResult = await pool.request()
             .input('postId', sql.Int, parseInt(postId))
@@ -376,11 +429,10 @@ export async function deletePost(request: HttpRequest, context: InvocationContex
 
         const post = postResult.recordset[0];
 
-        // Verify the user owns this post OR is a moderator
-        const isOwner = (characterId && post.CharacterID === parseInt(characterId)) ||
-                       (userId && (post.UserID === parseInt(userId) || post.characterOwnerUserId === parseInt(userId)));
+        // Verify the user owns this post OR is staff
+        const isOwner = (post.UserID === auth.userId) || (post.characterOwnerUserId === auth.userId);
 
-        if (!isOwner && !isActuallyModerator) {
+        if (!isOwner && !auth.isAdmin && !auth.isModerator) {
             return { status: 403, body: "You can only delete your own posts" };
         }
 
@@ -471,33 +523,21 @@ app.http('getLatestPosts', {
 });
 
 export async function archiveThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication via JWT
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const threadId = request.params.threadId;
-    
+
     if (!threadId) {
         return { status: 400, body: "threadId is required" };
     }
 
     try {
-        const body = await request.json() as any;
-        const { userId, isModerator } = body;
-
-        if (!userId) {
-            return { status: 400, body: "userId is required" };
-        }
-
         const pool = await getPool();
-        
-        // Verify moderator status if claimed
-        let isActuallyModerator = false;
-        if (isModerator) {
-            const modCheck = await pool.request()
-                .input('userId', sql.Int, parseInt(userId))
-                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-            if (modCheck.recordset.length > 0) {
-                isActuallyModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-            }
-        }
-        
+
         // Get the thread and verify the user is the creator
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
@@ -507,8 +547,8 @@ export async function archiveThread(request: HttpRequest, context: InvocationCon
                 FROM Thread t
                 CROSS APPLY (
                     SELECT TOP 1 CharacterID, UserID
-                    FROM Post 
-                    WHERE ThreadID = t.ThreadID 
+                    FROM Post
+                    WHERE ThreadID = t.ThreadID
                     ORDER BY Created ASC
                 ) p
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
@@ -521,8 +561,8 @@ export async function archiveThread(request: HttpRequest, context: InvocationCon
 
         const thread = threadResult.recordset[0];
 
-        // Check if user is the creator OR is a moderator
-        if (thread.creatorUserId !== parseInt(userId) && !isActuallyModerator) {
+        // Check if user is the creator OR is staff
+        if (thread.creatorUserId !== auth.userId && !auth.isAdmin && !auth.isModerator) {
             return { status: 403, body: "You can only archive your own threads" };
         }
 
@@ -567,36 +607,21 @@ app.http('archiveThread', {
 
 // DELETE /api/threads/:threadId - Delete an entire thread (moderator only)
 export async function deleteThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const threadId = request.params.threadId;
-    
+
     if (!threadId) {
         return { status: 400, body: "threadId is required" };
     }
 
     try {
-        const body = await request.json() as any;
-        const { userId } = body;
-
-        if (!userId) {
-            return { status: 400, body: "userId is required" };
-        }
-
         const pool = await getPool();
-        
-        // Verify the user is a moderator or admin
-        const modCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(userId))
-            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-        
-        if (modCheck.recordset.length === 0) {
-            return { status: 404, body: "User not found" };
-        }
-        
-        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-        if (!isModerator) {
-            return { status: 403, body: "Only moderators can delete threads" };
-        }
-        
+
         // Verify the thread exists
         const threadCheck = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
@@ -642,36 +667,21 @@ app.http('deleteThread', {
 // POST /api/threads/:threadId/unarchive - Unarchive a thread (moderator only)
 // Reverses skill points and deletes all claims, then restores thread to original location
 export async function unarchiveThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const threadId = request.params.threadId;
-    
+
     if (!threadId) {
         return { status: 400, body: "threadId is required" };
     }
 
     try {
-        const body = await request.json() as any;
-        const { userId } = body;
-
-        if (!userId) {
-            return { status: 400, body: "userId is required" };
-        }
-
         const pool = await getPool();
-        
-        // Verify the user is a moderator or admin
-        const modCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(userId))
-            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-        
-        if (modCheck.recordset.length === 0) {
-            return { status: 404, body: "User not found" };
-        }
-        
-        const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-        if (!isModerator) {
-            return { status: 403, body: "Only moderators can unarchive threads" };
-        }
-        
+
         // Get the thread and verify it's archived
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
@@ -746,6 +756,12 @@ app.http('unarchiveThread', {
 
 // Toggle pin status for OOC forum threads (moderator/admin only)
 export async function toggleThreadPin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const threadId = request.params.threadId;
 
     if (!threadId) {
@@ -801,6 +817,12 @@ app.http('toggleThreadPin', {
 
 // Update thread title and subheader
 export async function updateThreadDetails(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication via JWT
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const threadId = request.params.threadId;
 
     if (!threadId) {
@@ -816,6 +838,32 @@ export async function updateThreadDetails(request: HttpRequest, context: Invocat
         }
 
         const pool = await getPool();
+
+        // Verify user owns this thread (or is staff)
+        if (!auth.isAdmin && !auth.isModerator) {
+            const threadResult = await pool.request()
+                .input('threadId', sql.Int, parseInt(threadId))
+                .query(`
+                    SELECT COALESCE(c.UserID, p.UserID) as creatorUserId
+                    FROM Thread t
+                    CROSS APPLY (
+                        SELECT TOP 1 CharacterID, UserID
+                        FROM Post
+                        WHERE ThreadID = t.ThreadID
+                        ORDER BY Created ASC
+                    ) p
+                    LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                    WHERE t.ThreadID = @threadId
+                `);
+
+            if (threadResult.recordset.length === 0) {
+                return { status: 404, body: "Thread not found" };
+            }
+
+            if (threadResult.recordset[0].creatorUserId !== auth.userId) {
+                return { status: 403, jsonBody: { error: 'You can only edit your own threads' } };
+            }
+        }
 
         // Update the thread's subheader
         await pool.request()

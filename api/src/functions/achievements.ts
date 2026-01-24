@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { verifyAuth, verifyStaffAuth } from "../auth";
 
 // SignalR output binding for broadcasting admin count updates
 const signalROutput = output.generic({
@@ -61,12 +62,23 @@ export async function getUserAchievements(request: HttpRequest, context: Invocat
 
 // POST /api/achievements/check - Check and award automated achievements for a user
 export async function checkAutomatedAchievements(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as any;
         const { userId } = body;
 
         if (!userId) {
             return { status: 400, body: "Missing user ID" };
+        }
+
+        // Users can only check their own achievements (staff can check any)
+        if (!auth.isAdmin && !auth.isModerator && auth.userId !== parseInt(userId)) {
+            return { status: 403, jsonBody: { error: 'You can only check your own achievements' } };
         }
 
         const pool = await getPool();
@@ -226,12 +238,23 @@ export async function checkAutomatedAchievements(request: HttpRequest, context: 
 
 // POST /api/achievements/request - Submit achievement request
 export async function submitAchievementRequest(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify authentication
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as any;
         const { userId, achievementId, note } = body;
 
         if (!userId || !achievementId) {
             return { status: 400, body: "Missing required fields" };
+        }
+
+        // Users can only submit requests for themselves
+        if (auth.userId !== parseInt(userId)) {
+            return { status: 403, jsonBody: { error: 'You can only submit requests for yourself' } };
         }
 
         const pool = await getPool();
@@ -288,6 +311,12 @@ export async function submitAchievementRequest(request: HttpRequest, context: In
 
 // GET /api/achievements/requests/pending - Get pending achievement requests (admin)
 export async function getPendingAchievementRequests(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         const result = await pool.request().query(`
@@ -315,6 +344,12 @@ export async function getPendingAchievementRequests(request: HttpRequest, contex
 
 // GET /api/achievements/requests/pending/count - Get count of pending requests
 export async function getPendingAchievementRequestsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         const result = await pool.request().query(`
@@ -329,27 +364,17 @@ export async function getPendingAchievementRequestsCount(request: HttpRequest, c
 
 // POST /api/achievements/requests/:id/approve - Approve achievement request
 export async function approveAchievementRequest(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const requestId = request.params.id;
     if (!requestId) return { status: 400, body: "Missing request ID" };
 
     try {
-        const body = await request.json() as any;
-        const { moderatorUserId } = body;
-
-        if (!moderatorUserId) {
-            return { status: 400, body: "Missing moderator user ID" };
-        }
-
         const pool = await getPool();
-
-        // Verify moderator
-        const modCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(moderatorUserId))
-            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-        
-        if (modCheck.recordset.length === 0 || (!modCheck.recordset[0].Is_Moderator && !modCheck.recordset[0].Is_Admin)) {
-            return { status: 403, body: "Only moderators can approve requests" };
-        }
 
         // Get request details
         const requestResult = await pool.request()
@@ -369,7 +394,7 @@ export async function approveAchievementRequest(request: HttpRequest, context: I
         await pool.request()
             .input('userId', sql.Int, req.UserID)
             .input('achievementId', sql.Int, req.AchievementID)
-            .input('moderatorUserId', sql.Int, parseInt(moderatorUserId))
+            .input('moderatorUserId', sql.Int, auth.userId)
             .query(`
                 INSERT INTO UserAchievement (UserID, AchievementID, AwardedAt, AwardedByUserID)
                 VALUES (@userId, @achievementId, GETDATE(), @moderatorUserId)
@@ -378,7 +403,7 @@ export async function approveAchievementRequest(request: HttpRequest, context: I
         // Update request status
         await pool.request()
             .input('requestId', sql.Int, parseInt(requestId))
-            .input('moderatorUserId', sql.Int, parseInt(moderatorUserId))
+            .input('moderatorUserId', sql.Int, auth.userId)
             .query(`
                 UPDATE AchievementRequest
                 SET Status = 'approved', ReviewedByUserID = @moderatorUserId, ReviewedAt = GETDATE()
@@ -402,31 +427,24 @@ export async function approveAchievementRequest(request: HttpRequest, context: I
 
 // POST /api/achievements/requests/:id/reject - Reject achievement request
 export async function rejectAchievementRequest(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const requestId = request.params.id;
     if (!requestId) return { status: 400, body: "Missing request ID" };
 
     try {
         const body = await request.json() as any;
-        const { moderatorUserId, reviewNote } = body;
-
-        if (!moderatorUserId) {
-            return { status: 400, body: "Missing moderator user ID" };
-        }
+        const { reviewNote } = body;
 
         const pool = await getPool();
 
-        // Verify moderator
-        const modCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(moderatorUserId))
-            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-        
-        if (modCheck.recordset.length === 0 || (!modCheck.recordset[0].Is_Moderator && !modCheck.recordset[0].Is_Admin)) {
-            return { status: 403, body: "Only moderators can reject requests" };
-        }
-
         await pool.request()
             .input('requestId', sql.Int, parseInt(requestId))
-            .input('moderatorUserId', sql.Int, parseInt(moderatorUserId))
+            .input('moderatorUserId', sql.Int, auth.userId)
             .input('reviewNote', sql.NVarChar, reviewNote || null)
             .query(`
                 UPDATE AchievementRequest
@@ -451,24 +469,21 @@ export async function rejectAchievementRequest(request: HttpRequest, context: In
 
 // POST /api/achievements/award - Manually award an achievement (admin)
 export async function awardAchievement(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization via JWT
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as any;
-        const { userId, achievementId, moderatorUserId } = body;
+        const { userId, achievementId } = body;
 
-        if (!userId || !achievementId || !moderatorUserId) {
+        if (!userId || !achievementId) {
             return { status: 400, body: "Missing required fields" };
         }
 
         const pool = await getPool();
-
-        // Verify moderator
-        const modCheck = await pool.request()
-            .input('modUserId', sql.Int, parseInt(moderatorUserId))
-            .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @modUserId');
-        
-        if (modCheck.recordset.length === 0 || (!modCheck.recordset[0].Is_Moderator && !modCheck.recordset[0].Is_Admin)) {
-            return { status: 403, body: "Only moderators can award achievements" };
-        }
 
         // Check if already awarded
         const existing = await pool.request()
@@ -483,7 +498,7 @@ export async function awardAchievement(request: HttpRequest, context: Invocation
         await pool.request()
             .input('userId', sql.Int, parseInt(userId))
             .input('achievementId', sql.Int, parseInt(achievementId))
-            .input('moderatorUserId', sql.Int, parseInt(moderatorUserId))
+            .input('moderatorUserId', sql.Int, auth.userId)
             .query(`
                 INSERT INTO UserAchievement (UserID, AchievementID, AwardedAt, AwardedByUserID)
                 VALUES (@userId, @achievementId, GETDATE(), @moderatorUserId)

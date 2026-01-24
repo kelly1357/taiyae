@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
+import { verifyStaffAuth } from "../auth";
 
 // SignalR output binding for broadcasting admin count updates
 const signalROutput = output.generic({
@@ -21,6 +22,12 @@ async function getCurrentPendingCount(): Promise<number> {
 
 // GET: Get all pending skill point assignments (IsModeratorApproved = 0 or NULL)
 async function getPendingSkillPointAssignments(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         
@@ -73,6 +80,12 @@ async function getPendingSkillPointAssignments(request: HttpRequest, context: In
 
 // GET: Get count of pending skill point assignments (for notification badge)
 async function getPendingSkillPointsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         
@@ -97,6 +110,12 @@ async function getPendingSkillPointsCount(request: HttpRequest, context: Invocat
 
 // POST: Approve a skill point assignment
 async function approveSkillPointAssignment(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as { assignmentId: number };
         const { assignmentId } = body;
@@ -170,6 +189,12 @@ async function approveSkillPointAssignment(request: HttpRequest, context: Invoca
 
 // DELETE: Reject a skill point assignment (marks as rejected, doesn't delete)
 async function rejectSkillPointAssignment(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const assignmentId = request.params.assignmentId;
 

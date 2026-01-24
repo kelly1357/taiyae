@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
+import { verifyStaffAuth } from "../auth";
 import * as sql from 'mssql';
 
 // SignalR output binding for broadcasting admin count updates
@@ -22,6 +23,12 @@ async function getCurrentPendingCount(): Promise<number> {
 
 // GET: Get all pending user approvals (UserStatusID = 1 = Joining)
 async function getPendingUserApprovals(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
 
@@ -55,6 +62,12 @@ async function getPendingUserApprovals(request: HttpRequest, context: Invocation
 
 // GET: Get count of pending user approvals (for notification badge)
 async function getPendingUserApprovalsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const count = await getCurrentPendingCount();
 
@@ -73,6 +86,12 @@ async function getPendingUserApprovalsCount(request: HttpRequest, context: Invoc
 
 // POST: Approve a user (change status from Joining or Rejected to Joined)
 async function approveUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as { userId: number };
         const { userId } = body;
@@ -118,6 +137,12 @@ async function approveUser(request: HttpRequest, context: InvocationContext): Pr
 
 // DELETE: Reject a user (change status to Rejected)
 async function rejectUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const userId = request.params.userId;
 
@@ -162,6 +187,12 @@ async function rejectUser(request: HttpRequest, context: InvocationContext): Pro
 
 // POST: Ban a user (change status to Banned for any non-banned user)
 async function banUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const userId = request.params.userId;
 
@@ -206,6 +237,12 @@ async function banUser(request: HttpRequest, context: InvocationContext): Promis
 
 // GET: Get all users with Joining, Joined, or Rejected status (for toggle view)
 async function getJoiningAndJoinedUsers(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
 
@@ -240,6 +277,12 @@ async function getJoiningAndJoinedUsers(request: HttpRequest, context: Invocatio
 
 // POST: Unban a user (change status from Banned to Joined)
 async function unbanUser(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const userId = request.params.userId;
 

@@ -60,8 +60,13 @@ const UserApprovalsAdmin: React.FC = () => {
   const fetchPendingUsers = async (includeJoined: boolean = false) => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const endpoint = includeJoined ? '/api/user-approval/all' : '/api/user-approval';
-      const response = await fetch(endpoint);
+      const response = await fetch(endpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setPendingUsers(data);
@@ -76,9 +81,13 @@ const UserApprovalsAdmin: React.FC = () => {
   const fetchUsers = async () => {
     setUsersLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/moderation/user-permissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user?.id })
       });
 
@@ -111,9 +120,13 @@ const UserApprovalsAdmin: React.FC = () => {
   const handleUpdatePermissions = async (targetUserId: number, field: 'isModerator' | 'isAdmin', value: boolean) => {
     setProcessingUserId(targetUserId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/moderation/user-permissions/${targetUserId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           userId: user?.id,
           [field]: value
@@ -144,9 +157,13 @@ const UserApprovalsAdmin: React.FC = () => {
 
     setProcessingUserId(targetUserId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/user-approval/ban/${targetUserId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user?.id })
       });
 
@@ -173,9 +190,13 @@ const UserApprovalsAdmin: React.FC = () => {
 
     setProcessingUserId(targetUserId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/user-approval/unban/${targetUserId}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user?.id })
       });
 
@@ -198,9 +219,13 @@ const UserApprovalsAdmin: React.FC = () => {
   const handleApprove = async (userId: number) => {
     setProcessingId(userId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/user-approval/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId })
       });
 
@@ -221,8 +246,12 @@ const UserApprovalsAdmin: React.FC = () => {
 
     setProcessingId(userId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/user-approval/${userId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {

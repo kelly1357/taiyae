@@ -60,13 +60,15 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     // Fetch all admin counts
     const fetchAllCounts = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const authHeaders = { 'Authorization': `Bearer ${token}` };
         const [skillPoints, plotNews, achievements, inactiveChars, staffPings, userApprovals] = await Promise.all([
           fetch('/api/skill-points-approval/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/plot-news/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/achievements/requests/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/moderation/characters-to-inactivate/count').then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/staff-pings/count').then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/user-approval/count').then(r => r.ok ? r.json() : { count: 0 })
+          fetch('/api/user-approval/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 })
         ]);
         setPendingSkillPointsCount(skillPoints.count || 0);
         setPendingPlotNewsCount(plotNews.count || 0);
@@ -116,7 +118,10 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
     const fetchCount = async () => {
       try {
-        const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (response.ok) {
           const data = await response.json();
           setUnreadByCharacter(data.unreadByCharacter || {});

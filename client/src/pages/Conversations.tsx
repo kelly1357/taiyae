@@ -41,7 +41,10 @@ const Conversations: React.FC = () => {
     if (!activeCharacter) return;
 
     try {
-      const res = await fetch(`/api/conversations?characterId=${activeCharacter.id}`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/conversations?characterId=${activeCharacter.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       setConversations(data);
       setLoading(false);
@@ -55,7 +58,10 @@ const Conversations: React.FC = () => {
   const fetchMessages = async (conversationId: number) => {
     setMessagesLoading(true);
     try {
-      const res = await fetch(`/api/conversations/${conversationId}/messages`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/conversations/${conversationId}/messages`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
 
       setMessages(data);
@@ -71,7 +77,10 @@ const Conversations: React.FC = () => {
       // Mark conversation as read
       await fetch(`/api/conversations/${conversationId}/mark-read`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ characterId: activeCharacter?.id }),
       });
 
@@ -171,9 +180,13 @@ const Conversations: React.FC = () => {
 
         // Mark as read since we're viewing it
         if (activeCharacter) {
+          const token = localStorage.getItem('token');
           fetch(`/api/conversations/${newMsg.conversationId}/mark-read`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
             body: JSON.stringify({ characterId: activeCharacter.id }),
           }).catch(err => console.error('Failed to mark as read:', err));
 
@@ -211,9 +224,13 @@ const Conversations: React.FC = () => {
     setSending(true);
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`/api/conversations/${selectedConversationId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           characterId: activeCharacter.id,
           message: newMessage.trim(),
@@ -243,9 +260,13 @@ const Conversations: React.FC = () => {
     setCreatingConversation(true);
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/conversations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           fromCharacterId: activeCharacter.id,
           toCharacterId: selectedCharacter,

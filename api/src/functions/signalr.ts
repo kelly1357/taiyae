@@ -1,4 +1,5 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, input, output } from "@azure/functions";
+import { verifyStaffAuth, verifyCharacterOwnershipOrStaff } from "../auth";
 
 // SignalR connection input binding for negotiate
 const signalRConnectionInput = input.generic({
@@ -54,6 +55,12 @@ export async function joinCharacterGroup(
             return { status: 400, body: "characterId and userId are required" };
         }
 
+        // Verify user owns this character or is staff
+        const auth = await verifyCharacterOwnershipOrStaff(request, characterId);
+        if (!auth.authorized) {
+            return auth.error!;
+        }
+
         context.extraOutputs.set(signalRGroupOutput, [{
             userId: String(userId),
             groupName: `character-${characterId}`,
@@ -83,6 +90,12 @@ export async function leaveCharacterGroup(
             return { status: 400, body: "characterId and userId are required" };
         }
 
+        // Verify user owns this character or is staff
+        const auth = await verifyCharacterOwnershipOrStaff(request, characterId);
+        if (!auth.authorized) {
+            return auth.error!;
+        }
+
         context.extraOutputs.set(signalRGroupOutput, [{
             userId: String(userId),
             groupName: `character-${characterId}`,
@@ -104,6 +117,12 @@ export async function joinStaffGroup(
     request: HttpRequest,
     context: InvocationContext
 ): Promise<HttpResponseInit> {
+    // Verify staff authorization - only admins/moderators can join staff group
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as { userId: string };
         const { userId } = body;
@@ -133,6 +152,12 @@ export async function leaveStaffGroup(
     request: HttpRequest,
     context: InvocationContext
 ): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as { userId: string };
         const { userId } = body;

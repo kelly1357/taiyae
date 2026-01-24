@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, output } from "@azure/functions";
 import { getPool } from "../db";
+import { verifyAuth, verifyStaffAuth } from "../auth";
 import * as sql from 'mssql';
 
 // SignalR output binding for broadcasting admin count updates
@@ -20,6 +21,12 @@ async function getCurrentUnresolvedCount(): Promise<number> {
 
 // Create a new staff ping
 export async function createStaffPing(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify user is authenticated
+    const auth = await verifyAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const body = await request.json() as any;
         const { userId, isAnonymous, message, pageUrl } = body;
@@ -61,6 +68,12 @@ export async function createStaffPing(request: HttpRequest, context: InvocationC
 
 // Get count of unresolved pings (for badge)
 export async function getUnresolvedPingsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const pool = await getPool();
         
@@ -80,6 +93,12 @@ export async function getUnresolvedPingsCount(request: HttpRequest, context: Inv
 
 // Get all pings (with optional filter for resolved/unresolved)
 export async function getStaffPings(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const showResolved = request.query.get('showResolved') === 'true';
         
@@ -121,8 +140,14 @@ export async function getStaffPings(request: HttpRequest, context: InvocationCon
 
 // Resolve a ping
 export async function resolveStaffPing(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const pingId = request.params.pingId;
-    
+
     if (!pingId) {
         return { status: 400, body: "pingId is required" };
     }
@@ -171,8 +196,14 @@ export async function resolveStaffPing(request: HttpRequest, context: Invocation
 
 // Unresolve a ping (reopen)
 export async function unresolveStaffPing(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const pingId = request.params.pingId;
-    
+
     if (!pingId) {
         return { status: 400, body: "pingId is required" };
     }
@@ -212,8 +243,14 @@ export async function unresolveStaffPing(request: HttpRequest, context: Invocati
 
 // Delete a ping (for admins only)
 export async function deleteStaffPing(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify staff authorization
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     const pingId = request.params.pingId;
-    
+
     if (!pingId) {
         return { status: 400, body: "pingId is required" };
     }

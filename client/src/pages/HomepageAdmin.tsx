@@ -55,7 +55,10 @@ export default function HomepageAdmin() {
 
   async function loadPlotNewsSubmissions() {
     try {
-      const response = await fetch('/api/plot-news/pending');
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/plot-news/pending', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (response.ok) {
         const data = await response.json();
         setPlotNewsSubmissions(data);
@@ -99,9 +102,13 @@ export default function HomepageAdmin() {
     setBulletinSaving(true);
     setMessage(null);
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/bulletin', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           content: bulletinContent,
           isEnabled: bulletinEnabled,
@@ -131,9 +138,13 @@ export default function HomepageAdmin() {
     setMessage(null);
 
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch('/api/sitewide-updates', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           content: newUpdateContent,
           userId
@@ -158,9 +169,13 @@ export default function HomepageAdmin() {
   const handleApprovePlotNews = async (plotNewsId: number) => {
     setApproving(plotNewsId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/plot-news/approve', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ plotNewsId, userId })
       });
       
@@ -181,8 +196,10 @@ export default function HomepageAdmin() {
   const handleDeletePlotNews = async (submission: PlotNewsSubmission) => {
     setDeleting(submission.PlotNewsID);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/plot-news/${submission.PlotNewsID}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
@@ -212,9 +229,13 @@ export default function HomepageAdmin() {
 
   const handleSaveEditPlotNews = async (plotNewsId: number) => {
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/plot-news/${plotNewsId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           packName: editForm.packName,
           newsText: editForm.newsText,

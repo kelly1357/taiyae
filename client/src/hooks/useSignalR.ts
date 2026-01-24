@@ -111,10 +111,14 @@ export function useSignalR({
         newConnection.onreconnected(() => {
             setIsConnected(true);
             // Rejoin all groups after reconnection
+            const token = localStorage.getItem('token');
             currentGroupsRef.current.forEach(characterId => {
                 fetch('/api/signalr/join-group', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ characterId, userId: String(userId) })
                 }).catch(() => {});
             });
@@ -122,7 +126,10 @@ export function useSignalR({
             if (isInStaffGroupRef.current) {
                 fetch('/api/signalr/join-staff-group', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ userId: String(userId) })
                 }).catch(() => {});
             }
@@ -148,9 +155,13 @@ export function useSignalR({
         if (!userId) return;
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch('/api/signalr/join-group', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ characterId, userId: String(userId) })
             });
 
@@ -166,9 +177,13 @@ export function useSignalR({
         if (!userId) return;
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch('/api/signalr/leave-group', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ characterId, userId: String(userId) })
             });
 
@@ -184,9 +199,13 @@ export function useSignalR({
         if (!userId) return;
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch('/api/signalr/join-staff-group', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ userId: String(userId) })
             });
 
@@ -202,9 +221,13 @@ export function useSignalR({
         if (!userId) return;
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch('/api/signalr/leave-staff-group', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ userId: String(userId) })
             });
 

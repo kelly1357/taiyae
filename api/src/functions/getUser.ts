@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { verifyAdminAuth } from "../auth";
 
 export async function getAllUsers(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
@@ -60,35 +61,14 @@ app.http('getAllUsers', {
 
 // Get all users with their admin/moderator status (admin only)
 export async function getAllUsersWithStatus(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify admin authorization via JWT
+    const auth = await verifyAdminAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
-        let body: any;
-        try {
-            body = await request.json();
-        } catch (e) {
-            return { status: 400, body: "Invalid JSON body" };
-        }
-        
-        const { userId } = body;
-
-        if (!userId) {
-            return { status: 400, body: "User ID is required" };
-        }
-
         const pool = await getPool();
-
-        // Verify the requesting user is an admin
-        const adminCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(String(userId)))
-            .query('SELECT Is_Admin FROM [User] WHERE UserID = @userId');
-
-        if (adminCheck.recordset.length === 0) {
-            return { status: 404, body: "User not found" };
-        }
-
-        const isAdmin = adminCheck.recordset[0].Is_Admin === true || adminCheck.recordset[0].Is_Admin === 1;
-        if (!isAdmin) {
-            return { status: 403, body: "Only administrators can view user permissions" };
-        }
 
         // Get all users with their status
         const result = await pool.request()
@@ -125,6 +105,12 @@ export async function getAllUsersWithStatus(request: HttpRequest, context: Invoc
 
 // Update user admin/moderator status (admin only)
 export async function updateUserPermissions(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    // Verify admin authorization via JWT
+    const auth = await verifyAdminAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
     try {
         const targetUserId = request.params.id;
         if (!targetUserId) {
@@ -137,12 +123,8 @@ export async function updateUserPermissions(request: HttpRequest, context: Invoc
         } catch (e) {
             return { status: 400, body: "Invalid JSON body" };
         }
-        
-        const { userId, isModerator, isAdmin } = body;
 
-        if (!userId) {
-            return { status: 400, body: "Requesting user ID is required" };
-        }
+        const { isModerator, isAdmin } = body;
 
         if (typeof isModerator !== 'boolean' && typeof isAdmin !== 'boolean') {
             return { status: 400, body: "At least one of isModerator or isAdmin must be provided" };
@@ -150,22 +132,8 @@ export async function updateUserPermissions(request: HttpRequest, context: Invoc
 
         const pool = await getPool();
 
-        // Verify the requesting user is an admin
-        const adminCheck = await pool.request()
-            .input('userId', sql.Int, parseInt(String(userId)))
-            .query('SELECT Is_Admin FROM [User] WHERE UserID = @userId');
-
-        if (adminCheck.recordset.length === 0) {
-            return { status: 404, body: "Requesting user not found" };
-        }
-
-        const requestingUserIsAdmin = adminCheck.recordset[0].Is_Admin === true || adminCheck.recordset[0].Is_Admin === 1;
-        if (!requestingUserIsAdmin) {
-            return { status: 403, body: "Only administrators can modify user permissions" };
-        }
-
         // Prevent admin from removing their own admin status
-        if (parseInt(targetUserId) === parseInt(String(userId)) && isAdmin === false) {
+        if (parseInt(targetUserId) === auth.userId && isAdmin === false) {
             return { status: 400, body: "You cannot remove your own admin status" };
         }
 

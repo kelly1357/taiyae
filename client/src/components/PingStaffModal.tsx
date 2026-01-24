@@ -27,9 +27,13 @@ const PingStaffModal: React.FC<PingStaffModalProps> = ({ isOpen, onClose, userId
     setError(null);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/staff-pings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           userId: userId,
           isAnonymous,
