@@ -48,7 +48,10 @@ function getRegions(request, context) {
                     });
                 }
             });
-            return { jsonBody: Array.from(regionsMap.values()) };
+            return {
+                jsonBody: Array.from(regionsMap.values()),
+                headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+            };
         }
         catch (error) {
             context.error(error);

@@ -48,8 +48,11 @@ interface ThreadItem {
   regionName?: string;
   createdAt: string;
   updatedAt: string;
+  lastPostDate?: string;
   replyCount: number;
   lastReplyAuthorName?: string;
+  lastReplyAuthorId?: number;
+  lastReplyAuthorSlug?: string;
   lastReplyIsOnline?: boolean;
 }
 
@@ -223,36 +226,38 @@ const Home: React.FC = () => {
   useEffect(() => {
     if ((viewMode !== 'active' && viewMode !== 'lonely') || !regions.length) return;
     
+    // Don't refetch if we already have threads
+    if (allThreads.length > 0) return;
+    
     setThreadsLoading(true);
     
-    const fetchAllThreads = async () => {
-      const allThreadsData: ThreadItem[] = [];
-      
-      for (const region of regions) {
-        try {
-          const response = await fetch(`/api/threads?regionId=${region.id}`);
-          if (response.ok) {
-            const threads = await response.json();
-            threads.forEach((thread: any) => {
-              allThreadsData.push({
-                ...thread,
-                regionName: region.name,
-              });
-            });
-          }
-        } catch (err) {
-          console.error(`Failed to fetch threads for region ${region.id}:`, err);
+    // Use the optimized single endpoint instead of fetching per-region
+    fetch('/api/all-threads')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
         }
-      }
-      
-      // Sort by most recent post
-      allThreadsData.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      setAllThreads(allThreadsData);
-      setThreadsLoading(false);
-    };
-    
-    fetchAllThreads();
-  }, [viewMode, regions]);
+        return res.json();
+      })
+      .then((threads: any[]) => {
+        if (!Array.isArray(threads)) {
+          console.error('Unexpected response format:', threads);
+          setAllThreads([]);
+          setThreadsLoading(false);
+          return;
+        }
+        const allThreadsData: ThreadItem[] = threads.map(thread => ({
+          ...thread,
+          // regionName is now included in the API response
+        }));
+        setAllThreads(allThreadsData);
+        setThreadsLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch all threads:', err);
+        setThreadsLoading(false);
+      });
+  }, [viewMode, regions, allThreads.length]);
 
   // Fetch latest posts when switching to latest view
   useEffect(() => {
@@ -374,8 +379,9 @@ const Home: React.FC = () => {
           bVal = b.title.toLowerCase();
           break;
         case 'date':
-          aVal = new Date(a.updatedAt).getTime();
-          bVal = new Date(b.updatedAt).getTime();
+          // Use lastPostDate if available, fall back to updatedAt
+          aVal = new Date(a.lastPostDate || a.updatedAt).getTime();
+          bVal = new Date(b.lastPostDate || b.updatedAt).getTime();
           break;
         case 'area':
           aVal = (a.regionName || '').toLowerCase();

@@ -40,7 +40,10 @@ export async function getRegions(request: HttpRequest, context: InvocationContex
             }
         });
 
-        return { jsonBody: Array.from(regionsMap.values()) };
+        return { 
+            jsonBody: Array.from(regionsMap.values()),
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+        };
     } catch (error) {
         context.error(error);
         return { status: 500, body: "Internal Server Error" };

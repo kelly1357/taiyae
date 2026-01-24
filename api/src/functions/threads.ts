@@ -12,75 +12,78 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
 
     try {
         const pool = await getPool();
-        
-        let header = `SELECT 
-                    t.ThreadID as id,
-                    t.RegionId as regionId,
-                    t.OOCForumID as oocForumId,
-                    t.IsPinned as isPinned,
-                    t.Subheader as subheader,
-                    t.Created as createdAt,
-                    t.Modified as updatedAt,
-                    firstPost.Subject as title,
-                    firstPost.Body as content,
-                    COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
-                    COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
-                    threadAuthor.Slug as authorSlug,
-                    CASE 
-                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                        WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                        ELSE 0 
-                    END as isOnline,
-                    (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
-                    0 as views,
-                    COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
-                    lastPostAuthor.CharacterID as lastReplyAuthorId,
-                    lastPostAuthor.Slug as lastReplyAuthorSlug,
-                    lastPost.Created as lastPostDate,
-                    CASE 
-                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                        WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                        ELSE 0 
-                    END as lastReplyIsOnline
-                FROM Thread t
-                CROSS APPLY (
-                    SELECT TOP 1 * 
-                    FROM Post 
-                    WHERE ThreadID = t.ThreadID 
-                    ORDER BY Created ASC
-                ) firstPost
-                LEFT JOIN Character threadAuthor ON firstPost.CharacterID = threadAuthor.CharacterID
-                LEFT JOIN [User] threadUser ON firstPost.UserID = threadUser.UserID
-                CROSS APPLY (
-                    SELECT TOP 1 *
-                    FROM Post 
-                    WHERE ThreadID = t.ThreadID 
-                    ORDER BY Created DESC
-                ) lastPost
-                LEFT JOIN Character lastPostAuthor ON lastPost.CharacterID = lastPostAuthor.CharacterID
-                LEFT JOIN [User] lastPostUser ON lastPost.UserID = lastPostUser.UserID`;
-
         const requestBuilder = pool.request();
         
-        let whereClause = "";
-        let orderByClause = "";
-        if (regionId) {
-            whereClause = " WHERE t.RegionId = @regionId";
-            orderByClause = " ORDER BY lastPost.Created DESC";
-            requestBuilder.input('regionId', sql.Int, parseInt(regionId));
-        } else {
-            whereClause = " WHERE t.OOCForumID = @oocForumId";
-            // For OOC forums, sort pinned threads first, then by last post date
-            orderByClause = " ORDER BY t.IsPinned DESC, lastPost.Created DESC";
-            requestBuilder.input('oocForumId', sql.Int, parseInt(oocForumId));
-        }
+        let whereClause: string;
+        let orderByClause: string;
         
-        const query = header + whereClause + orderByClause;
+        if (regionId) {
+            whereClause = 't.RegionId = @filterId';
+            orderByClause = 'ORDER BY lastPost.Created DESC';
+            requestBuilder.input('filterId', sql.Int, parseInt(regionId));
+        } else {
+            whereClause = 't.OOCForumID = @filterId';
+            orderByClause = 'ORDER BY t.IsPinned DESC, lastPost.Created DESC';
+            requestBuilder.input('filterId', sql.Int, parseInt(oocForumId!));
+        }
+
+        // Use CROSS APPLY which is efficient for this pattern
+        const query = `
+            SELECT 
+                t.ThreadID as id,
+                t.RegionId as regionId,
+                t.OOCForumID as oocForumId,
+                t.IsPinned as isPinned,
+                t.Subheader as subheader,
+                t.Created as createdAt,
+                t.Modified as updatedAt,
+                firstPost.Subject as title,
+                firstPost.Body as content,
+                COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
+                COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
+                threadAuthor.Slug as authorSlug,
+                CASE 
+                    WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                    WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
+                    ELSE 0 
+                END as isOnline,
+                (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
+                0 as views,
+                COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
+                lastPostAuthor.CharacterID as lastReplyAuthorId,
+                lastPostAuthor.Slug as lastReplyAuthorSlug,
+                lastPost.Created as lastPostDate,
+                CASE 
+                    WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                    WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
+                    ELSE 0 
+                END as lastReplyIsOnline
+            FROM Thread t
+            CROSS APPLY (
+                SELECT TOP 1 * 
+                FROM Post 
+                WHERE ThreadID = t.ThreadID 
+                ORDER BY Created ASC
+            ) firstPost
+            LEFT JOIN Character threadAuthor ON firstPost.CharacterID = threadAuthor.CharacterID
+            LEFT JOIN [User] threadUser ON firstPost.UserID = threadUser.UserID
+            CROSS APPLY (
+                SELECT TOP 1 *
+                FROM Post 
+                WHERE ThreadID = t.ThreadID 
+                ORDER BY Created DESC
+            ) lastPost
+            LEFT JOIN Character lastPostAuthor ON lastPost.CharacterID = lastPostAuthor.CharacterID
+            LEFT JOIN [User] lastPostUser ON lastPost.UserID = lastPostUser.UserID
+            WHERE ${whereClause}
+            ${orderByClause}
+        `;
 
         const result = await requestBuilder.query(query);
 
         return {
-            jsonBody: result.recordset
+            jsonBody: result.recordset,
+            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
         };
     } catch (error) {
         context.error(error);
@@ -851,4 +854,80 @@ app.http('updateThreadDetails', {
     authLevel: 'anonymous',
     handler: updateThreadDetails,
     route: 'threads/{threadId}/details'
+});
+
+// Optimized endpoint to get all threads across all regions in a single query
+export async function getAllThreads(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const pool = await getPool();
+        
+        // Use CROSS APPLY pattern - simpler and reliable
+        const result = await pool.request()
+            .query(`
+                SELECT 
+                    t.ThreadID as id,
+                    t.RegionId as regionId,
+                    r.RegionName as regionName,
+                    t.IsPinned as isPinned,
+                    t.Subheader as subheader,
+                    t.Created as createdAt,
+                    t.Modified as updatedAt,
+                    firstPost.Subject as title,
+                    firstPost.Body as content,
+                    COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
+                    COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
+                    threadAuthor.Slug as authorSlug,
+                    CASE 
+                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
+                        ELSE 0 
+                    END as isOnline,
+                    (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
+                    COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
+                    lastPostAuthor.CharacterID as lastReplyAuthorId,
+                    lastPostAuthor.Slug as lastReplyAuthorSlug,
+                    lastPost.Created as lastPostDate,
+                    CASE 
+                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
+                        WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
+                        ELSE 0 
+                    END as lastReplyIsOnline
+                FROM Thread t
+                INNER JOIN Region r ON t.RegionId = r.RegionID
+                CROSS APPLY (
+                    SELECT TOP 1 * 
+                    FROM Post 
+                    WHERE ThreadID = t.ThreadID 
+                    ORDER BY Created ASC
+                ) firstPost
+                LEFT JOIN Character threadAuthor ON firstPost.CharacterID = threadAuthor.CharacterID
+                LEFT JOIN [User] threadUser ON firstPost.UserID = threadUser.UserID
+                CROSS APPLY (
+                    SELECT TOP 1 *
+                    FROM Post 
+                    WHERE ThreadID = t.ThreadID 
+                    ORDER BY Created DESC
+                ) lastPost
+                LEFT JOIN Character lastPostAuthor ON lastPost.CharacterID = lastPostAuthor.CharacterID
+                LEFT JOIN [User] lastPostUser ON lastPost.UserID = lastPostUser.UserID
+                WHERE t.RegionId IS NOT NULL
+                  AND (t.IsArchived IS NULL OR t.IsArchived = 0)
+                ORDER BY lastPost.Created DESC
+            `);
+
+        return {
+            jsonBody: result.recordset,
+            headers: { 'Cache-Control': 'public, max-age=30' }
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('getAllThreads', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    handler: getAllThreads,
+    route: 'all-threads'
 });
