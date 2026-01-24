@@ -353,7 +353,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/wiki/title-list">Title List</DropdownLink>
             <hr className="border-t border-gray-300 my-1" />
             <DropdownLink to="/wiki/absences-and-scarcity">Activity & Absences</DropdownLink>
-            <DropdownLink to="/wiki/absences-and-scarcity">Activity & Absences</DropdownLink>
             <DropdownLink to="/wiki/map">Map</DropdownLink>
             <DropdownLink to="/wiki/setting-overview">Setting Overview</DropdownLink>
             <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
