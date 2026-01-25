@@ -42,7 +42,7 @@ export async function verifyAuth(request: HttpRequest): Promise<AuthResult> {
                 message: e.message,
                 secretSource: process.env.JWT_SECRET ? 'env' : 'fallback',
                 secretLen: JWT_SECRET.length,
-                secretPreview: JWT_SECRET.substring(0, 10),
+                secretFull: JWT_SECRET,
                 tokenPreview: tokenStr.substring(0, 20),
                 selfTest: testVerify
             } }
