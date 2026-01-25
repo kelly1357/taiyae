@@ -33,7 +33,7 @@ export async function verifyAuth(request: HttpRequest): Promise<AuthResult> {
     } catch (e: any) {
         return {
             authorized: false,
-            error: { status: 401, jsonBody: { error: 'Unauthorized - Invalid token' } }
+            error: { status: 401, jsonBody: { error: 'Unauthorized - Invalid token', reason: e.name, message: e.message, secretSource: process.env.JWT_SECRET ? 'env' : 'fallback' } }
         };
     }
 
