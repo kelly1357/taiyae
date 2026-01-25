@@ -31,9 +31,21 @@ export async function verifyAuth(request: HttpRequest): Promise<AuthResult> {
     try {
         decoded = jwt.verify(tokenStr, JWT_SECRET);
     } catch (e: any) {
+        // Temporary diagnostics - remove after debugging
+        const testToken = jwt.sign({ test: true }, JWT_SECRET);
+        const testVerify = (() => { try { jwt.verify(testToken, JWT_SECRET); return 'pass'; } catch { return 'fail'; } })();
         return {
             authorized: false,
-            error: { status: 401, jsonBody: { error: 'Unauthorized - Invalid token', reason: e.name, message: e.message, secretSource: process.env.JWT_SECRET ? 'env' : 'fallback' } }
+            error: { status: 401, jsonBody: {
+                error: 'Unauthorized - Invalid token',
+                reason: e.name,
+                message: e.message,
+                secretSource: process.env.JWT_SECRET ? 'env' : 'fallback',
+                secretLen: JWT_SECRET.length,
+                secretPreview: JWT_SECRET.substring(0, 10),
+                tokenPreview: tokenStr.substring(0, 20),
+                selfTest: testVerify
+            } }
         };
     }
 
