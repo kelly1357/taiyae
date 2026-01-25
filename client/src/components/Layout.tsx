@@ -7,6 +7,16 @@ import { useBackground } from '../contexts/BackgroundContext';
 import Login from '../pages/Login';
 import type { User, Character } from '../types';
 
+// Generate or retrieve a unique guest session ID
+const getGuestSessionId = (): string => {
+  let sessionId = localStorage.getItem('guestSessionId');
+  if (!sessionId) {
+    sessionId = 'guest_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    localStorage.setItem('guestSessionId', sessionId);
+  }
+  return sessionId;
+};
+
 
 interface LayoutProps {
   user?: User;
@@ -33,6 +43,7 @@ const Layout: React.FC<LayoutProps> = ({
   const { backgroundUrl, isGrayscale } = useBackground();
   const [imageError, setImageError] = useState(false);
   const [isPingModalOpen, setIsPingModalOpen] = useState(false);
+  const [guestCount, setGuestCount] = useState(0);
   const location = useLocation();
 
   // Reset imageError when active character changes
@@ -60,6 +71,65 @@ const Layout: React.FC<LayoutProps> = ({
 
     return () => clearInterval(interval);
   }, [activeCharacter?.id]);
+
+  // Guest heartbeat - only for users without an active character
+  useEffect(() => {
+    // Wait until we know whether the user has characters loaded
+    // This prevents counting logged-in users as guests during initial page load
+    if (user && !charactersLoaded) return;
+
+    // If user has an active character, they're not a guest - remove their guest session
+    if (activeCharacter?.id) {
+      const sessionId = localStorage.getItem('guestSessionId');
+      if (sessionId) {
+        fetch('/api/guests/session', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        }).catch(() => {});
+      }
+      return;
+    }
+
+    // If user is logged in but has no active character, don't count as guest
+    if (user) return;
+
+    const sessionId = getGuestSessionId();
+
+    const sendGuestHeartbeat = () => {
+      fetch('/api/guests/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      }).catch(err => console.error('Guest heartbeat failed:', err));
+    };
+
+    // Send immediately
+    sendGuestHeartbeat();
+
+    // Then send every 5 minutes
+    const interval = setInterval(sendGuestHeartbeat, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user, activeCharacter?.id, charactersLoaded]);
+
+  // Fetch guest count periodically
+  useEffect(() => {
+    const fetchGuestCount = () => {
+      fetch('/api/guests/count')
+        .then(res => res.json())
+        .then(data => setGuestCount(data.count || 0))
+        .catch(() => {});
+    };
+
+    // Fetch immediately
+    fetchGuestCount();
+
+    // Then refresh every 2 minutes
+    const interval = setInterval(fetchGuestCount, 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen text-gray-100 font-sans flex flex-col relative">
@@ -180,7 +250,7 @@ const Layout: React.FC<LayoutProps> = ({
                 Who's Online ({onlineList.length})
               </div>
               <div className="px-4 py-4 text-sm text-gray-800 space-y-2">
-                {onlineList.length ? (
+                {(onlineList.length > 0 || guestCount > 0) ? (
                   <div className="flex flex-wrap items-center justify-center">
                     {onlineList.map((character, index) => (
                       <span key={character.id}>
@@ -190,18 +260,21 @@ const Layout: React.FC<LayoutProps> = ({
                         >
                           {character.name}
                         </Link>
-                        {index < onlineList.length - 1 && <span className="mx-1 text-gray-400">·</span>}
+                        {(index < onlineList.length - 1 || guestCount > 0) && <span className="mx-1 text-gray-400">·</span>}
                       </span>
                     ))}
+                    {guestCount > 0 && (
+                      <span className="text-gray-500 italic">
+                        {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
+                      </span>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-gray-500 italic text-center">No characters online.</p>
+                  <p className="text-gray-500 italic text-center">No one online.</p>
                 )}
                 <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center">
                   <div className="flex items-center justify-center gap-2">
                     <span className="text-gray-500">Rogue</span>
-                    <span>•</span>
-                    <span className="italic text-gray-500">Joining</span>
                     <span>•</span>
                     <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Staff</span>
                   </div>
