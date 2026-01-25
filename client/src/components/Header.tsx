@@ -320,6 +320,18 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           </NavDropdown>
           {(isModerator || isAdmin) && (
             <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
+              <DropdownLink to="/admin/user-approvals">
+                <span className="flex items-center justify-between w-full">
+                  User Approvals
+                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
+                </span>
+              </DropdownLink>
+              <DropdownLink to="/admin/staff-pings">
+                <span className="flex items-center justify-between w-full">
+                  Staff Pings
+                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
+                </span>
+              </DropdownLink>
               <DropdownLink to="/admin/skill-points">
                 <span className="flex items-center justify-between w-full">
                   Skill Points
@@ -342,18 +354,6 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <span className="flex items-center justify-between w-full">
                   Homepage
                   {pendingPlotNewsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingPlotNewsCount}</span>}
-                </span>
-              </DropdownLink>
-              <DropdownLink to="/admin/staff-pings">
-                <span className="flex items-center justify-between w-full">
-                  Staff Pings
-                  {pendingStaffPingsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingStaffPingsCount}</span>}
-                </span>
-              </DropdownLink>
-              <DropdownLink to="/admin/user-approvals">
-                <span className="flex items-center justify-between w-full">
-                  User Approvals
-                  {pendingUserApprovalsCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingUserApprovalsCount}</span>}
                 </span>
               </DropdownLink>
             </NavDropdown>
