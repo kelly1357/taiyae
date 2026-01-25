@@ -64,7 +64,7 @@ const UserApprovalsAdmin: React.FC = () => {
       const endpoint = includeJoined ? '/api/user-approval/all' : '/api/user-approval';
       const response = await fetch(endpoint, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         }
       });
       if (response.ok) {
@@ -86,7 +86,7 @@ const UserApprovalsAdmin: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId: user?.id })
       });
@@ -125,7 +125,7 @@ const UserApprovalsAdmin: React.FC = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: user?.id,
@@ -162,7 +162,7 @@ const UserApprovalsAdmin: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId: user?.id })
       });
@@ -195,7 +195,7 @@ const UserApprovalsAdmin: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId: user?.id })
       });
@@ -224,7 +224,7 @@ const UserApprovalsAdmin: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId })
       });
@@ -250,7 +250,7 @@ const UserApprovalsAdmin: React.FC = () => {
       const response = await fetch(`/api/user-approval/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         }
       });
 

@@ -57,7 +57,7 @@ export default function HomepageAdmin() {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/plot-news/pending', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -107,7 +107,7 @@ export default function HomepageAdmin() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           content: bulletinContent,
@@ -143,7 +143,7 @@ export default function HomepageAdmin() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           content: newUpdateContent,
@@ -174,7 +174,7 @@ export default function HomepageAdmin() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ plotNewsId, userId })
       });
@@ -199,7 +199,7 @@ export default function HomepageAdmin() {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/plot-news/${submission.PlotNewsID}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {
@@ -234,7 +234,7 @@ export default function HomepageAdmin() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           packName: editForm.packName,

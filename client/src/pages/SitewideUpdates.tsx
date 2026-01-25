@@ -48,7 +48,7 @@ const SitewideUpdates: React.FC = () => {
       const token = localStorage.getItem('token');
       const res = await fetch(`/api/sitewide-updates/${updateId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {

@@ -231,7 +231,7 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
         }
 
         // Verify token
-        const authHeader = request.headers.get('Authorization');
+        const authHeader = request.headers.get('X-Authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
              return { status: 401, jsonBody: { body: "Unauthorized" } };
         }

@@ -85,7 +85,7 @@ export default function Achievements() {
         const token = localStorage.getItem('token');
         await fetch('/api/achievements/check', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
           body: JSON.stringify({ userId: userId })
         });
 
@@ -119,7 +119,7 @@ export default function Achievements() {
       const token = localStorage.getItem('token');
       const res = await fetch('/api/achievements/request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           userId: userId,
           achievementId: selectedAchievement.id,

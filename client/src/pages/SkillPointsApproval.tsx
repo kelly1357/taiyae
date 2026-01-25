@@ -32,7 +32,7 @@ const SkillPointsApproval: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/skill-points-approval', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -57,7 +57,7 @@ const SkillPointsApproval: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ assignmentId })
       });
@@ -82,7 +82,7 @@ const SkillPointsApproval: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/skill-points-approval/${assignmentId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       
       if (response.ok) {

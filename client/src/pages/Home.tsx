@@ -195,7 +195,7 @@ const Home: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/plot-news', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           packName: plotNewsForm.packName,
           newsText: plotNewsForm.newsText.trim(),

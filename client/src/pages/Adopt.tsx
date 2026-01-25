@@ -154,7 +154,7 @@ const Adopt: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { 'X-Authorization': `Bearer ${token}` },
         body: formDataUpload,
       });
       if (response.ok) {
@@ -207,7 +207,7 @@ const Adopt: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/adoptables/${adoptable.id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           requestingUserId: user?.id,
           isModerator: user?.isModerator || user?.isAdmin,
@@ -263,7 +263,7 @@ const Adopt: React.FC = () => {
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
 
@@ -877,7 +877,7 @@ const Adopt: React.FC = () => {
                           const token = localStorage.getItem('token');
                           const response = await fetch(url, {
                             method,
-                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
                             body: JSON.stringify(payload),
                           });
                           if (response.ok) {

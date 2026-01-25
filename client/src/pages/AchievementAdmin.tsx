@@ -57,7 +57,7 @@ export default function AchievementAdmin() {
       const token = localStorage.getItem('token');
       const [requestsRes, achievementsRes] = await Promise.all([
         fetch('/api/achievements/requests/pending', {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'X-Authorization': `Bearer ${token}` }
         }),
         fetch('/api/achievements')
       ]);
@@ -81,7 +81,7 @@ export default function AchievementAdmin() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ moderatorUserId: moderatorId })
       });
@@ -109,7 +109,7 @@ export default function AchievementAdmin() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           moderatorUserId: moderatorId,
@@ -153,7 +153,7 @@ export default function AchievementAdmin() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: parseInt(awardUserId),

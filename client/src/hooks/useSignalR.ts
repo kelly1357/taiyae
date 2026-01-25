@@ -117,7 +117,7 @@ export function useSignalR({
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'X-Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ characterId, userId: String(userId) })
                 }).catch(() => {});
@@ -128,7 +128,7 @@ export function useSignalR({
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'X-Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ userId: String(userId) })
                 }).catch(() => {});
@@ -160,7 +160,7 @@ export function useSignalR({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'X-Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ characterId, userId: String(userId) })
             });
@@ -182,7 +182,7 @@ export function useSignalR({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'X-Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ characterId, userId: String(userId) })
             });
@@ -204,7 +204,7 @@ export function useSignalR({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'X-Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ userId: String(userId) })
             });
@@ -226,7 +226,7 @@ export function useSignalR({
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'X-Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ userId: String(userId) })
             });

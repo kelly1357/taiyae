@@ -392,7 +392,7 @@ const ThreadView: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/skill-points-claim?characterId=${activeCharacter.id}&threadId=${threadId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -440,7 +440,7 @@ const ThreadView: React.FC = () => {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title: editTitle.trim(),
@@ -495,7 +495,7 @@ const ThreadView: React.FC = () => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'X-Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 content: replyContent,
@@ -538,7 +538,7 @@ const ThreadView: React.FC = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           content: editContent,
@@ -571,7 +571,7 @@ const ThreadView: React.FC = () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           characterId: activeCharacter?.id,
@@ -605,7 +605,7 @@ const ThreadView: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           userId: user.id,
@@ -638,7 +638,7 @@ const ThreadView: React.FC = () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId: user.id })
       });
@@ -675,7 +675,7 @@ const ThreadView: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ userId: user.id })
       });
@@ -734,7 +734,7 @@ const ThreadView: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           characterId: activeCharacter.id,

@@ -43,7 +43,7 @@ const Conversations: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`/api/conversations?characterId=${activeCharacter.id}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       setConversations(data);
@@ -60,7 +60,7 @@ const Conversations: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`/api/conversations/${conversationId}/messages`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
 
@@ -79,7 +79,7 @@ const Conversations: React.FC = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ characterId: activeCharacter?.id }),
       });
@@ -185,7 +185,7 @@ const Conversations: React.FC = () => {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'X-Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ characterId: activeCharacter.id }),
           }).catch(err => console.error('Failed to mark as read:', err));
@@ -229,7 +229,7 @@ const Conversations: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           characterId: activeCharacter.id,
@@ -265,7 +265,7 @@ const Conversations: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           fromCharacterId: activeCharacter.id,

@@ -36,7 +36,7 @@ const StaffPingsAdmin: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/staff-pings/list?showResolved=${showResolved}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
         const data = await response.json();
@@ -62,7 +62,7 @@ const StaffPingsAdmin: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           resolvedByUserId: user.id,
@@ -85,7 +85,7 @@ const StaffPingsAdmin: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/staff-pings/${pingId}/unresolve`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
@@ -103,7 +103,7 @@ const StaffPingsAdmin: React.FC = () => {
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/staff-pings/${pingId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'X-Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {

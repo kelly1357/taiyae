@@ -40,7 +40,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'X-Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });

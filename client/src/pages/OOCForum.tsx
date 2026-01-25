@@ -46,7 +46,7 @@ const OOCForumPage: React.FC = () => {
     setPinningThreadId(threadId);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST', headers: { 'X-Authorization': `Bearer ${token}` } });
       if (response.ok) {
         fetchThreads();
       }

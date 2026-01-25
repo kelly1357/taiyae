@@ -18,7 +18,8 @@ export interface AuthResult {
  * Does NOT check for staff privileges - use verifyStaffAuth for that.
  */
 export async function verifyAuth(request: HttpRequest): Promise<AuthResult> {
-    const authHeader = request.headers.get('Authorization');
+    // Use X-Authorization header because Azure SWA hijacks the standard Authorization header
+    const authHeader = request.headers.get('X-Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return {
             authorized: false,
@@ -31,21 +32,9 @@ export async function verifyAuth(request: HttpRequest): Promise<AuthResult> {
     try {
         decoded = jwt.verify(tokenStr, JWT_SECRET);
     } catch (e: any) {
-        // Temporary diagnostics - remove after debugging
-        const testToken = jwt.sign({ test: true }, JWT_SECRET);
-        const testVerify = (() => { try { jwt.verify(testToken, JWT_SECRET); return 'pass'; } catch { return 'fail'; } })();
         return {
             authorized: false,
-            error: { status: 401, jsonBody: {
-                error: 'Unauthorized - Invalid token',
-                reason: e.name,
-                message: e.message,
-                secretSource: process.env.JWT_SECRET ? 'env' : 'fallback',
-                secretLen: JWT_SECRET.length,
-                secretFull: JWT_SECRET,
-                tokenFull: tokenStr,
-                selfTest: testVerify
-            } }
+            error: { status: 401, jsonBody: { error: 'Unauthorized - Invalid token' } }
         };
     }
 

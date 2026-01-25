@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     const fetchAllCounts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const authHeaders = { 'Authorization': `Bearer ${token}` };
+        const authHeaders = { 'X-Authorization': `Bearer ${token}` };
         const [skillPoints, plotNews, achievements, inactiveChars, staffPings, userApprovals] = await Promise.all([
           fetch('/api/skill-points-approval/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/plot-news/pending/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
@@ -120,7 +120,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
       try {
         const token = localStorage.getItem('token');
         const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'X-Authorization': `Bearer ${token}` }
         });
         if (response.ok) {
           const data = await response.json();
