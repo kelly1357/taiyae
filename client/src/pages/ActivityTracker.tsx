@@ -19,11 +19,25 @@ const ActivityTracker: React.FC = () => {
   const [postCutoffDate, setPostCutoffDate] = useState<string>('');
   const [sortField, setSortField] = useState<SortField>('Name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [birthdayCount, setBirthdayCount] = useState<number>(0);
 
   useEffect(() => {
     fetchInactiveCharacters();
     calculateNextCheckDate();
+    fetchBirthdayCount();
   }, []);
+
+  const fetchBirthdayCount = async () => {
+    try {
+      const response = await fetch('/api/birthdays/count');
+      if (response.ok) {
+        const data = await response.json();
+        setBirthdayCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching birthday count:', error);
+    }
+  };
 
   const fetchInactiveCharacters = async () => {
     try {
@@ -116,8 +130,11 @@ const ActivityTracker: React.FC = () => {
 
   return (
     <section className="bg-white border border-gray-300 shadow">
-      <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
+      <div className="bg-[#2f3a2f] px-4 py-2 dark-header flex justify-between items-center">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Activity Checks</h2>
+        <Link to="/birthdays" className="text-[#fff9] hover:text-white normal-case text-xs flex items-center gap-1">
+          🎂 Birthdays{birthdayCount > 0 && <span>({birthdayCount})</span>} →
+        </Link>
       </div>
 
       <div className="px-6 py-6">

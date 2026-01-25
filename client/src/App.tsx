@@ -27,6 +27,7 @@ import SitewideUpdates from './pages/SitewideUpdates';
 import ActivityTracker from './pages/ActivityTracker';
 import InactiveCharacters from './pages/InactiveCharacters';
 import DeadCharacters from './pages/DeadCharacters';
+import Birthdays from './pages/Birthdays';
 import StaffPingsAdmin from './pages/StaffPingsAdmin';
 import UserApprovalsAdmin from './pages/UserApprovalsAdmin';
 import Conversations from './pages/Conversations';
@@ -240,6 +241,7 @@ const App: React.FC = () => {
         <Route path="memorial" element={<DeadCharacters />} />
         <Route path="adopt" element={<Adopt />} />
         <Route path="activity-tracker" element={<ActivityTracker />} />
+        <Route path="birthdays" element={<Birthdays />} />
         <Route path="character/:slug" element={<CharacterProfile />} />
         <Route path="my-characters" element={user ? <CharacterManagement user={user} /> : (
           <section className="bg-white border border-gray-300 shadow">
