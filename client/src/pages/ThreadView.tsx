@@ -110,6 +110,13 @@ const OOCPlayerInfoPanel: React.FC<{
         )}
       </div>
 
+      {/* Status text if user is Joining */}
+      {user?.userStatus === 'Joining' && (
+        <div className="text-sm italic text-gray-500 mb-2 text-center">
+          Joining
+        </div>
+      )}
+
       {/* Player section */}
       <table className="w-full text-xs border border-gray-300 mb-2">
         <tbody>

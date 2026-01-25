@@ -52,14 +52,16 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     fetchUnreadCounts();
   }, [user.id, fetchUnreadCounts]);
 
-  // Check for ?new=true query param to open create form
+  // Check for ?new=true query param to open create form (only for non-Joining users)
   useEffect(() => {
     if (searchParams.get('new') === 'true') {
-      handleCreate();
+      if (user.userStatus !== 'Joining') {
+        handleCreate();
+      }
       // Remove the query param from URL
       setSearchParams({});
     }
-  }, [searchParams]);
+  }, [searchParams, user.userStatus]);
 
   const fetchHealthStatuses = async () => {
     try {
@@ -414,12 +416,14 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
           <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
             My Characters
           </h2>
-          <button 
-            onClick={handleCreate}
-            className="bg-white/20 hover:bg-white/30 text-white text-xs uppercase tracking-wide px-3 py-1 transition-colors"
-          >
-            Create New Character
-          </button>
+          {user.userStatus !== 'Joining' && (
+            <button 
+              onClick={handleCreate}
+              className="bg-white/20 hover:bg-white/30 text-white text-xs uppercase tracking-wide px-3 py-1 transition-colors"
+            >
+              Create New Character
+            </button>
+          )}
         </div>
 
       {isEditing ? (

@@ -295,7 +295,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="/wiki/faq">FAQ</DropdownLink>
             <DropdownLink to="/wiki/rules-general">Site Rules</DropdownLink>
             <DropdownLink to="/adopt">Adoptables</DropdownLink>
-            <DropdownLink to="/my-characters?new=true?new=true">Join Horizon</DropdownLink>
+            <DropdownLink to={user?.userStatus === 'Joining' ? '/ooc-forum/1' : '/my-characters?new=true'}>Join Horizon</DropdownLink>
           </NavDropdown>
           <NavDropdown id="characters" label="Characters">
             <DropdownLink to="/characters">Character List</DropdownLink>
@@ -502,11 +502,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               
               <button onClick={onLogout} className="header-link text-xs uppercase tracking-wide font-bold">Logout</button>
             </div>
-          ) : (
-            <div className="space-x-4">
-              <span className="text-xs uppercase tracking-wide font-bold" style={{ color: 'black' }}>Sign In / Join</span>
-            </div>
-          )}
+          ) : null}
         </nav>
       </div>
 
@@ -518,7 +514,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <MobileDropdownLink to="/wiki/faq">FAQ</MobileDropdownLink>
             <MobileDropdownLink to="/wiki/rules-general">Site Rules</MobileDropdownLink>
             <MobileDropdownLink to="/adopt">Adoptables</MobileDropdownLink>
-            <MobileDropdownLink to="/my-characters?new=true">Join Horizon</MobileDropdownLink>
+            <MobileDropdownLink to={user?.userStatus === 'Joining' ? '/ooc-forum/1' : '/my-characters?new=true'}>Join Horizon</MobileDropdownLink>
           </MobileNavSection>
           <MobileNavSection label="Characters">
             <MobileDropdownLink to="/characters">Character List</MobileDropdownLink>
@@ -682,24 +678,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 Logout
               </button>
             </div>
-          ) : (
-            <div className="border-b border-gray-200">
-              <Link 
-                to="/login" 
-                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Sign In
-              </Link>
-              <Link 
-                to="/register" 
-                className="block px-4 py-3 text-xs uppercase tracking-wide text-gray-700 hover:bg-gray-100 border-t border-gray-200"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Join
-              </Link>
-            </div>
-          )}
+          ) : null}
         </div>
       )}
     </header>

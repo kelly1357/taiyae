@@ -82,6 +82,9 @@ const App: React.FC = () => {
               if (data) {
                 const isModerator = data.Is_Moderator === true || data.Is_Moderator === 1 || data.isModerator === true;
                 const isAdmin = data.Is_Admin === true || data.Is_Admin === 1 || data.isAdmin === true;
+                // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
+                const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
+                const userStatus = data.UserStatusID != null ? (statusMap[data.UserStatusID] || 'Joined') : (parsedUser.userStatus || 'Joined');
                 const refreshedUser = {
                   ...parsedUser,
                   imageUrl: data.ImageURL || data.imageUrl || parsedUser.imageUrl || '',
@@ -92,6 +95,8 @@ const App: React.FC = () => {
                   isModerator,
                   isAdmin,
                   role: isModerator ? 'moderator' : 'member',
+                  userStatus,
+                  userStatusId: data.UserStatusID ?? parsedUser.userStatusId ?? 2,
                 };
                 setUser(refreshedUser);
                 localStorage.setItem('user', JSON.stringify(refreshedUser));

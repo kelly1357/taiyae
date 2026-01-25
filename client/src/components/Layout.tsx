@@ -131,7 +131,7 @@ const Layout: React.FC<LayoutProps> = ({
             )}
 
 
-            {!activeCharacter && user && charactersLoaded && userCharacters?.length === 0 && (
+            {!activeCharacter && user && charactersLoaded && userCharacters?.length === 0 && user.userStatus !== 'Joining' && (
               <section className="bg-white border border-gray-300 shadow">
                 <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                   Create a Character!

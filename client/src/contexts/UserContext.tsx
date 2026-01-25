@@ -84,9 +84,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const role: UserRole = isAdmin ? ('admin' as UserRole) : isModerator ? ('moderator' as UserRole) : ('member' as UserRole);
 
       // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
+      // If UserStatusID is null/undefined, treat as 'Joined' (existing users before status was added)
       const statusMap: Record<number, UserStatus> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
-      const userStatus: UserStatus = statusMap[userData.UserStatusID] || 'Joining';
-      const userStatusId: number = userData.UserStatusID || 1;
+      const userStatus: UserStatus = userData.UserStatusID != null ? (statusMap[userData.UserStatusID] || 'Joined') : 'Joined';
+      const userStatusId: number = userData.UserStatusID ?? 2;
 
       // Extend User type locally to allow role property
       type UserWithRole = User & { role: UserRole };

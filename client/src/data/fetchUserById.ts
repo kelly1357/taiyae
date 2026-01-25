@@ -6,6 +6,9 @@ export async function fetchUserById(userId: number | string): Promise<User | nul
     const res = await fetch(`/api/users/${userId}`);
     if (!res.ok) return null;
     const user = await res.json();
+    // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
+    const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
+    const userStatus = user.UserStatusID != null ? (statusMap[user.UserStatusID] || 'Joined') : 'Joined';
     // Normalize keys if needed (API may return PascalCase)
     return {
       id: user.UserID ?? user.id,
@@ -21,6 +24,8 @@ export async function fetchUserById(userId: number | string): Promise<User | nul
       discord: user.Discord ?? user.discord,
       isModerator: user.Is_Moderator ?? user.isModerator,
       isAdmin: user.Is_Admin ?? user.isAdmin,
+      userStatus: userStatus as 'Joining' | 'Joined' | 'Banned',
+      userStatusId: user.UserStatusID ?? 2,
     };
   } catch (e) {
     return null;

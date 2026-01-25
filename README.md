@@ -75,6 +75,10 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 [ ] Skill points enhancement (quantity, verifications)
 
+[ ] Forgot password feature
+
+[ ] Email server
+
 ✅  User Status: Active, Joining, Banned
 
 ✅  Moderator actions (approving new users)

@@ -80,6 +80,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
             isModerator,
             isAdmin,
             role: isModerator ? 'moderator' : 'member',
+            userStatus: data.user.userStatus || 'Joined',
+            userStatusId: data.user.userStatusId || data.user.UserStatusID || 2,
         };
         onLogin(normalizedUser);
         navigate('/');
@@ -134,6 +136,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
             isModerator,
             isAdmin,
             role: isModerator ? 'moderator' : 'member',
+            userStatus: data.user.userStatus || 'Joined',
+            userStatusId: data.user.userStatusId || data.user.UserStatusID || 2,
         };
         onLogin(normalizedUser);
         navigate('/');
