@@ -130,6 +130,28 @@ const Layout: React.FC<LayoutProps> = ({
               </section>
             )}
 
+            {/* Prompt for Joining users to apply */}
+            {user && user.userStatus === 'Joining' && (
+              <section className="bg-white border border-gray-300 shadow">
+                <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                  Welcome to Horizon!
+                </div>
+                <div className="px-4 py-4 space-y-3 text-gray-800">
+                  <p className="text-sm text-gray-700">
+                    Hello, <span className="font-semibold">{user.username}</span>! We're excited to have you here.
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    To start roleplaying, introduce yourself in the Joining forum. Once approved, you'll be able to create your first character.
+                  </p>
+                  <Link 
+                    to="/ooc-forum/1" 
+                    className="block w-full bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-3 text-sm uppercase tracking-wide text-center transition-colors"
+                  >
+                    Get Started →
+                  </Link>
+                </div>
+              </section>
+            )}
 
             {!activeCharacter && user && charactersLoaded && userCharacters?.length === 0 && user.userStatus !== 'Joining' && (
               <section className="bg-white border border-gray-300 shadow">
