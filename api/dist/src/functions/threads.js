@@ -13,6 +13,7 @@ exports.getAllThreads = exports.updateThreadDetails = exports.toggleThreadPin = 
 const functions_1 = require("@azure/functions");
 const db_1 = require("../db");
 const sql = require("mssql");
+const auth_1 = require("../auth");
 function getThreads(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
         const regionId = request.query.get('regionId');
@@ -50,10 +51,9 @@ function getThreads(request, context) {
                 COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
                 COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
                 threadAuthor.Slug as authorSlug,
-                CASE 
-                    WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                    WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                    ELSE 0 
+                CASE
+                    WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                    ELSE 0
                 END as isOnline,
                 (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                 0 as views,
@@ -61,10 +61,9 @@ function getThreads(request, context) {
                 lastPostAuthor.CharacterID as lastReplyAuthorId,
                 lastPostAuthor.Slug as lastReplyAuthorSlug,
                 lastPost.Created as lastPostDate,
-                CASE 
-                    WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                    WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                    ELSE 0 
+                CASE
+                    WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                    ELSE 0
                 END as lastReplyIsOnline
             FROM Thread t
             CROSS APPLY (
@@ -106,6 +105,24 @@ function createThread(request, context) {
             const { regionId, oocForumId, title, content, authorId, subheader } = body;
             if ((!regionId && !oocForumId) || !title || !content || !authorId) {
                 return { status: 400, body: "Missing required fields" };
+            }
+            // For region threads, verify user owns the character (authorId is characterId)
+            // For OOC threads, verify user is authenticated and authorId matches their userId
+            if (regionId) {
+                const auth = yield (0, auth_1.verifyCharacterOwnershipOrStaff)(request, parseInt(authorId));
+                if (!auth.authorized) {
+                    return auth.error;
+                }
+            }
+            else {
+                const auth = yield (0, auth_1.verifyAuth)(request);
+                if (!auth.authorized) {
+                    return auth.error;
+                }
+                // For OOC, authorId is userId - verify it matches logged in user (or staff)
+                if (!auth.isAdmin && !auth.isModerator && auth.userId !== parseInt(authorId)) {
+                    return { status: 403, jsonBody: { error: 'You can only post as yourself' } };
+                }
             }
             const pool = yield (0, db_1.getPool)();
             const transaction = new sql.Transaction(pool);
@@ -200,6 +217,24 @@ function createReply(request, context) {
             if (thread.IsArchived) {
                 return { status: 403, body: "This thread has been archived and is closed for new replies" };
             }
+            // Verify auth based on thread type
+            if (thread.RegionId) {
+                // For region threads, verify user owns the character
+                const auth = yield (0, auth_1.verifyCharacterOwnershipOrStaff)(request, parseInt(authorId || 1));
+                if (!auth.authorized) {
+                    return auth.error;
+                }
+            }
+            else {
+                // For OOC threads, verify user is authenticated and authorId matches
+                const auth = yield (0, auth_1.verifyAuth)(request);
+                if (!auth.authorized) {
+                    return auth.error;
+                }
+                if (!auth.isAdmin && !auth.isModerator && auth.userId !== parseInt(authorId || 1)) {
+                    return { status: 403, jsonBody: { error: 'You can only post as yourself' } };
+                }
+            }
             const req = pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
                 .input('authorId', sql.Int, parseInt(authorId || 1))
@@ -251,6 +286,11 @@ functions_1.app.http('createReply', {
 });
 function updatePost(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify authentication
+        const auth = yield (0, auth_1.verifyAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const postId = request.params.postId;
         if (!postId) {
             return { status: 400, body: "postId is required" };
@@ -262,6 +302,25 @@ function updatePost(request, context) {
                 return { status: 400, body: "Content and either modifiedByCharacterId or modifiedByUserId are required" };
             }
             const pool = yield (0, db_1.getPool)();
+            // Verify user owns this post (or is staff)
+            if (!auth.isAdmin && !auth.isModerator) {
+                const postResult = yield pool.request()
+                    .input('postId', sql.Int, parseInt(postId))
+                    .query(`
+                    SELECT p.CharacterID, p.UserID, c.UserID as characterOwnerUserId
+                    FROM Post p
+                    LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                    WHERE p.PostID = @postId
+                `);
+                if (postResult.recordset.length === 0) {
+                    return { status: 404, body: "Post not found" };
+                }
+                const post = postResult.recordset[0];
+                const isOwner = (post.UserID === auth.userId) || (post.characterOwnerUserId === auth.userId);
+                if (!isOwner) {
+                    return { status: 403, jsonBody: { error: 'You can only edit your own posts' } };
+                }
+            }
             // Use different update based on whether it's a character or user edit
             if (modifiedByCharacterId) {
                 yield pool.request()
@@ -311,27 +370,17 @@ functions_1.app.http('updatePost', {
 });
 function deletePost(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify authentication via JWT
+        const auth = yield (0, auth_1.verifyAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const postId = request.params.postId;
         if (!postId) {
             return { status: 400, body: "postId is required" };
         }
         try {
-            const body = yield request.json();
-            const { characterId, userId, isModerator } = body;
-            if (!characterId && !userId) {
-                return { status: 400, body: "characterId or userId is required" };
-            }
             const pool = yield (0, db_1.getPool)();
-            // Verify moderator status if claimed
-            let isActuallyModerator = false;
-            if (isModerator && userId) {
-                const modCheck = yield pool.request()
-                    .input('userId', sql.Int, parseInt(userId))
-                    .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-                if (modCheck.recordset.length > 0) {
-                    isActuallyModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-                }
-            }
             // Get the post to verify ownership
             const postResult = yield pool.request()
                 .input('postId', sql.Int, parseInt(postId))
@@ -348,10 +397,9 @@ function deletePost(request, context) {
                 return { status: 404, body: "Post not found" };
             }
             const post = postResult.recordset[0];
-            // Verify the user owns this post OR is a moderator
-            const isOwner = (characterId && post.CharacterID === parseInt(characterId)) ||
-                (userId && (post.UserID === parseInt(userId) || post.characterOwnerUserId === parseInt(userId)));
-            if (!isOwner && !isActuallyModerator) {
+            // Verify the user owns this post OR is staff
+            const isOwner = (post.UserID === auth.userId) || (post.characterOwnerUserId === auth.userId);
+            if (!isOwner && !auth.isAdmin && !auth.isModerator) {
                 return { status: 403, body: "You can only delete your own posts" };
             }
             // Don't allow deleting the first post (thread starter) - use archive or delete thread instead
@@ -439,27 +487,17 @@ functions_1.app.http('getLatestPosts', {
 });
 function archiveThread(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify authentication via JWT
+        const auth = yield (0, auth_1.verifyAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const threadId = request.params.threadId;
         if (!threadId) {
             return { status: 400, body: "threadId is required" };
         }
         try {
-            const body = yield request.json();
-            const { userId, isModerator } = body;
-            if (!userId) {
-                return { status: 400, body: "userId is required" };
-            }
             const pool = yield (0, db_1.getPool)();
-            // Verify moderator status if claimed
-            let isActuallyModerator = false;
-            if (isModerator) {
-                const modCheck = yield pool.request()
-                    .input('userId', sql.Int, parseInt(userId))
-                    .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-                if (modCheck.recordset.length > 0) {
-                    isActuallyModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-                }
-            }
             // Get the thread and verify the user is the creator
             const threadResult = yield pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
@@ -469,8 +507,8 @@ function archiveThread(request, context) {
                 FROM Thread t
                 CROSS APPLY (
                     SELECT TOP 1 CharacterID, UserID
-                    FROM Post 
-                    WHERE ThreadID = t.ThreadID 
+                    FROM Post
+                    WHERE ThreadID = t.ThreadID
                     ORDER BY Created ASC
                 ) p
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
@@ -480,8 +518,8 @@ function archiveThread(request, context) {
                 return { status: 404, body: "Thread not found" };
             }
             const thread = threadResult.recordset[0];
-            // Check if user is the creator OR is a moderator
-            if (thread.creatorUserId !== parseInt(userId) && !isActuallyModerator) {
+            // Check if user is the creator OR is staff
+            if (thread.creatorUserId !== auth.userId && !auth.isAdmin && !auth.isModerator) {
                 return { status: 403, body: "You can only archive your own threads" };
             }
             // Check if already archived
@@ -524,28 +562,17 @@ functions_1.app.http('archiveThread', {
 // DELETE /api/threads/:threadId - Delete an entire thread (moderator only)
 function deleteThread(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify staff authorization via JWT
+        const auth = yield (0, auth_1.verifyStaffAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const threadId = request.params.threadId;
         if (!threadId) {
             return { status: 400, body: "threadId is required" };
         }
         try {
-            const body = yield request.json();
-            const { userId } = body;
-            if (!userId) {
-                return { status: 400, body: "userId is required" };
-            }
             const pool = yield (0, db_1.getPool)();
-            // Verify the user is a moderator or admin
-            const modCheck = yield pool.request()
-                .input('userId', sql.Int, parseInt(userId))
-                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-            if (modCheck.recordset.length === 0) {
-                return { status: 404, body: "User not found" };
-            }
-            const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-            if (!isModerator) {
-                return { status: 403, body: "Only moderators can delete threads" };
-            }
             // Verify the thread exists
             const threadCheck = yield pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
@@ -587,28 +614,17 @@ functions_1.app.http('deleteThread', {
 // Reverses skill points and deletes all claims, then restores thread to original location
 function unarchiveThread(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify staff authorization via JWT
+        const auth = yield (0, auth_1.verifyStaffAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const threadId = request.params.threadId;
         if (!threadId) {
             return { status: 400, body: "threadId is required" };
         }
         try {
-            const body = yield request.json();
-            const { userId } = body;
-            if (!userId) {
-                return { status: 400, body: "userId is required" };
-            }
             const pool = yield (0, db_1.getPool)();
-            // Verify the user is a moderator or admin
-            const modCheck = yield pool.request()
-                .input('userId', sql.Int, parseInt(userId))
-                .query('SELECT Is_Moderator, Is_Admin FROM [User] WHERE UserID = @userId');
-            if (modCheck.recordset.length === 0) {
-                return { status: 404, body: "User not found" };
-            }
-            const isModerator = modCheck.recordset[0].Is_Moderator || modCheck.recordset[0].Is_Admin;
-            if (!isModerator) {
-                return { status: 403, body: "Only moderators can unarchive threads" };
-            }
             // Get the thread and verify it's archived
             const threadResult = yield pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
@@ -677,6 +693,11 @@ functions_1.app.http('unarchiveThread', {
 // Toggle pin status for OOC forum threads (moderator/admin only)
 function toggleThreadPin(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify staff authorization via JWT
+        const auth = yield (0, auth_1.verifyStaffAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const threadId = request.params.threadId;
         if (!threadId) {
             return { status: 400, body: "Thread ID is required" };
@@ -724,6 +745,11 @@ functions_1.app.http('toggleThreadPin', {
 // Update thread title and subheader
 function updateThreadDetails(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
+        // Verify authentication via JWT
+        const auth = yield (0, auth_1.verifyAuth)(request);
+        if (!auth.authorized) {
+            return auth.error;
+        }
         const threadId = request.params.threadId;
         if (!threadId) {
             return { status: 400, body: "Thread ID is required" };
@@ -735,6 +761,29 @@ function updateThreadDetails(request, context) {
                 return { status: 400, body: "Title is required" };
             }
             const pool = yield (0, db_1.getPool)();
+            // Verify user owns this thread (or is staff)
+            if (!auth.isAdmin && !auth.isModerator) {
+                const threadResult = yield pool.request()
+                    .input('threadId', sql.Int, parseInt(threadId))
+                    .query(`
+                    SELECT COALESCE(c.UserID, p.UserID) as creatorUserId
+                    FROM Thread t
+                    CROSS APPLY (
+                        SELECT TOP 1 CharacterID, UserID
+                        FROM Post
+                        WHERE ThreadID = t.ThreadID
+                        ORDER BY Created ASC
+                    ) p
+                    LEFT JOIN Character c ON p.CharacterID = c.CharacterID
+                    WHERE t.ThreadID = @threadId
+                `);
+                if (threadResult.recordset.length === 0) {
+                    return { status: 404, body: "Thread not found" };
+                }
+                if (threadResult.recordset[0].creatorUserId !== auth.userId) {
+                    return { status: 403, jsonBody: { error: 'You can only edit your own threads' } };
+                }
+            }
             // Update the thread's subheader
             yield pool.request()
                 .input('threadId', sql.Int, parseInt(threadId))
@@ -793,20 +842,18 @@ function getAllThreads(request, context) {
                     COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
                     COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
                     threadAuthor.Slug as authorSlug,
-                    CASE 
-                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                        WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                        ELSE 0 
+                    CASE
+                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                        ELSE 0
                     END as isOnline,
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                     COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
                     lastPostAuthor.CharacterID as lastReplyAuthorId,
                     lastPostAuthor.Slug as lastReplyAuthorSlug,
                     lastPost.Created as lastPostDate,
-                    CASE 
-                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                        WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                        ELSE 0 
+                    CASE
+                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                        ELSE 0
                     END as lastReplyIsOnline
                 FROM Thread t
                 INNER JOIN Region r ON t.RegionId = r.RegionID
