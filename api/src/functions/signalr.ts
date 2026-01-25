@@ -61,11 +61,11 @@ export async function joinCharacterGroup(
             return auth.error!;
         }
 
-        context.extraOutputs.set(signalRGroupOutput, [{
+        context.extraOutputs.set(signalRGroupOutput, {
             userId: String(userId),
             groupName: `character-${characterId}`,
             action: 'add'
-        }]);
+        });
 
         return {
             status: 200,
@@ -96,11 +96,11 @@ export async function leaveCharacterGroup(
             return auth.error!;
         }
 
-        context.extraOutputs.set(signalRGroupOutput, [{
+        context.extraOutputs.set(signalRGroupOutput, {
             userId: String(userId),
             groupName: `character-${characterId}`,
             action: 'remove'
-        }]);
+        });
 
         return {
             status: 200,
@@ -131,11 +131,11 @@ export async function joinStaffGroup(
             return { status: 400, body: "userId is required" };
         }
 
-        context.extraOutputs.set(signalRGroupOutput, [{
+        context.extraOutputs.set(signalRGroupOutput, {
             userId: String(userId),
             groupName: 'staff',
             action: 'add'
-        }]);
+        });
 
         return {
             status: 200,
@@ -166,11 +166,11 @@ export async function leaveStaffGroup(
             return { status: 400, body: "userId is required" };
         }
 
-        context.extraOutputs.set(signalRGroupOutput, [{
+        context.extraOutputs.set(signalRGroupOutput, {
             userId: String(userId),
             groupName: 'staff',
             action: 'remove'
-        }]);
+        });
 
         return {
             status: 200,

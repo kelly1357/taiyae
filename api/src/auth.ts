@@ -30,7 +30,7 @@ export async function verifyAuth(request: HttpRequest): Promise<AuthResult> {
     let decoded: any;
     try {
         decoded = jwt.verify(tokenStr, JWT_SECRET);
-    } catch (e) {
+    } catch (e: any) {
         return {
             authorized: false,
             error: { status: 401, jsonBody: { error: 'Unauthorized - Invalid token' } }

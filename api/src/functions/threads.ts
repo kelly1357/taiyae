@@ -43,10 +43,9 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                 COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
                 COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
                 threadAuthor.Slug as authorSlug,
-                CASE 
-                    WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                    WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                    ELSE 0 
+                CASE
+                    WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                    ELSE 0
                 END as isOnline,
                 (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                 0 as views,
@@ -54,10 +53,9 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                 lastPostAuthor.CharacterID as lastReplyAuthorId,
                 lastPostAuthor.Slug as lastReplyAuthorSlug,
                 lastPost.Created as lastPostDate,
-                CASE 
-                    WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                    WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                    ELSE 0 
+                CASE
+                    WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                    ELSE 0
                 END as lastReplyIsOnline
             FROM Thread t
             CROSS APPLY (
@@ -925,20 +923,18 @@ export async function getAllThreads(request: HttpRequest, context: InvocationCon
                     COALESCE(threadAuthor.CharacterName, threadUser.Username) as authorName,
                     COALESCE(threadAuthor.CharacterID, threadUser.UserID) as authorId,
                     threadAuthor.Slug as authorSlug,
-                    CASE 
-                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                        WHEN threadUser.Last_Login_IP IS NOT NULL AND threadUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                        ELSE 0 
+                    CASE
+                        WHEN threadAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                        ELSE 0
                     END as isOnline,
                     (SELECT COUNT(*) - 1 FROM Post WHERE ThreadID = t.ThreadID) as replyCount,
                     COALESCE(lastPostAuthor.CharacterName, lastPostUser.Username) as lastReplyAuthorName,
                     lastPostAuthor.CharacterID as lastReplyAuthorId,
                     lastPostAuthor.Slug as lastReplyAuthorSlug,
                     lastPost.Created as lastPostDate,
-                    CASE 
-                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
-                        WHEN lastPostUser.Last_Login_IP IS NOT NULL AND lastPostUser.Modified > DATEADD(minute, -15, GETDATE()) THEN 1
-                        ELSE 0 
+                    CASE
+                        WHEN lastPostAuthor.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1
+                        ELSE 0
                     END as lastReplyIsOnline
                 FROM Thread t
                 INNER JOIN Region r ON t.RegionId = r.RegionID
