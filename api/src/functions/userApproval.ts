@@ -40,7 +40,8 @@ async function getPendingUserApprovals(request: HttpRequest, context: Invocation
                 u.Created,
                 u.Auth_Provider as AuthProvider,
                 u.ImageURL,
-                us.StatusName as UserStatus
+                us.StatusName as UserStatus,
+                us.StatusID as UserStatusID
             FROM [User] u
             INNER JOIN UserStatus us ON u.UserStatusID = us.StatusID
             WHERE u.UserStatusID = 1
