@@ -81,11 +81,12 @@ const CharacterProfile: React.FC = () => {
   const saveSummary = async (threadId: number) => {
     const summaryText = editingSummary.trim();
     if (!character) return;
-    
+
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/characters/${character.id}/thread-summaries/${threadId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ summary: summaryText })
       });
       
@@ -113,9 +114,10 @@ const CharacterProfile: React.FC = () => {
     
     setIsUndoing(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/skill-points-undo/${claim.AssignmentID}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId: user.id })
       });
       
@@ -184,9 +186,10 @@ const CharacterProfile: React.FC = () => {
     
     setIsModeratorSaving(true);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/characters/${character.id}/moderator-edit`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
 

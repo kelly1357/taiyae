@@ -151,8 +151,10 @@ const Adopt: React.FC = () => {
     formDataUpload.append('file', file);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/upload', {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: formDataUpload,
       });
       if (response.ok) {
@@ -202,9 +204,10 @@ const Adopt: React.FC = () => {
     if (!confirm(`Are you sure you want to delete ${adoptable.characterName}?`)) return;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/adoptables/${adoptable.id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
           requestingUserId: user?.id,
           isModerator: user?.isModerator || user?.isAdmin,
@@ -256,10 +259,11 @@ const Adopt: React.FC = () => {
         ? `/api/adoptables/${editingAdoptable.id}`
         : '/api/adoptables';
       const method = editingAdoptable ? 'PUT' : 'POST';
+      const token = localStorage.getItem('token');
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload),
       });
 
@@ -870,9 +874,10 @@ const Adopt: React.FC = () => {
                           
                           const url = editingAdoptable ? `/api/adoptables/${editingAdoptable.id}` : '/api/adoptables';
                           const method = editingAdoptable ? 'PUT' : 'POST';
+                          const token = localStorage.getItem('token');
                           const response = await fetch(url, {
                             method,
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                             body: JSON.stringify(payload),
                           });
                           if (response.ok) {

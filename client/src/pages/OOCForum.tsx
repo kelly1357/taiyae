@@ -45,7 +45,8 @@ const OOCForumPage: React.FC = () => {
   const handleTogglePin = async (threadId: string) => {
     setPinningThreadId(threadId);
     try {
-      const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST' });
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
       if (response.ok) {
         fetchThreads();
       }

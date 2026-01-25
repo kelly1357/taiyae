@@ -53,15 +53,17 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
+      const authHeaders = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
       const [inactiveRes, pendingRes] = await Promise.all([
         fetch('/api/moderation/inactive-characters', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify({ userId: user.id })
         }),
         fetch('/api/moderation/characters-to-inactivate', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify({ userId: user.id })
         })
       ]);
@@ -85,9 +87,10 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
   const handleReactivate = async (characterId: number) => {
     setProcessingId(characterId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/moderation/characters/${characterId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId: user.id, status: 'Active' })
       });
 
@@ -110,11 +113,12 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     
     setProcessingId(showDeathModal.id);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/moderation/characters/${showDeathModal.id}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user.id, 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          userId: user.id,
           status: 'Dead'
         })
       });
@@ -137,9 +141,10 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
   const handleInactivate = async (characterId: number) => {
     setProcessingId(characterId);
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/moderation/characters/${characterId}/status`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId: user.id, status: 'Inactive' })
       });
 
@@ -161,11 +166,12 @@ const InactiveCharacters: React.FC<InactiveCharactersProps> = ({ user }) => {
     if (selectedForInactivation.size === 0) return;
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('/api/moderation/characters/bulk-inactivate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userId: user.id, 
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          userId: user.id,
           characterIds: Array.from(selectedForInactivation)
         })
       });

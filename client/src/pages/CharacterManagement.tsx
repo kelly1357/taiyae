@@ -33,7 +33,8 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
   // Fetch unread message counts for inactive/dead characters
   const fetchUnreadCounts = useCallback(async () => {
     try {
-      const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/conversations/unread-counts?userId=${user.id}`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (response.ok) {
         const data = await response.json();
         setUnreadByCharacter(data.unreadByCharacter || {});
@@ -137,9 +138,10 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     try {
       const newValue = !char.showInDropdown;
       console.log('Sending request with newValue:', newValue);
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/characters/${char.id}/show-in-dropdown`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ userId: user.id, showInDropdown: newValue })
       });
       
@@ -289,9 +291,10 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
         healthStatusId: currentCharacter.healthStatusId || 1
       };
 
+      const token = localStorage.getItem('token');
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(body)
       });
 
@@ -331,8 +334,10 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
     try {
       // Upload to API
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: file
       });
 
@@ -367,8 +372,10 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     setUploadingProfileImage(index);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
         method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
         body: file
       });
 

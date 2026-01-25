@@ -63,11 +63,11 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
         const token = localStorage.getItem('token');
         const authHeaders = { 'Authorization': `Bearer ${token}` };
         const [skillPoints, plotNews, achievements, inactiveChars, staffPings, userApprovals] = await Promise.all([
-          fetch('/api/skill-points-approval/count').then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/plot-news/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/achievements/requests/pending/count').then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/moderation/characters-to-inactivate/count').then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/staff-pings/count').then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/skill-points-approval/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/plot-news/pending/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/achievements/requests/pending/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/moderation/characters-to-inactivate/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
+          fetch('/api/staff-pings/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
           fetch('/api/user-approval/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 })
         ]);
         setPendingSkillPointsCount(skillPoints.count || 0);
