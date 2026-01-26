@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import WikiInlineEditor from '../../components/WikiInlineEditor';
+import WikiSearchBox from '../../components/WikiSearchBox';
 import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
 import type { User } from '../../types';
 
@@ -111,26 +112,7 @@ const UsingTags: React.FC = () => {
 
           {/* Sidebar */}
           <div className="lg:w-72">
-            {/* Search Box */}
-            <div className="bg-white border border-stone-300 mb-4">
-              <div className="bg-[#2f3a2f] text-white px-4 py-2 font-semibold">
-                Search the Wiki
-              </div>
-              <div className="p-4">
-                <div className="flex">
-                  <input
-                    type="text"
-                    placeholder="Search articles..."
-                    className="flex-1 border border-stone-300 px-3 py-2 text-sm focus:outline-none focus:border-[#2f3a2f]"
-                  />
-                  <button
-                    className="bg-[#2f3a2f] text-white px-4 py-2 text-sm hover:bg-[#3d4a3d] transition-colors"
-                  >
-                    Go
-                  </button>
-                </div>
-              </div>
-            </div>
+            <WikiSearchBox />
 
             {/* Quick Links */}
             <div className="bg-white border border-stone-300">

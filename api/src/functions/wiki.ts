@@ -323,6 +323,96 @@ export async function deleteWikiPage(request: HttpRequest, context: InvocationCo
     }
 }
 
+// GET /api/wiki-search?q=query - Search wiki pages by title and content
+export async function searchWikiPages(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const searchQuery = request.query.get('q');
+    
+    if (!searchQuery || searchQuery.trim().length < 2) {
+        return { status: 200, jsonBody: [] };
+    }
+
+    try {
+        const pool = await getPool();
+        const hasNewColumns = await hasNewWikiColumns(pool);
+        
+        const searchTerm = `%${searchQuery.trim()}%`;
+        
+        let query: string;
+        if (hasNewColumns) {
+            query = `
+                SELECT 
+                    w.WikiPageID,
+                    w.Slug,
+                    w.Title,
+                    w.IsHandbook,
+                    w.Content,
+                    c.Username as CreatedByUsername,
+                    CASE 
+                        WHEN w.Title LIKE @searchTerm THEN 1 
+                        ELSE 0 
+                    END as TitleMatch
+                FROM WikiPage w
+                LEFT JOIN [User] c ON w.CreatedByUserID = c.UserID
+                WHERE w.Title LIKE @searchTerm OR w.Content LIKE @searchTerm
+                ORDER BY TitleMatch DESC, w.Title ASC
+            `;
+        } else {
+            query = `
+                SELECT 
+                    w.WikiPageID,
+                    w.Slug,
+                    w.Title,
+                    1 as IsHandbook,
+                    w.Content,
+                    NULL as CreatedByUsername,
+                    CASE 
+                        WHEN w.Title LIKE @searchTerm THEN 1 
+                        ELSE 0 
+                    END as TitleMatch
+                FROM WikiPage w
+                WHERE w.Title LIKE @searchTerm OR w.Content LIKE @searchTerm
+                ORDER BY TitleMatch DESC, w.Title ASC
+            `;
+        }
+        
+        const result = await pool.request()
+            .input('searchTerm', searchTerm)
+            .query(query);
+
+        // Return results with a snippet of matching content
+        const results = result.recordset.map((page: any) => {
+            let snippet = '';
+            const content = page.Content || '';
+            const lowerContent = content.toLowerCase();
+            const lowerQuery = searchQuery.toLowerCase();
+            const matchIndex = lowerContent.indexOf(lowerQuery);
+            
+            if (matchIndex !== -1) {
+                // Extract snippet around the match
+                const start = Math.max(0, matchIndex - 50);
+                const end = Math.min(content.length, matchIndex + searchQuery.length + 100);
+                snippet = (start > 0 ? '...' : '') + 
+                    content.substring(start, end).replace(/<[^>]*>/g, '') + 
+                    (end < content.length ? '...' : '');
+            }
+            
+            return {
+                WikiPageID: page.WikiPageID,
+                Slug: page.Slug,
+                Title: page.Title,
+                IsHandbook: page.IsHandbook,
+                CreatedByUsername: page.CreatedByUsername,
+                Snippet: snippet
+            };
+        });
+
+        return { status: 200, jsonBody: results };
+    } catch (error: any) {
+        context.error(error);
+        return { status: 500, body: error.message };
+    }
+}
+
 app.http('getWikiPage', {
     methods: ['GET'],
     authLevel: 'anonymous',
@@ -356,4 +446,11 @@ app.http('deleteWikiPage', {
     authLevel: 'anonymous',
     route: 'wiki/{slug}',
     handler: deleteWikiPage
+});
+
+app.http('searchWikiPages', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'wiki-search',
+    handler: searchWikiPages
 });

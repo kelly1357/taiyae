@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import RichTextEditor from '../../components/RichTextEditor';
+import WikiSearchBox from '../../components/WikiSearchBox';
 import type { User } from '../../types';
 
 interface WikiPageData {
@@ -309,6 +310,8 @@ const UserWikiPage: React.FC = () => {
 
               {/* Sidebar */}
               <div className="lg:w-72">
+                <WikiSearchBox />
+
                 {/* Quick Links */}
                 <div className="bg-white border border-stone-300">
                   <div className="bg-[#2f3a2f] text-white px-4 py-2 font-semibold">
