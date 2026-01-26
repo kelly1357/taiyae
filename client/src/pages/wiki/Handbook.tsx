@@ -38,17 +38,12 @@ export default function Handbook() {
   const { user } = useOutletContext<{ user?: User }>();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const isModerator = user?.isModerator || user?.isAdmin;
-  const [searchTerm, setSearchTerm] = useState('');
   const { dbContent, loading } = useWikiContent('handbook');
 
   // Group articles by first letter
   const groupedArticles = useMemo(() => {
-    const filtered = articles.filter(article =>
-      article.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     const groups: Record<string, WikiArticle[]> = {};
-    filtered.forEach(article => {
+    articles.forEach(article => {
       const letter = article.title[0].toUpperCase();
       if (!groups[letter]) {
         groups[letter] = [];
@@ -62,7 +57,7 @@ export default function Handbook() {
     });
 
     return groups;
-  }, [searchTerm]);
+  }, []);
 
   const sortedLetters = Object.keys(groupedArticles).sort();
   const totalArticles = articles.length;
@@ -145,8 +140,7 @@ export default function Handbook() {
                 Articles in category "Handbook":
               </h2>
               <p className="text-xs text-stone-600">
-                There are {searchTerm ? Object.values(groupedArticles).flat().length : totalArticles} articles in this category
-                {searchTerm && ` matching "${searchTerm}"`}:
+                There are {totalArticles} articles in this category:
               </p>
             </div>
 
@@ -174,7 +168,7 @@ export default function Handbook() {
               </div>
             ) : (
               <div className="bg-white border border-stone-300 p-8 text-center">
-                <p className="text-stone-600">No articles found matching "{searchTerm}"</p>
+                <p className="text-stone-600">No articles found.</p>
               </div>
             )}
           </div>
