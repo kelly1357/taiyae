@@ -262,7 +262,7 @@ const Layout: React.FC<LayoutProps> = ({
                       </span>
                     ))}
                     {guestCount > 0 && (
-                      <span className="text-gray-500 italic">
+                      <span className="text-gray-500">
                         {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
                       </span>
                     )}
