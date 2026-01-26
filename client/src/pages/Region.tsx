@@ -149,7 +149,7 @@ const Region: React.FC = () => {
                   threads.map(thread => (
                     <tr key={thread.id} className="hover:bg-gray-50 transition-colors border-t border-gray-300">
                       <td className="px-4 py-3 border-r border-gray-300">
-                        <Link to={`/thread/${thread.id}`} state={{ region }} style={{ color: '#111827' }} className="hover:underline font-medium">
+                        <Link to={`/thread/${thread.id}`} state={{ region }} className="forum-link font-medium">
                           {thread.title}
                         </Link>
                         {thread.subheader && (
@@ -158,7 +158,7 @@ const Region: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-gray-700 border-r border-gray-300">
                         {thread.authorSlug ? (
-                          <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                          <Link to={`/character/${thread.authorSlug}`} className="forum-link font-bold">
                             {thread.authorName}
                           </Link>
                         ) : (
@@ -172,7 +172,7 @@ const Region: React.FC = () => {
                         {thread.lastReplyAuthorName && thread.lastPostDate ? (
                           <>
                             {thread.lastReplyAuthorSlug ? (
-                              <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                              <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="forum-link font-bold">
                                 {thread.lastReplyAuthorName}
                               </Link>
                             ) : (
@@ -200,7 +200,7 @@ const Region: React.FC = () => {
               {threads.length > 0 ? (
                 threads.map(thread => (
                   <div key={thread.id} className="border-b border-gray-300 p-3 hover:bg-gray-50">
-                    <Link to={`/thread/${thread.id}`} state={{ region }} style={{ color: '#111827' }} className="hover:underline font-medium block">
+                    <Link to={`/thread/${thread.id}`} state={{ region }} className="forum-link font-medium block">
                       {thread.title}
                     </Link>
                     {thread.subheader && (
@@ -208,7 +208,7 @@ const Region: React.FC = () => {
                     )}
                     <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                       <span>by {thread.authorSlug ? (
-                        <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                        <Link to={`/character/${thread.authorSlug}`} className="forum-link font-bold">
                           {thread.authorName}
                         </Link>
                       ) : (
@@ -219,7 +219,7 @@ const Region: React.FC = () => {
                     {thread.lastReplyAuthorName && thread.lastPostDate && (
                       <div className="text-xs text-gray-400 mt-1">
                         Latest: {thread.lastReplyAuthorSlug ? (
-                          <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#6b7280' }}>
+                          <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="forum-link font-bold">
                             {thread.lastReplyAuthorName}
                           </Link>
                         ) : (

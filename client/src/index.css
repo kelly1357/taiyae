@@ -110,6 +110,32 @@ a {
   text-decoration: underline;
 }
 
+/* Homepage news content link styles (Sitewide Updates & Plot News) */
+.homepage-news-content a {
+  color: #617eb3;
+  font-weight: bold;
+}
+.homepage-news-content a:hover {
+  color: #4b6596;
+}
+
+/* Homepage footer links */
+.homepage-footer-link {
+  color: #617eb3;
+  font-weight: bold;
+}
+.homepage-footer-link:hover {
+  color: #4b6596;
+}
+
+/* Forum/region thread and character links */
+.forum-link {
+  color: #111827;
+}
+.forum-link:hover {
+  color: #4b6596;
+}
+
 /* Wiki content styles for rendered HTML */
 .wiki-content {
   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;

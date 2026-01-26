@@ -480,14 +480,14 @@ const Home: React.FC = () => {
                     return (
                       <div key={update.UpdateID} className="text-sm text-gray-800">
                         <span className="text-gray-500 font-bold uppercase">{formattedDate}</span>{' '}
-                        <span dangerouslySetInnerHTML={{ __html: update.Content }} />
+                        <span className="homepage-news-content" dangerouslySetInnerHTML={{ __html: update.Content }} />
                       </div>
                     );
                   })}
                 </div>
               )}
-              <div className="mt-3 text-sm text-gray-500">
-                <Link to="/sitewide-updates" className="hover:text-gray-700 font-bold">All Updates</Link>
+              <div className="mt-3 text-sm">
+                <Link to="/sitewide-updates" className="homepage-footer-link">All Updates</Link>
               </div>
             </div>
 
@@ -499,29 +499,29 @@ const Home: React.FC = () => {
               ) : (
                 <div className="space-y-2">
                   {plotNews.map((news) => (
-                    <div key={news.PlotNewsID} className="text-sm text-gray-800">
+                    <div key={news.PlotNewsID} className="text-sm text-gray-800 homepage-news-content">
                       <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
                         {news.PackName === 'Rogue' ? 'R' : news.PackName.charAt(0).toUpperCase()}
                       </span>
                       {news.NewsText}
                       {news.ThreadURL && (
-                        <span className="text-gray-600">
+                        <span>
                           {' '}
-                          (<a href={news.ThreadURL} className="text-gray-600 hover:text-gray-900 hover:underline" target="_blank" rel="noopener noreferrer">"{news.ThreadTitle || 'thread'}"</a>)
+                          (<a href={news.ThreadURL} target="_blank" rel="noopener noreferrer">"{news.ThreadTitle || 'thread'}"</a>)
                         </span>
                       )}
                     </div>
                   ))}
                 </div>
               )}
-              <div className="mt-3 text-sm text-gray-500">
-                <Link to="/plot-news" className="hover:text-gray-700 font-bold">View All</Link>
+              <div className="mt-3 text-sm">
+                <Link to="/plot-news" className="homepage-footer-link">View All</Link>
                 {user && (
                   <>
-                    <span className="mx-1">|</span>
+                    <span className="mx-1 text-gray-500">|</span>
                     <button
                       onClick={() => setShowPlotNewsModal(true)}
-                      className="hover:text-gray-700 font-bold"
+                      className="homepage-footer-link"
                     >
                       Submit Plot News
                     </button>
@@ -558,12 +558,13 @@ const Home: React.FC = () => {
                         />
                         <div className="font-semibold">{horizonDate.phase.name}, {formatHorizonYear(horizonDate.year)}</div>
                         <div className="text-gray-600 flex items-center gap-1 mt-2 text-xs">
-                          <span className="text-lg">{todayWeather.condition.icon}</span>
+                          <span className="text-lg leading-none">{todayWeather.condition.icon}</span>
                           {todayWeather.condition.description} · {todayWeather.highTemp}°F / {todayWeather.lowTemp}°F
                         </div>
-                        <Link to="/weather" className="text-xs text-gray-500 hover:text-gray-700 mt-1 inline-block font-bold">
-                          [view full forecast]
-                        </Link>
+                        <div className="text-xs mt-0.5 flex items-center gap-1">
+                          <span className="text-lg leading-none invisible">{todayWeather.condition.icon}</span>
+                          [<Link to="/weather" className="text-black hover:text-[#4b6596] font-bold">view full forecast</Link>]
+                        </div>
                         <div className="text-gray-700 text-sm mt-8">
                           {horizonDate.daysUntilNextPhase} {horizonDate.daysUntilNextPhase === 1 ? 'day' : 'days'} until {horizonDate.nextPhase.name}
                         </div>
@@ -725,7 +726,7 @@ const Home: React.FC = () => {
                                     <span key={sub.id}>
                                       <Link
                                         to={`/region/${region.id}/subarea/${sub.id}`}
-                                        className="text-gray-900 hover:underline"
+                                        className="text-gray-900 hover:text-[#4b6596]"
                                       >
                                         {sub.name}
                                       </Link>
@@ -742,13 +743,13 @@ const Home: React.FC = () => {
                                 <Link
                                   to={`/thread/${stats.latestThread.id}`}
                                   state={{ region }}
-                                  className="font-semibold text-gray-900 hover:underline"
+                                  className="font-semibold text-gray-900 hover:text-[#4b6596]"
                                 >
                                   {stats.latestThread.title}
                                 </Link>
                                 <div className="text-sm text-gray-700">
                                   by {stats.latestThread.authorId ? (
-                                    <Link to={`/character/${stats.latestThread.authorId}`} className="font-bold hover:underline">
+                                    <Link to={`/character/${stats.latestThread.authorId}`} className="font-bold hover:text-[#4b6596]">
                                       {stats.latestThread.authorName || 'Unknown'}
                                     </Link>
                                   ) : (
@@ -794,7 +795,7 @@ const Home: React.FC = () => {
                               <Link
                                 to={`/ooc-forum/${forum.id}`}
                                 state={{ forum }}
-                                className="text-xs font-semibold uppercase tracking-wider text-gray-700 hover:text-gray-900"
+                                className="text-xs font-semibold uppercase tracking-wider text-gray-700 hover:text-[#4b6596]"
                               >
                                 {forum.title}
                               </Link>
@@ -812,13 +813,13 @@ const Home: React.FC = () => {
                                   <Link
                                     to={`/thread/${forum.latestThreadId}`}
                                     state={{ forum }}
-                                    className="font-semibold text-gray-900 hover:underline"
+                                    className="font-semibold text-gray-900 hover:text-[#4b6596]"
                                   >
                                     {forum.latestThreadTitle}
                                   </Link>
                                   <div className="text-sm text-gray-600">
                                     by {forum.latestThreadCharacterId ? (
-                                      <Link to={`/character/${forum.latestThreadCharacterId}`} className="font-bold hover:underline">
+                                      <Link to={`/character/${forum.latestThreadCharacterId}`} className="font-bold hover:text-[#4b6596]">
                                         {forum.latestThreadAuthorName || 'Unknown'}
                                       </Link>
                                     ) : (
@@ -885,7 +886,7 @@ const Home: React.FC = () => {
                               <Link
                                 to={`/thread/${thread.id}`}
                                 state={{ region }}
-                                className="font-semibold text-gray-900 hover:underline"
+                                className="font-semibold text-gray-900 hover:text-[#4b6596]"
                               >
                                 {thread.title}
                               </Link>
@@ -897,7 +898,7 @@ const Home: React.FC = () => {
                               <Link
                                 to={`/region/${thread.regionId}`}
                                 state={{ region }}
-                                className="text-gray-900 hover:underline"
+                                className="text-gray-900 hover:text-[#4b6596]"
                               >
                                 {thread.regionName}
                               </Link>
@@ -967,7 +968,7 @@ const Home: React.FC = () => {
                                 <Link
                                   to={`/thread/${thread.id}`}
                                   state={{ region }}
-                                  className="font-semibold text-gray-900 hover:underline"
+                                  className="font-semibold text-gray-900 hover:text-[#4b6596]"
                                 >
                                   {thread.title}
                                 </Link>
@@ -979,7 +980,7 @@ const Home: React.FC = () => {
                                 <Link
                                   to={`/region/${thread.regionId}`}
                                   state={{ region }}
-                                  className="text-gray-900 hover:underline"
+                                  className="text-gray-900 hover:text-[#4b6596]"
                                 >
                                   {thread.regionName}
                                 </Link>
@@ -1030,7 +1031,7 @@ const Home: React.FC = () => {
                             <Link
                               to={`/thread/${post.threadId}`}
                               state={{ region }}
-                              className="text-sm text-gray-700 hover:underline"
+                              className="text-sm text-gray-700 hover:text-[#4b6596]"
                             >
                               — {post.authorName || 'Unknown'}, {post.threadTitle}
                             </Link>

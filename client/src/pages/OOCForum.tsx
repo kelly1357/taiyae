@@ -130,7 +130,7 @@ const OOCForumPage: React.FC = () => {
                       <td className="px-4 py-3 border-r border-gray-300">
                         <div className="flex items-start gap-2">
                           <div className="flex-1">
-                            <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium">
+                            <Link to={`/thread/${thread.id}`} state={{ forum }} className="forum-link font-medium">
                               {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
                               {thread.title}
                             </Link>
@@ -152,7 +152,7 @@ const OOCForumPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3 text-gray-700 border-r border-gray-300">
                         {thread.authorSlug ? (
-                          <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                          <Link to={`/character/${thread.authorSlug}`} className="forum-link font-bold">
                             {thread.authorName}
                           </Link>
                         ) : (
@@ -166,7 +166,7 @@ const OOCForumPage: React.FC = () => {
                         {thread.lastReplyAuthorName && thread.lastPostDate ? (
                           <>
                             {thread.lastReplyAuthorSlug ? (
-                              <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                              <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="forum-link font-bold">
                                 {thread.lastReplyAuthorName}
                               </Link>
                             ) : (
@@ -196,7 +196,7 @@ const OOCForumPage: React.FC = () => {
                   <div key={thread.id} className={`border-b border-gray-300 p-3 hover:bg-gray-50 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
                     <div className="flex items-start gap-2">
                       <div className="flex-1">
-                        <Link to={`/thread/${thread.id}`} state={{ forum }} style={{ color: '#111827' }} className="hover:underline font-medium block">
+                        <Link to={`/thread/${thread.id}`} state={{ forum }} className="forum-link font-medium block">
                           {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
                           {thread.title}
                         </Link>
@@ -217,7 +217,7 @@ const OOCForumPage: React.FC = () => {
                     </div>
                     <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                       <span>by {thread.authorSlug ? (
-                        <Link to={`/character/${thread.authorSlug}`} className="font-bold hover:underline" style={{ color: '#111827' }}>
+                        <Link to={`/character/${thread.authorSlug}`} className="forum-link font-bold">
                           {thread.authorName}
                         </Link>
                       ) : (
@@ -228,7 +228,7 @@ const OOCForumPage: React.FC = () => {
                     {thread.lastReplyAuthorName && thread.lastPostDate && (
                       <div className="text-xs text-gray-400 mt-1">
                         Latest: {thread.lastReplyAuthorSlug ? (
-                          <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="font-bold hover:underline" style={{ color: '#6b7280' }}>
+                          <Link to={`/character/${thread.lastReplyAuthorSlug}`} className="forum-link font-bold">
                             {thread.lastReplyAuthorName}
                           </Link>
                         ) : (
