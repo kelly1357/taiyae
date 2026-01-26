@@ -91,9 +91,7 @@ const Layout: React.FC<LayoutProps> = ({
       return;
     }
 
-    // If user is logged in but has no active character, don't count as guest
-    if (user) return;
-
+    // Users without an active character (including logged-in users with no characters) count as guests
     const sessionId = getGuestSessionId();
 
     const sendGuestHeartbeat = () => {
