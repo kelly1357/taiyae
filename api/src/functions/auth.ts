@@ -109,10 +109,11 @@ export async function login(request: HttpRequest, context: InvocationContext): P
         // Add isModerator and isAdmin fields based on database columns
         const isModerator = user.Is_Moderator === true || user.Is_Moderator === 1;
         const isAdmin = user.Is_Admin === true || user.Is_Admin === 1;
+        const isAbsent = user.Is_Absent === true || user.Is_Absent === 1;
         // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
         const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
         const userStatus = statusMap[user.UserStatusID] || 'Joining';
-        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member', userStatus, userStatusId: user.UserStatusID };
+        const userWithRole = { ...user, isModerator, isAdmin, isAbsent, absenceNote: user.Absence_Note || null, role: isModerator ? 'moderator' : 'member', userStatus, userStatusId: user.UserStatusID };
 
         return {
             status: 200,
@@ -204,10 +205,11 @@ export async function googleLogin(request: HttpRequest, context: InvocationConte
         // Add isModerator and isAdmin fields based on database columns
         const isModerator = user.Is_Moderator === true || user.Is_Moderator === 1;
         const isAdmin = user.Is_Admin === true || user.Is_Admin === 1;
+        const isAbsent = user.Is_Absent === true || user.Is_Absent === 1;
         // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
         const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
         const userStatus = statusMap[user.UserStatusID] || 'Joining';
-        const userWithRole = { ...user, isModerator, isAdmin, role: isModerator ? 'moderator' : 'member', userStatus, userStatusId: user.UserStatusID };
+        const userWithRole = { ...user, isModerator, isAdmin, isAbsent, absenceNote: user.Absence_Note || null, role: isModerator ? 'moderator' : 'member', userStatus, userStatusId: user.UserStatusID };
 
         return {
             status: 200,
@@ -224,7 +226,7 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
     try {
         const id = request.params.id;
         const body: any = await request.json();
-        const { username, currentPassword, newPassword, playerInfo, facebook, instagram, discord, imageUrl } = body;
+        const { username, currentPassword, newPassword, playerInfo, facebook, instagram, discord, imageUrl, isAbsent, absenceNote } = body;
 
         if (!id) {
             return { status: 400, jsonBody: { body: "User ID is required" } };
@@ -323,6 +325,16 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
             updates.push("PasswordHash = @PasswordHash");
         }
 
+        // Update Absence Status
+        if (isAbsent !== undefined) {
+            requestObj.input('Is_Absent', sql.Bit, isAbsent ? 1 : 0);
+            updates.push("Is_Absent = @Is_Absent");
+        }
+        if (absenceNote !== undefined) {
+            requestObj.input('Absence_Note', sql.NVarChar, absenceNote || null);
+            updates.push("Absence_Note = @Absence_Note");
+        }
+
         if (updates.length === 0) {
             return { status: 200, jsonBody: { body: "No changes made" } };
         }
@@ -330,7 +342,7 @@ export async function updateUser(request: HttpRequest, context: InvocationContex
         const query = `
             UPDATE [User] 
             SET ${updates.join(', ')}
-            OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.Description, INSERTED.Facebook, INSERTED.Instagram, INSERTED.Discord, INSERTED.ImageURL
+            OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.Description, INSERTED.Facebook, INSERTED.Instagram, INSERTED.Discord, INSERTED.ImageURL, INSERTED.Is_Absent, INSERTED.Absence_Note
             WHERE UserID = @UserID
         `;
 

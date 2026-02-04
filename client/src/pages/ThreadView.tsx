@@ -2,6 +2,7 @@ import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom';
 import RichTextEditor from '../components/RichTextEditor';
+import AbsenceIndicator from '../components/AbsenceIndicator';
 import { useBackground } from '../contexts/BackgroundContext';
 import type { Character, ForumRegion, User } from '../types';
 
@@ -26,6 +27,8 @@ interface PostAuthor {
   userId?: number;
   isModerator?: boolean;
   isAdmin?: boolean;
+  isAbsent?: boolean;
+  absenceNote?: string | null;
 }
 
 interface UserAchievement {
@@ -129,6 +132,9 @@ const OOCPlayerInfoPanel: React.FC<{
                 <span>{playerName || 'Unknown'}</span>
                 {user && (user.isModerator || user.isAdmin) && (
                   <span className="bg-gray-200 text-gray-600 px-1 py-0.5 text-[10px] uppercase font-semibold">Staff</span>
+                )}
+                {user?.isAbsent && (
+                  <AbsenceIndicator absenceNote={user.absenceNote} />
                 )}
               </div>
             </td>
@@ -266,6 +272,9 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
               {author.playerName || 'Unknown'}
               {(author.isModerator || author.isAdmin) && (
                 <span className="ml-1 bg-gray-200 text-gray-600 px-1 py-0.5 text-[10px] uppercase font-semibold">Staff</span>
+              )}
+              {author.isAbsent && (
+                <AbsenceIndicator absenceNote={author.absenceNote} className="ml-1" />
               )}
             </td>
           </tr>
@@ -807,7 +816,9 @@ const ThreadView: React.FC = () => {
     playerName: thread.playerName || 'Unknown',
     userId: thread.userId,
     isModerator: thread.isModerator,
-    isAdmin: thread.isAdmin
+    isAdmin: thread.isAdmin,
+    isAbsent: thread.isAbsent,
+    absenceNote: thread.absenceNote
   };
 
   return (
@@ -1356,7 +1367,9 @@ const ThreadView: React.FC = () => {
                 playerName: reply.playerName || 'Unknown',
                 userId: reply.userId,
                 isModerator: reply.isModerator,
-                isAdmin: reply.isAdmin
+                isAdmin: reply.isAdmin,
+                isAbsent: reply.isAbsent,
+                absenceNote: reply.absenceNote
             };
     
             return (

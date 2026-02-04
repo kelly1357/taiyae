@@ -67,6 +67,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
         localStorage.setItem('token', data.token);
         const isModerator = data.user.Is_Moderator === true || data.user.Is_Moderator === 1 || data.user.isModerator === true;
         const isAdmin = data.user.Is_Admin === true || data.user.Is_Admin === 1 || data.user.isAdmin === true;
+        const isAbsent = data.user.Is_Absent === true || data.user.Is_Absent === 1 || data.user.isAbsent === true;
         const normalizedUser = {
             id: data.user.UserID || data.user.id,
             username: data.user.Username || data.user.username,
@@ -79,6 +80,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
             imageUrl: data.user.ImageURL || data.user.imageUrl || '',
             isModerator,
             isAdmin,
+            isAbsent,
+            absenceNote: data.user.Absence_Note || data.user.absenceNote || '',
             role: isModerator ? 'moderator' : 'member',
             userStatus: data.user.userStatus || 'Joined',
             userStatusId: data.user.userStatusId || data.user.UserStatusID || 2,
@@ -123,6 +126,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
         localStorage.setItem('token', data.token);
         const isModerator = data.user.Is_Moderator === true || data.user.Is_Moderator === 1 || data.user.isModerator === true;
         const isAdmin = data.user.Is_Admin === true || data.user.Is_Admin === 1 || data.user.isAdmin === true;
+        const isAbsent = data.user.Is_Absent === true || data.user.Is_Absent === 1 || data.user.isAbsent === true;
         const normalizedUser = {
             id: data.user.UserID || data.user.id,
             username: data.user.Username || data.user.username,
@@ -135,6 +139,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
             imageUrl: data.user.ImageURL || data.user.imageUrl || '',
             isModerator,
             isAdmin,
+            isAbsent,
+            absenceNote: data.user.Absence_Note || data.user.absenceNote || '',
             role: isModerator ? 'moderator' : 'member',
             userStatus: data.user.userStatus || 'Joined',
             userStatusId: data.user.userStatusId || data.user.UserStatusID || 2,

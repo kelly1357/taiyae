@@ -26,6 +26,8 @@ export async function fetchUserById(userId: number | string): Promise<User | nul
       isAdmin: user.Is_Admin ?? user.isAdmin,
       userStatus: userStatus as 'Joining' | 'Joined' | 'Banned',
       userStatusId: user.UserStatusID ?? 2,
+      isAbsent: user.Is_Absent === true || user.Is_Absent === 1 || user.isAbsent || false,
+      absenceNote: user.Absence_Note ?? user.absenceNote ?? null,
     };
   } catch (e) {
     return null;

@@ -19,6 +19,8 @@ export interface User {
   role?: UserRole; // 'admin', 'moderator', or 'member'
   userStatus?: UserStatus; // 'Joining', 'Joined', or 'Banned'
   userStatusId?: number; // 1=Joining, 2=Joined, 3=Banned
+  isAbsent?: boolean; // Is_Absent column - true if user has marked themselves as absent
+  absenceNote?: string; // Absence_Note column - optional note about absence (e.g., return date)
 }
 
 export interface Achievement {
@@ -50,6 +52,8 @@ export interface Character {
   userCreatedAt?: string;
   isModerator?: boolean;
   isAdmin?: boolean;
+  isAbsent?: boolean; // Player's absence status
+  absenceNote?: string | null; // Player's optional absence note
   name: string;
   surname?: string;
   sex: 'Male' | 'Female' | 'Other';

@@ -50,6 +50,8 @@ function getThread(request, context) {
                     COALESCE(u.UserID, oocUser.UserID) as userId,
                     COALESCE(u.Is_Moderator, oocUser.Is_Moderator) as isModerator,
                     COALESCE(u.Is_Admin, oocUser.Is_Admin) as isAdmin,
+                    COALESCE(u.Is_Absent, oocUser.Is_Absent) as isAbsent,
+                    COALESCE(u.Absence_Note, oocUser.Absence_Note) as absenceNote,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -95,6 +97,8 @@ function getThread(request, context) {
                 userId: p.userId,
                 isModerator: p.isModerator === true || p.isModerator === 1,
                 isAdmin: p.isAdmin === true || p.isAdmin === 1,
+                isAbsent: p.isAbsent === true || p.isAbsent === 1,
+                absenceNote: p.absenceNote || null,
                 createdAt: p.Created,
                 modifiedAt: p.Modified,
                 modifiedByName: p.modifiedByName
@@ -122,6 +126,8 @@ function getThread(request, context) {
                 userId: op.userId,
                 isModerator: op.isModerator === true || op.isModerator === 1,
                 isAdmin: op.isAdmin === true || op.isAdmin === 1,
+                isAbsent: op.isAbsent === true || op.isAbsent === 1,
+                absenceNote: op.absenceNote || null,
                 createdAt: op.Created,
                 modifiedAt: op.Modified,
                 modifiedByName: op.modifiedByName,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Character } from '../types';
+import AbsenceIndicator from '../components/AbsenceIndicator';
 
 type SortField = 'name' | 'username' | 'packName' | 'age' | 'healthStatus' | 'totalSkill' | 'sex' | 'spiritSymbol';
 type SortDirection = 'asc' | 'desc';
@@ -227,7 +228,10 @@ const Characters: React.FC = () => {
                     )}
                   </td>
                   <td className="px-3 py-3 text-center font-bold text-gray-900 border-r border-gray-300">{char.totalSkill || 0}</td>
-                  <td className="px-3 py-3 text-gray-700">{char.username || 'Unknown'}</td>
+                  <td className="px-3 py-3 text-gray-700">
+                    {char.username || 'Unknown'}
+                    {char.isAbsent && <AbsenceIndicator absenceNote={char.absenceNote} className="ml-1" />}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -318,7 +322,10 @@ const Characters: React.FC = () => {
                         </>
                       )}
                     </div>
-                    <div className="text-gray-500">Player: {char.username || 'Unknown'}</div>
+                    <div className="text-gray-500">
+                      Player: {char.username || 'Unknown'}
+                      {char.isAbsent && <AbsenceIndicator absenceNote={char.absenceNote} className="ml-1" />}
+                    </div>
                   </div>
                 </div>
               </div>

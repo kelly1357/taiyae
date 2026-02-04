@@ -58,6 +58,8 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     u.Discord as discord,
                     u.Is_Moderator as isModerator,
                     u.Is_Admin as isAdmin,
+                    u.Is_Absent as isAbsent,
+                    u.Absence_Note as absenceNote,
                     c.CharacterName as name, 
                     c.Surname as surname,
                     c.Slug as slug,

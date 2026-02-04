@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
+import AbsenceIndicator from '../components/AbsenceIndicator';
 import type { Character, ThreadlogEntry, User } from '../types';
 
 interface LayoutContext {
@@ -629,6 +630,9 @@ const CharacterProfile: React.FC = () => {
                               {character.username || '—'}
                               {(character.isModerator || character.isAdmin) && (
                                 <span className="bg-gray-200 text-gray-600 px-1 py-0.5 text-[10px] uppercase font-semibold">Staff</span>
+                              )}
+                              {(character.isAbsent === true || (character as any).isAbsent === 1) && (
+                                <AbsenceIndicator absenceNote={(character as any).absenceNote} />
                               )}
                             </span>
                           </td>

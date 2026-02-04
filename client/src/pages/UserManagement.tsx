@@ -13,6 +13,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
   const [instagram, setInstagram] = useState(user.instagram || '');
   const [discord, setDiscord] = useState(user.discord || '');
   const [imageUrl, setImageUrl] = useState(user.imageUrl || '');
+  const [isAbsent, setIsAbsent] = useState(user.isAbsent || false);
+  const [absenceNote, setAbsenceNote] = useState(user.absenceNote || '');
   const [uploading, setUploading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -28,6 +30,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
     setInstagram(user.instagram || '');
     setDiscord(user.discord || '');
     setImageUrl(user.imageUrl || '');
+    setIsAbsent(user.isAbsent || false);
+    setAbsenceNote(user.absenceNote || '');
   }, [user]);
 
   const updateUserData = async (payload: any) => {
@@ -69,6 +73,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
             instagram: data.user.Instagram || data.user.instagram || '',
             discord: data.user.Discord || data.user.discord || '',
             imageUrl: data.user.ImageURL || data.user.imageUrl || '',
+            isAbsent: data.user.Is_Absent === true || data.user.Is_Absent === 1 || data.user.isAbsent || false,
+            absenceNote: data.user.Absence_Note || data.user.absenceNote || '',
         };
         
         onUpdateUser(normalizedUser);
@@ -88,7 +94,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateUserData({ username, playerInfo, facebook, instagram, discord, imageUrl });
+    await updateUserData({ username, playerInfo, facebook, instagram, discord, imageUrl, isAbsent, absenceNote: isAbsent ? absenceNote : '' });
   };
 
   // Handle avatar upload
@@ -253,6 +259,34 @@ const UserManagement: React.FC<UserManagementProps> = ({ user, onUpdateUser }) =
                 placeholder="Discord Username"
               />
             </div>
+          </div>
+
+          <div className="border-t border-gray-300 pt-6">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-3">Availability Status</label>
+            <div className="flex items-start gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAbsent}
+                  onChange={(e) => setIsAbsent(e.target.checked)}
+                  className="w-4 h-4 text-[#2f3a2f] border-gray-300 rounded focus:ring-[#2f3a2f]"
+                />
+                <span className="text-sm text-gray-700">I am currently absent</span>
+              </label>
+            </div>
+            {isAbsent && (
+              <div className="mt-3">
+                <input
+                  type="text"
+                  value={absenceNote}
+                  onChange={(e) => setAbsenceNote(e.target.value)}
+                  className="w-full bg-gray-100 border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:border-[#2f3a2f]"
+                  placeholder="Optional note (e.g., 'Back Feb 15' or 'Moving, slow replies')"
+                  maxLength={255}
+                />
+                <p className="text-xs text-gray-500 mt-1">This note will appear when others hover over your absence indicator.</p>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-gray-300 pt-6">

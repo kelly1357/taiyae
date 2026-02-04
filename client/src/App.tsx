@@ -83,6 +83,7 @@ const App: React.FC = () => {
               if (data) {
                 const isModerator = data.Is_Moderator === true || data.Is_Moderator === 1 || data.isModerator === true;
                 const isAdmin = data.Is_Admin === true || data.Is_Admin === 1 || data.isAdmin === true;
+                const isAbsent = data.Is_Absent === true || data.Is_Absent === 1 || data.isAbsent === true;
                 // Map UserStatusID to status name (1=Joining, 2=Joined, 3=Banned)
                 const statusMap: Record<number, string> = { 1: 'Joining', 2: 'Joined', 3: 'Banned' };
                 const userStatus = data.UserStatusID != null ? (statusMap[data.UserStatusID] || 'Joined') : (parsedUser.userStatus || 'Joined');
@@ -95,6 +96,8 @@ const App: React.FC = () => {
                   discord: data.Discord || data.discord || parsedUser.discord || '',
                   isModerator,
                   isAdmin,
+                  isAbsent,
+                  absenceNote: data.Absence_Note || data.absenceNote || parsedUser.absenceNote || '',
                   role: isModerator ? 'moderator' : 'member',
                   userStatus,
                   userStatusId: data.UserStatusID ?? parsedUser.userStatusId ?? 2,
