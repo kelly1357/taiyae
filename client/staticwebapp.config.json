@@ -4,7 +4,7 @@
   },
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/assets/*", "/Favicon/*", "*.css", "*.js", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.svg", "*.ico", "*.woff", "*.woff2", "*.ttf", "*.eot"]
+    "exclude": ["/api/*", "*.{css,js,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot,json,map,txt,xml,webmanifest}"]
   },
   "routes": [
     {
