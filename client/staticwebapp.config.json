@@ -3,7 +3,8 @@
     "apiRuntime": "node:20"
   },
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/Favicon/*", "*.css", "*.js", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.svg", "*.ico", "*.woff", "*.woff2", "*.ttf", "*.eot"]
   },
   "routes": [
     {
@@ -11,11 +12,6 @@
       "allowedRoles": ["anonymous"]
     }
   ],
-  "responseOverrides": {
-    "404": {
-      "rewrite": "/index.html"
-    }
-  },
   "globalHeaders": {
     "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
   },
@@ -23,6 +19,7 @@
     ".js": "application/javascript",
     ".mjs": "application/javascript",
     ".json": "application/json",
-    ".wasm": "application/wasm"
+    ".wasm": "application/wasm",
+    ".css": "text/css"
   }
 }
