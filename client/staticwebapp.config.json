@@ -3,8 +3,7 @@
     "apiRuntime": "node:20"
   },
   "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/api/*"]
+    "rewrite": "/index.html"
   },
   "routes": [
     {
@@ -12,6 +11,11 @@
       "allowedRoles": ["anonymous"]
     }
   ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html"
+    }
+  },
   "globalHeaders": {
     "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
   },
@@ -19,7 +23,6 @@
     ".js": "application/javascript",
     ".mjs": "application/javascript",
     ".json": "application/json",
-    ".wasm": "application/wasm",
-    ".css": "text/css"
+    ".wasm": "application/wasm"
   }
 }
