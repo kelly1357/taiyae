@@ -4,22 +4,7 @@
   },
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": [
-      "/api/*",
-      "/assets/*",
-      "/Favicon/*",
-      "*.css",
-      "*.js",
-      "*.png",
-      "*.jpg",
-      "*.jpeg",
-      "*.gif",
-      "*.svg",
-      "*.ico",
-      "*.woff",
-      "*.woff2",
-      "*.json"
-    ]
+    "exclude": ["/api/*"]
   },
   "routes": [
     {
