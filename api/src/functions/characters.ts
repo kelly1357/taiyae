@@ -44,8 +44,13 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
     const characterSlug = request.query.get('characterSlug');
     const includeInactive = request.query.get('includeInactive') === 'true';
     
+    // Determine if this is a single character lookup (needs full details) or a list (optimized)
+    const isSingleCharacter = !!(characterId || characterSlug);
+    
     try {
         const pool = await getPool();
+        
+        // Base query - only include expensive post counts for single character lookups
         let query = `
                 SELECT 
                     c.CharacterID as id, 
@@ -95,13 +100,13 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
-                    END as isOnline,
+                    END as isOnline` + (isSingleCharacter ? `,
                     (SELECT COUNT(*) FROM Post WHERE CharacterID = c.CharacterID) as icPostCount,
                     (SELECT COUNT(*) FROM Post p2 
                      JOIN Thread t2 ON p2.ThreadID = t2.ThreadID 
                      WHERE p2.UserID = c.UserID 
                        AND t2.OOCForumID IS NOT NULL 
-                       AND t2.OriginalRegionId IS NULL) as oocPostCount
+                       AND t2.OriginalRegionId IS NULL) as oocPostCount` : '') + `
                 FROM Character c
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
@@ -153,7 +158,8 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
         });
 
         return {
-            jsonBody: characters
+            jsonBody: characters,
+            headers: isSingleCharacter ? {} : { 'Cache-Control': 'public, max-age=60' }
         };
     } catch (error) {
         context.error(error);

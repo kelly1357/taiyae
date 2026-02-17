@@ -42,7 +42,7 @@ export async function getRegions(request: HttpRequest, context: InvocationContex
 
         return { 
             jsonBody: Array.from(regionsMap.values()),
-            headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+            headers: { 'Cache-Control': 'public, max-age=300' }
         };
     } catch (error) {
         context.error(error);

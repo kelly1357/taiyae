@@ -50,7 +50,7 @@ function getRegions(request, context) {
             });
             return {
                 jsonBody: Array.from(regionsMap.values()),
-                headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+                headers: { 'Cache-Control': 'public, max-age=300' }
             };
         }
         catch (error) {
