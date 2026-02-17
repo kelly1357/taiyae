@@ -69,7 +69,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ### Backend updates
 
-[ ] Subareas within regions
+✅ Subareas within regions
 
 [ ] Pack management: creating, editing, and function, hierarchy
 
