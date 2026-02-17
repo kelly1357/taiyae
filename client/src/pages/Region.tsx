@@ -117,6 +117,19 @@ const Region: React.FC = () => {
             <div className="w-1/2">
               <h3 className="text-base font-semibold text-gray-900 mb-1">{region.name}</h3>
               <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: region.description }} />
+              {region.subareas && region.subareas.length > 0 && (
+                <p className="text-xs text-gray-600 mt-6">
+                  <span>Subareas: </span>
+                  {region.subareas.map((sub, index) => (
+                    <span key={sub.id}>
+                      <Link to={`/subarea/${sub.id}`} className="font-semibold text-gray-900 hover:text-[#4b6596]">
+                        {sub.name}
+                      </Link>
+                      {index < region.subareas.length - 1 && ', '}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
             {activeCharacter && activeCharacter.status !== 'Dead' && (
               <button 

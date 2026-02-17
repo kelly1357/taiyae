@@ -23,10 +23,15 @@ function getRegions(request, context) {
                 r.Description    AS description,
                 r.ImageURL       AS imageUrl,
                 r.HeaderImageURL AS headerImageUrl,
+                LOWER(REPLACE(r.RegionName, ' ', '-')) AS regionSlug,
                 s.id             AS subId,
-                s.name           AS subName
+                s.name           AS subName,
+                s.description    AS subDescription,
+                s.imageUrl       AS subImageUrl,
+                (SELECT COUNT(*) FROM Thread t WHERE t.RegionID = r.RegionID AND t.IsArchived = 0) AS activeThreadCount,
+                (SELECT COUNT(*) FROM Post p JOIN Thread t ON p.ThreadID = t.ThreadID WHERE t.RegionID = r.RegionID) AS postCount
             FROM Region r
-            LEFT JOIN Subareas s ON CAST(r.RegionID AS NVARCHAR(50)) = s.regionId
+            LEFT JOIN Subareas s ON LOWER(REPLACE(r.RegionName, ' ', '-')) = s.regionId
         `);
             // Transform flat result into nested structure
             const regionsMap = new Map();
@@ -38,13 +43,18 @@ function getRegions(request, context) {
                         description: row.description,
                         imageUrl: row.imageUrl,
                         headerImageUrl: row.headerImageUrl,
+                        slug: row.regionSlug,
+                        activeThreadCount: row.activeThreadCount || 0,
+                        postCount: row.postCount || 0,
                         subareas: []
                     });
                 }
                 if (row.subId) {
                     regionsMap.get(row.id).subareas.push({
                         id: row.subId,
-                        name: row.subName
+                        name: row.subName,
+                        description: row.subDescription,
+                        imageUrl: row.subImageUrl
                     });
                 }
             });

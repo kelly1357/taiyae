@@ -546,7 +546,25 @@ const RegionDirectory: React.FC = () => {
                 )}
                 
                 <div className="p-4 flex-grow flex flex-col justify-between">
-                  <p className="text-gray-700 text-sm mb-3 line-clamp-3 leading-relaxed">{region.description}</p>
+                  <div>
+                    <p className="text-gray-700 text-sm mb-3 line-clamp-3 leading-relaxed">{region.description}</p>
+                    {region.subareas && region.subareas.length > 0 && (
+                      <div className="text-sm text-gray-600 mb-3">
+                        <span className="text-gray-500">Subareas:</span>{' '}
+                        {region.subareas.map((sub, index) => (
+                          <span key={sub.id}>
+                            <Link 
+                              to={`/subarea/${sub.id}`}
+                              className="font-medium text-gray-900 hover:text-[#4b6596]"
+                            >
+                              {sub.name}
+                            </Link>
+                            {index < region.subareas.length - 1 && ', '}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                     <Link to={`/region/${region.id}`} className="text-gray-900 hover:underline text-sm font-bold">
                       View Region

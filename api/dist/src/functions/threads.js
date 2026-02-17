@@ -18,15 +18,21 @@ function getThreads(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
         const regionId = request.query.get('regionId');
         const oocForumId = request.query.get('oocForumId');
-        if (!regionId && !oocForumId) {
-            return { status: 400, body: "regionId or oocForumId is required" };
+        const subareaId = request.query.get('subareaId');
+        if (!regionId && !oocForumId && !subareaId) {
+            return { status: 400, body: "regionId, oocForumId, or subareaId is required" };
         }
         try {
             const pool = yield (0, db_1.getPool)();
             const requestBuilder = pool.request();
             let whereClause;
             let orderByClause;
-            if (regionId) {
+            if (subareaId) {
+                whereClause = 't.SubareaID = @filterId';
+                orderByClause = 'ORDER BY lastPost.Created DESC';
+                requestBuilder.input('filterId', sql.NVarChar, subareaId);
+            }
+            else if (regionId) {
                 whereClause = 't.RegionId = @filterId';
                 orderByClause = 'ORDER BY lastPost.Created DESC';
                 requestBuilder.input('filterId', sql.Int, parseInt(regionId));
@@ -102,13 +108,13 @@ function createThread(request, context) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const body = yield request.json();
-            const { regionId, oocForumId, title, content, authorId, subheader } = body;
-            if ((!regionId && !oocForumId) || !title || !content || !authorId) {
+            const { regionId, oocForumId, subareaId, title, content, authorId, subheader } = body;
+            if ((!regionId && !oocForumId && !subareaId) || !title || !content || !authorId) {
                 return { status: 400, body: "Missing required fields" };
             }
-            // For region threads, verify user owns the character (authorId is characterId)
+            // For region/subarea threads, verify user owns the character (authorId is characterId)
             // For OOC threads, verify user is authenticated and authorId matches their userId
-            if (regionId) {
+            if (regionId || subareaId) {
                 const auth = yield (0, auth_1.verifyCharacterOwnershipOrStaff)(request, parseInt(authorId));
                 if (!auth.authorized) {
                     return auth.error;
@@ -133,7 +139,33 @@ function createThread(request, context) {
                 let valuesSQL = "VALUES (GETDATE(), GETDATE(), @subheader";
                 const req = transaction.request();
                 req.input('subheader', sql.NVarChar, subheader || null);
-                if (regionId) {
+                if (subareaId) {
+                    // Subarea threads also need to reference the parent region for proper categorization
+                    insertThreadSQL += ", SubareaID, RegionId)";
+                    valuesSQL += ", @subareaId, @regionId)";
+                    req.input('subareaId', sql.NVarChar, subareaId);
+                    // Need to look up the region ID from the subarea
+                    const subareaLookup = yield pool.request()
+                        .input('subareaId', sql.NVarChar, subareaId)
+                        .query(`SELECT regionId FROM Subareas WHERE id = @subareaId`);
+                    if (subareaLookup.recordset.length > 0) {
+                        // Convert slug-based regionId to numeric
+                        const regionSlug = subareaLookup.recordset[0].regionId;
+                        const regionLookup = yield pool.request()
+                            .input('regionSlug', sql.NVarChar, regionSlug)
+                            .query(`SELECT RegionID FROM Region WHERE LOWER(REPLACE(RegionName, ' ', '-')) = @regionSlug`);
+                        if (regionLookup.recordset.length > 0) {
+                            req.input('regionId', sql.Int, regionLookup.recordset[0].RegionID);
+                        }
+                        else {
+                            req.input('regionId', sql.Int, null);
+                        }
+                    }
+                    else {
+                        req.input('regionId', sql.Int, null);
+                    }
+                }
+                else if (regionId) {
                     insertThreadSQL += ", RegionId)";
                     valuesSQL += ", @regionId)";
                     req.input('regionId', sql.Int, parseInt(regionId));
@@ -153,10 +185,33 @@ function createThread(request, context) {
                     .input('body', sql.NVarChar, content);
                 let insertPostSQL = "INSERT INTO Post (ThreadID, Subject, Body, Created, Modified";
                 let postValuesSQL = "VALUES (@threadId, @subject, @body, GETDATE(), GETDATE()";
-                if (regionId) {
+                if (regionId || subareaId) {
                     insertPostSQL += ", RegionID, CharacterID)";
-                    postValuesSQL += ", @regionId, @authorId)";
-                    postReq.input('regionId', sql.Int, parseInt(regionId));
+                    postValuesSQL += ", @postRegionId, @authorId)";
+                    // For subareas, we need to get the numeric region ID
+                    if (subareaId) {
+                        const subareaLookup = yield pool.request()
+                            .input('subareaId', sql.NVarChar, subareaId)
+                            .query(`SELECT regionId FROM Subareas WHERE id = @subareaId`);
+                        if (subareaLookup.recordset.length > 0) {
+                            const regionSlug = subareaLookup.recordset[0].regionId;
+                            const regionLookup = yield pool.request()
+                                .input('regionSlug', sql.NVarChar, regionSlug)
+                                .query(`SELECT RegionID FROM Region WHERE LOWER(REPLACE(RegionName, ' ', '-')) = @regionSlug`);
+                            if (regionLookup.recordset.length > 0) {
+                                postReq.input('postRegionId', sql.Int, regionLookup.recordset[0].RegionID);
+                            }
+                            else {
+                                postReq.input('postRegionId', sql.Int, null);
+                            }
+                        }
+                        else {
+                            postReq.input('postRegionId', sql.Int, null);
+                        }
+                    }
+                    else {
+                        postReq.input('postRegionId', sql.Int, parseInt(regionId));
+                    }
                 }
                 else {
                     insertPostSQL += ", UserID)";

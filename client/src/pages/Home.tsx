@@ -719,19 +719,21 @@ const Home: React.FC = () => {
                                 ) : statsLoading ? 'Loading…' : '—'}
                               </div>
                               {region.subareas && region.subareas.length > 0 && (
-                                <div className="text-sm text-gray-700">
-                                  <div className="font-semibold">Subareas:</div>
-                                  {region.subareas.map((sub: { id: string; name: string }, index: number) => (
-                                    <span key={sub.id}>
-                                      <Link
-                                        to={`/subarea/${sub.id}`}
-                                        className="text-gray-900 hover:text-[#4b6596]"
-                                      >
-                                        {sub.name}
-                                      </Link>
-                                      {index < region.subareas.length - 1 && ', '}
-                                    </span>
-                                  ))}
+                                <div className="text-sm text-gray-700 mt-3">
+                                  <div>Subareas:</div>
+                                  <div>
+                                    {region.subareas.map((sub: { id: string; name: string }, index: number) => (
+                                      <span key={sub.id}>
+                                        <Link
+                                          to={`/subarea/${sub.id}`}
+                                          className="font-semibold text-gray-900 hover:text-[#4b6596]"
+                                        >
+                                          {sub.name}
+                                        </Link>
+                                        {index < region.subareas.length - 1 && ', '}
+                                      </span>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
