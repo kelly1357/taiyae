@@ -6,6 +6,7 @@ interface NewThreadModalProps {
   onClose: () => void;
   regionId?: string;
   oocForumId?: string;
+  subareaId?: string;
   regionName: string;
   onThreadCreated: () => void;
   authorId?: number | string;
@@ -16,6 +17,7 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
   onClose, 
   regionId,
   oocForumId,
+  subareaId,
   regionName,
   onThreadCreated,
   authorId
@@ -44,6 +46,7 @@ const NewThreadModal: React.FC<NewThreadModalProps> = ({
         body: JSON.stringify({
           regionId,
           oocForumId,
+          subareaId,
           title,
           subheader: subheader.trim() || null,
           content,

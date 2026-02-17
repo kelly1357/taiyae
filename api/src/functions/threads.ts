@@ -6,9 +6,10 @@ import { verifyAuth, verifyStaffAuth, verifyCharacterOwnershipOrStaff } from "..
 export async function getThreads(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     const regionId = request.query.get('regionId');
     const oocForumId = request.query.get('oocForumId');
+    const subareaId = request.query.get('subareaId');
 
-    if (!regionId && !oocForumId) {
-        return { status: 400, body: "regionId or oocForumId is required" };
+    if (!regionId && !oocForumId && !subareaId) {
+        return { status: 400, body: "regionId, oocForumId, or subareaId is required" };
     }
 
     try {
@@ -18,7 +19,11 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
         let whereClause: string;
         let orderByClause: string;
         
-        if (regionId) {
+        if (subareaId) {
+            whereClause = 't.SubareaID = @filterId';
+            orderByClause = 'ORDER BY lastPost.Created DESC';
+            requestBuilder.input('filterId', sql.NVarChar, subareaId);
+        } else if (regionId) {
             whereClause = 't.RegionId = @filterId';
             orderByClause = 'ORDER BY lastPost.Created DESC';
             requestBuilder.input('filterId', sql.Int, parseInt(regionId));
@@ -93,15 +98,15 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
 export async function createThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const body = await request.json() as any;
-        const { regionId, oocForumId, title, content, authorId, subheader } = body;
+        const { regionId, oocForumId, subareaId, title, content, authorId, subheader } = body;
 
-        if ((!regionId && !oocForumId) || !title || !content || !authorId) {
+        if ((!regionId && !oocForumId && !subareaId) || !title || !content || !authorId) {
             return { status: 400, body: "Missing required fields" };
         }
 
-        // For region threads, verify user owns the character (authorId is characterId)
+        // For region/subarea threads, verify user owns the character (authorId is characterId)
         // For OOC threads, verify user is authenticated and authorId matches their userId
-        if (regionId) {
+        if (regionId || subareaId) {
             const auth = await verifyCharacterOwnershipOrStaff(request, parseInt(authorId));
             if (!auth.authorized) {
                 return auth.error!;
@@ -130,7 +135,30 @@ export async function createThread(request: HttpRequest, context: InvocationCont
             const req = transaction.request();
             req.input('subheader', sql.NVarChar, subheader || null);
             
-            if (regionId) {
+            if (subareaId) {
+                // Subarea threads also need to reference the parent region for proper categorization
+                insertThreadSQL += ", SubareaID, RegionId)";
+                valuesSQL += ", @subareaId, @regionId)";
+                req.input('subareaId', sql.NVarChar, subareaId);
+                // Need to look up the region ID from the subarea
+                const subareaLookup = await pool.request()
+                    .input('subareaId', sql.NVarChar, subareaId)
+                    .query(`SELECT regionId FROM Subareas WHERE id = @subareaId`);
+                if (subareaLookup.recordset.length > 0) {
+                    // Convert slug-based regionId to numeric
+                    const regionSlug = subareaLookup.recordset[0].regionId;
+                    const regionLookup = await pool.request()
+                        .input('regionSlug', sql.NVarChar, regionSlug)
+                        .query(`SELECT RegionID FROM Region WHERE LOWER(REPLACE(RegionName, ' ', '-')) = @regionSlug`);
+                    if (regionLookup.recordset.length > 0) {
+                        req.input('regionId', sql.Int, regionLookup.recordset[0].RegionID);
+                    } else {
+                        req.input('regionId', sql.Int, null);
+                    }
+                } else {
+                    req.input('regionId', sql.Int, null);
+                }
+            } else if (regionId) {
                 insertThreadSQL += ", RegionId)";
                 valuesSQL += ", @regionId)";
                 req.input('regionId', sql.Int, parseInt(regionId));
@@ -154,10 +182,30 @@ export async function createThread(request: HttpRequest, context: InvocationCont
             let insertPostSQL = "INSERT INTO Post (ThreadID, Subject, Body, Created, Modified";
             let postValuesSQL = "VALUES (@threadId, @subject, @body, GETDATE(), GETDATE()";
             
-            if (regionId) {
+            if (regionId || subareaId) {
                 insertPostSQL += ", RegionID, CharacterID)";
-                postValuesSQL += ", @regionId, @authorId)";
-                postReq.input('regionId', sql.Int, parseInt(regionId));
+                postValuesSQL += ", @postRegionId, @authorId)";
+                // For subareas, we need to get the numeric region ID
+                if (subareaId) {
+                    const subareaLookup = await pool.request()
+                        .input('subareaId', sql.NVarChar, subareaId)
+                        .query(`SELECT regionId FROM Subareas WHERE id = @subareaId`);
+                    if (subareaLookup.recordset.length > 0) {
+                        const regionSlug = subareaLookup.recordset[0].regionId;
+                        const regionLookup = await pool.request()
+                            .input('regionSlug', sql.NVarChar, regionSlug)
+                            .query(`SELECT RegionID FROM Region WHERE LOWER(REPLACE(RegionName, ' ', '-')) = @regionSlug`);
+                        if (regionLookup.recordset.length > 0) {
+                            postReq.input('postRegionId', sql.Int, regionLookup.recordset[0].RegionID);
+                        } else {
+                            postReq.input('postRegionId', sql.Int, null);
+                        }
+                    } else {
+                        postReq.input('postRegionId', sql.Int, null);
+                    }
+                } else {
+                    postReq.input('postRegionId', sql.Int, parseInt(regionId));
+                }
             } else {
                  insertPostSQL += ", UserID)";
                  postValuesSQL += ", @authorId)";

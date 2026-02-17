@@ -712,25 +712,24 @@ const Home: React.FC = () => {
                           <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
                             <div className="space-y-2">
                               <div>
-                                <span className="font-semibold">Active Threads: </span>
-                                {stats ? stats.activeThreads.toLocaleString() : statsLoading ? 'Loading…' : '—'}
+                                {stats ? (
+                                  <span>
+                                    <span className="font-semibold">{stats.activeThreads.toLocaleString()}</span> active threads, <span className="font-semibold">{stats.totalPosts.toLocaleString()}</span> posts
+                                  </span>
+                                ) : statsLoading ? 'Loading…' : '—'}
                               </div>
-                              <div>
-                                <span className="font-semibold">Total Posts: </span>
-                                {stats ? stats.totalPosts.toLocaleString() : statsLoading ? 'Loading…' : '—'}
-                              </div>
-                              {region.subareas.length > 0 && (
+                              {region.subareas && region.subareas.length > 0 && (
                                 <div className="text-sm text-gray-700">
-                                  <span className="font-semibold">Subareas: </span>
-                                  {region.subareas.map((sub, index) => (
+                                  <div className="font-semibold">Subareas:</div>
+                                  {region.subareas.map((sub: { id: string; name: string }, index: number) => (
                                     <span key={sub.id}>
                                       <Link
-                                        to={`/region/${region.id}/subarea/${sub.id}`}
+                                        to={`/subarea/${sub.id}`}
                                         className="text-gray-900 hover:text-[#4b6596]"
                                       >
                                         {sub.name}
                                       </Link>
-                                      {index < region.subareas.length - 1 && ' · '}
+                                      {index < region.subareas.length - 1 && ', '}
                                     </span>
                                   ))}
                                 </div>

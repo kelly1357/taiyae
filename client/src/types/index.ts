@@ -99,6 +99,7 @@ export interface ForumSubarea {
   id: string;
   name: string;
   description?: string;
+  imageUrl?: string; // Background image for the subarea
 }
 
 export interface ForumRegion {
@@ -108,6 +109,9 @@ export interface ForumRegion {
   subareas: ForumSubarea[];
   imageUrl?: string; // For the region background
   headerImageUrl?: string; // For the homepage header above thread info
+  slug?: string; // URL-friendly version of region name
+  activeThreadCount?: number; // Number of active threads
+  postCount?: number; // Total posts in region
 }
 
 export interface OOCForum {

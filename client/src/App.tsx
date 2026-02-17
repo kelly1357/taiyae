@@ -7,6 +7,7 @@ import ScrollToTop from './components/ScrollToTop';
 import { useUser } from './contexts/UserContext';
 import Home from './pages/Home';
 import Region from './pages/Region';
+import Subarea from './pages/Subarea';
 import OOCForumPage from './pages/OOCForum';
 import OOCForums from './pages/OOCForums';
 import RegionDirectory from './pages/RegionDirectory';
@@ -237,6 +238,7 @@ const App: React.FC = () => {
         <Route index element={<Home />} />
         <Route path="regions" element={<RegionDirectory />} />
         <Route path="region/:regionId" element={<Region />} />
+        <Route path="subarea/:subareaId" element={<Subarea />} />
         <Route path="ooc" element={<OOCForums />} />
         <Route path="ooc-forum/:forumId" element={<OOCForumPage />} />
         <Route path="thread/:threadId" element={<ThreadView />} />

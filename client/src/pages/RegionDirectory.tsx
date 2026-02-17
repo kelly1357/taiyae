@@ -2,13 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useIsAdmin, useUser } from '../contexts/UserContext';
 
+interface Subarea {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  regionId: string;
+}
+
 interface Region {
   id: string;
   name: string;
   description: string;
   imageUrl?: string;
   headerImageUrl?: string;
-  subareas: { id: string; name: string }[];
+  subareas: Subarea[];
+}
+
+interface EditingSubarea {
+  id?: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  isNew: boolean;
 }
 
 const RegionDirectory: React.FC = () => {
@@ -18,6 +34,9 @@ const RegionDirectory: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
+  const [uploadingSubarea, setUploadingSubarea] = useState(false);
+  const [editingSubarea, setEditingSubarea] = useState<EditingSubarea | null>(null);
+  const [subareaLoading, setSubareaLoading] = useState(false);
   const isAdmin = useIsAdmin();
   const userContext = useUser();
   // Debug: log admin context and user
@@ -106,6 +125,152 @@ const RegionDirectory: React.FC = () => {
       alert(`Header image upload failed: ${error}`);
     } finally {
       setUploadingHeader(false);
+    }
+  };
+
+  const handleSubareaImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    setUploadingSubarea(true);
+
+    try {
+      const response = await fetch(`/api/upload?filename=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        body: file
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setEditingSubarea(prev => prev ? { ...prev, imageUrl: data.url } : null);
+      } else {
+        const errorText = await response.text();
+        alert(`Subarea image upload failed: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error uploading subarea image', error);
+      alert(`Subarea image upload failed: ${error}`);
+    } finally {
+      setUploadingSubarea(false);
+    }
+  };
+
+  const handleAddSubarea = () => {
+    setEditingSubarea({
+      name: '',
+      description: '',
+      imageUrl: '',
+      isNew: true
+    });
+  };
+
+  const handleEditSubarea = (subarea: Subarea) => {
+    setEditingSubarea({
+      id: subarea.id,
+      name: subarea.name,
+      description: subarea.description || '',
+      imageUrl: subarea.imageUrl || '',
+      isNew: false
+    });
+  };
+
+  const handleSaveSubarea = async () => {
+    if (!editingSubarea || !currentRegion.id) return;
+    
+    setSubareaLoading(true);
+    const token = localStorage.getItem('token');
+    
+    try {
+      // Generate the region slug from region name
+      const regionSlug = currentRegion.name?.toLowerCase().replace(/\s+/g, '-') || '';
+      
+      if (editingSubarea.isNew) {
+        const response = await fetch('/api/subareas', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            regionId: regionSlug,
+            name: editingSubarea.name,
+            description: editingSubarea.description || null,
+            imageUrl: editingSubarea.imageUrl || null
+          })
+        });
+
+        if (response.ok) {
+          const newSubarea = await response.json();
+          setCurrentRegion(prev => ({
+            ...prev,
+            subareas: [...(prev.subareas || []), newSubarea]
+          }));
+          setEditingSubarea(null);
+        } else {
+          const errorText = await response.text();
+          alert(`Failed to create subarea: ${errorText}`);
+        }
+      } else {
+        const response = await fetch(`/api/subareas/${editingSubarea.id}`, {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: editingSubarea.name,
+            description: editingSubarea.description || null,
+            imageUrl: editingSubarea.imageUrl || null
+          })
+        });
+
+        if (response.ok) {
+          const updatedSubarea = await response.json();
+          setCurrentRegion(prev => ({
+            ...prev,
+            subareas: prev.subareas?.map(s => 
+              s.id === updatedSubarea.id ? updatedSubarea : s
+            ) || []
+          }));
+          setEditingSubarea(null);
+        } else {
+          const errorText = await response.text();
+          alert(`Failed to update subarea: ${errorText}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving subarea', error);
+      alert(`Error saving subarea: ${error}`);
+    } finally {
+      setSubareaLoading(false);
+    }
+  };
+
+  const handleDeleteSubarea = async (subareaId: string) => {
+    if (!confirm('Are you sure you want to delete this subarea? This cannot be undone.')) return;
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+      const response = await fetch(`/api/subareas/${subareaId}`, {
+        method: 'DELETE',
+        headers: { 
+          'X-Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setCurrentRegion(prev => ({
+          ...prev,
+          subareas: prev.subareas?.filter(s => s.id !== subareaId) || []
+        }));
+      } else {
+        const errorText = await response.text();
+        alert(`Failed to delete subarea: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error deleting subarea', error);
+      alert(`Error deleting subarea: ${error}`);
     }
   };
 
@@ -221,6 +386,119 @@ const RegionDirectory: React.FC = () => {
                     {uploadingHeader && <span className="text-sm text-gray-600 animate-pulse">Uploading...</span>}
                   </div>
                 </div>
+
+                {/* Subareas Section - only show for existing regions */}
+                {currentRegion.id && (
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700">Subareas</label>
+                      <button
+                        type="button"
+                        onClick={handleAddSubarea}
+                        className="text-xs text-[#2f3a2f] hover:underline"
+                      >
+                        + Add Subarea
+                      </button>
+                    </div>
+                    
+                    {/* Existing subareas list */}
+                    {currentRegion.subareas && currentRegion.subareas.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                        {currentRegion.subareas.map(subarea => (
+                          <div key={subarea.id} className="flex items-center justify-between p-2 bg-gray-50 border border-gray-200">
+                            <div className="flex items-center space-x-3">
+                              {subarea.imageUrl && (
+                                <img src={subarea.imageUrl} alt={subarea.name} className="w-12 h-8 object-cover border border-gray-300" />
+                              )}
+                              <div>
+                                <span className="text-sm font-medium text-gray-900">{subarea.name}</span>
+                                {subarea.description && (
+                                  <p className="text-xs text-gray-500 truncate max-w-md">{subarea.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex space-x-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEditSubarea(subarea)}
+                                className="text-xs text-gray-500 hover:text-gray-700"
+                              >
+                                [edit]
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSubarea(subarea.id)}
+                                className="text-xs text-red-500 hover:text-red-700"
+                              >
+                                [delete]
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Subarea edit form */}
+                    {editingSubarea && (
+                      <div className="p-3 bg-gray-100 border border-gray-300 space-y-3">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-gray-600 mb-2">
+                          {editingSubarea.isNew ? 'New Subarea' : 'Edit Subarea'}
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Name</label>
+                          <input
+                            type="text"
+                            value={editingSubarea.name}
+                            onChange={e => setEditingSubarea({ ...editingSubarea, name: e.target.value })}
+                            className="w-full border border-gray-300 px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                            placeholder="Subarea name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Description</label>
+                          <textarea
+                            value={editingSubarea.description}
+                            onChange={e => setEditingSubarea({ ...editingSubarea, description: e.target.value })}
+                            className="w-full border border-gray-300 px-2 py-1 text-sm text-gray-900 h-20 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                            placeholder="Brief description of this subarea..."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Background Image</label>
+                          <div className="flex items-center space-x-3">
+                            {editingSubarea.imageUrl && (
+                              <img src={editingSubarea.imageUrl} alt="Preview" className="w-20 h-12 object-cover border border-gray-300" />
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleSubareaImageUpload}
+                              className="text-xs text-gray-600 file:mr-2 file:py-1 file:px-2 file:border file:border-gray-300 file:text-xs file:bg-white file:text-gray-700 hover:file:bg-gray-100 cursor-pointer"
+                            />
+                            {uploadingSubarea && <span className="text-xs text-gray-600 animate-pulse">Uploading...</span>}
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditingSubarea(null)}
+                            className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveSubarea}
+                            disabled={subareaLoading || uploadingSubarea || !editingSubarea.name.trim()}
+                            className="bg-[#2f3a2f] hover:bg-[#3a4a3a] text-white px-3 py-1 text-xs disabled:opacity-50"
+                          >
+                            {subareaLoading ? 'Saving...' : 'Save Subarea'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                   <button 
