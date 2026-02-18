@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useUser } from '../contexts/UserContext';
 import { Link } from 'react-router-dom';
 
@@ -289,8 +290,8 @@ export default function PackAdmin() {
       </div>
 
       {/* Edit/Create Modal */}
-      {(editingPack || showCreateModal) && (
-        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-8">
+      {(editingPack || showCreateModal) && createPortal(
+        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[100] overflow-y-auto py-8">
           <div className="bg-white border border-gray-300 shadow-lg w-full max-w-3xl mx-4">
             <div className="bg-[#2f3a2f] px-4 py-2 flex justify-between items-center">
               <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
@@ -577,7 +578,8 @@ export default function PackAdmin() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
