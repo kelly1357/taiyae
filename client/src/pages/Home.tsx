@@ -127,7 +127,6 @@ const Home: React.FC = () => {
 
   // Packs state
   const [packs, setPacks] = useState<{ id: number; name: string; slug: string; color1: string; color2: string; isActive: boolean }[]>([]);
-  const [rogueStats, setRogueStats] = useState<{ total: number; males: number; females: number; pups: number } | null>(null);
 
   // Check for season change and age characters if needed (runs once on page load)
   useEffect(() => {
@@ -193,13 +192,6 @@ const Home: React.FC = () => {
       })
       .catch(err => console.error('Failed to fetch packs:', err));
 
-    // Fetch rogue stats
-    fetch('/api/rogues')
-      .then(res => res.json())
-      .then(data => {
-        setRogueStats(data.stats);
-      })
-      .catch(err => console.error('Failed to fetch rogues:', err));
   }, []);
 
   // Handle plot news submission
