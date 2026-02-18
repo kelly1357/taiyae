@@ -28,10 +28,17 @@ function getRegions(request, context) {
                 s.name           AS subName,
                 s.description    AS subDescription,
                 s.imageUrl       AS subImageUrl,
+                p.id             AS packId,
+                p.name           AS packName,
+                p.slug           AS packSlug,
+                p.color1         AS packColor1,
+                p.color2         AS packColor2,
                 (SELECT COUNT(*) FROM Thread t WHERE t.RegionID = r.RegionID AND t.IsArchived = 0) AS activeThreadCount,
                 (SELECT COUNT(*) FROM Post p JOIN Thread t ON p.ThreadID = t.ThreadID WHERE t.RegionID = r.RegionID) AS postCount
             FROM Region r
             LEFT JOIN Subareas s ON LOWER(REPLACE(r.RegionName, ' ', '-')) = s.regionId
+            LEFT JOIN PackSubareas ps ON s.id = ps.subareaId
+            LEFT JOIN Packs p ON ps.packId = p.id AND p.isActive = 1
         `);
             // Transform flat result into nested structure
             const regionsMap = new Map();
@@ -54,7 +61,14 @@ function getRegions(request, context) {
                         id: row.subId,
                         name: row.subName,
                         description: row.subDescription,
-                        imageUrl: row.subImageUrl
+                        imageUrl: row.subImageUrl,
+                        claimedBy: row.packId ? {
+                            id: row.packId,
+                            name: row.packName,
+                            slug: row.packSlug,
+                            color1: row.packColor1,
+                            color2: row.packColor2
+                        } : null
                     });
                 }
             });

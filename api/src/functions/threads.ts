@@ -532,7 +532,11 @@ export async function getLatestPosts(request: HttpRequest, context: InvocationCo
                     c.CharacterName as authorName,
                     c.CharacterID as authorId,
                     c.AvatarImage as authorImage,
-                    pk.PackName as packName,
+                    pk.name as packName,
+                    pk.slug as packSlug,
+                    pk.color1 as packColor1,
+                    pk.color2 as packColor2,
+                    pr.name as packRankName,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 
@@ -542,7 +546,8 @@ export async function getLatestPosts(request: HttpRequest, context: InvocationCo
                 JOIN Thread t ON p.ThreadID = t.ThreadID
                 JOIN Region r ON t.RegionID = r.RegionID
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
-                LEFT JOIN Pack pk ON c.PackID = pk.PackID
+                LEFT JOIN Packs pk ON c.PackID = pk.id
+                LEFT JOIN PackRanks pr ON c.packRankId = pr.id
                 CROSS APPLY (
                     SELECT TOP 1 Subject 
                     FROM Post 

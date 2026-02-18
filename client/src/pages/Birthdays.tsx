@@ -9,6 +9,10 @@ interface BirthdayCharacter {
   monthsAge: number;
   sex: string;
   packName: string | null;
+  packSlug?: string;
+  packColor1?: string;
+  packColor2?: string;
+  packRankName?: string;
   username: string;
   odUserId: number;
 }
@@ -188,7 +192,27 @@ const Birthdays: React.FC = () => {
                         </Link>
                       </td>
                       <td className="px-4 py-3 border-r border-gray-300 text-gray-700">
-                        {char.packName || <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>}
+                        {char.packName ? (
+                          <Link to={`/pack/${char.packSlug}`} className="hover:opacity-80">
+                            <span 
+                              className="uppercase tracking-wide"
+                              style={{ 
+                                fontFamily: 'Baskerville, "Times New Roman", serif',
+                                background: `linear-gradient(to right, ${char.packColor1 || '#666'}, ${char.packColor2 || char.packColor1 || '#666'})`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}
+                            >
+                              {char.packName}
+                            </span>
+                            {char.packRankName && (
+                              <span className="ml-1 text-xs text-gray-600">{char.packRankName}</span>
+                            )}
+                          </Link>
+                        ) : (
+                          <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 border-r border-gray-300 text-gray-700">
                         {formatAge(char.monthsAge)}
@@ -237,7 +261,29 @@ const Birthdays: React.FC = () => {
                   </div>
                   <div className="p-3 text-sm text-gray-600 space-y-1">
                     <div><span className="font-medium">Age:</span> {formatAge(char.monthsAge)}</div>
-                    <div><span className="font-medium">Pack:</span> {char.packName || <span className="uppercase tracking-wide text-gray-500" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>}</div>
+                    <div><span className="font-medium">Pack:</span>{' '}
+                      {char.packName ? (
+                        <Link to={`/pack/${char.packSlug}`} className="hover:opacity-80">
+                          <span 
+                            className="uppercase tracking-wide"
+                            style={{ 
+                              fontFamily: 'Baskerville, "Times New Roman", serif',
+                              background: `linear-gradient(to right, ${char.packColor1 || '#666'}, ${char.packColor2 || char.packColor1 || '#666'})`,
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text'
+                            }}
+                          >
+                            {char.packName}
+                          </span>
+                          {char.packRankName && (
+                            <span className="ml-1 text-xs text-gray-500">{char.packRankName}</span>
+                          )}
+                        </Link>
+                      ) : (
+                        <span className="uppercase tracking-wide text-gray-500" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
+                      )}
+                    </div>
                     <div><span className="font-medium">Player:</span>{' '}
                       <Link to={`/user/${char.odUserId}`} className="text-[#5c7c3b] hover:text-[#4a6530]">
                         {char.username}

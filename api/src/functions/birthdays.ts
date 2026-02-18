@@ -15,11 +15,16 @@ export async function getBirthdayCharacters(request: HttpRequest, context: Invoc
                 c.AvatarImage as imageUrl,
                 c.MonthsAge as monthsAge,
                 c.Sex as sex,
-                p.PackName as packName,
+                p.name as packName,
+                p.slug as packSlug,
+                p.color1 as packColor1,
+                p.color2 as packColor2,
+                pr.name as packRankName,
                 u.Username as username,
                 u.UserID as odUserId
             FROM Character c
-            LEFT JOIN Pack p ON c.PackID = p.PackID
+            LEFT JOIN Packs p ON c.PackID = p.id
+            LEFT JOIN PackRanks pr ON c.packRankId = pr.id
             LEFT JOIN [User] u ON c.UserID = u.UserID
             WHERE c.MonthsAge > 0 
               AND (c.MonthsAge % 12) = 0

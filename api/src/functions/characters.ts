@@ -72,7 +72,12 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     c.MonthsAge as monthsAge, 
                     c.AvatarImage as imageUrl, 
                     c.PackID as packId,
-                    p.PackName as packName,
+                    c.packRankId as packRankId,
+                    p.name as packName,
+                    p.slug as packSlug,
+                    p.color1 as packColor1,
+                    p.color2 as packColor2,
+                    pr.name as packRankName,
                     hs.StatusValue as healthStatus,
                     c.HealthStatus_Id as healthStatusId,
                     c.CI_General_HTML as bio,
@@ -110,7 +115,8 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                 FROM Character c
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
-                LEFT JOIN Pack p ON c.PackID = p.PackID
+                LEFT JOIN Packs p ON c.PackID = p.id
+                LEFT JOIN PackRanks pr ON c.packRankId = pr.id
                 LEFT JOIN Height h ON c.HeightID = h.HeightID
                 LEFT JOIN Build b ON c.BuildID = b.BuildID
             `;
@@ -359,9 +365,9 @@ export async function moderatorUpdateCharacter(request: HttpRequest, context: In
 
     try {
         const body = await request.json() as any;
-        const { name, sex, monthsAge, status, userId } = body;
+        const { name, sex, monthsAge, status, userId, packId, packRankId } = body;
         
-        context.log('Moderator edit request:', { characterId, name, sex, monthsAge, status, userId });
+        context.log('Moderator edit request:', { characterId, name, sex, monthsAge, status, userId, packId, packRankId });
 
         if (!userId) {
             return { status: 400, body: "Missing user ID" };
@@ -416,6 +422,25 @@ export async function moderatorUpdateCharacter(request: HttpRequest, context: In
             }
             
             context.log('Status update included:', { status, isActive: status === 'Active' ? 1 : 0 });
+        }
+        
+        // Handle pack assignment
+        if (packId !== undefined) {
+            updates.push('PackID = @packId');
+            requestObj.input('packId', sql.Int, packId);
+            
+            // If pack is being removed (set to null/0), also clear the rank
+            if (!packId) {
+                updates.push('packRankId = NULL');
+            }
+        }
+        
+        // Handle pack rank assignment
+        if (packRankId !== undefined && packId) {
+            updates.push('packRankId = @packRankId');
+            requestObj.input('packRankId', sql.Int, packRankId);
+        } else if (packRankId === null) {
+            updates.push('packRankId = NULL');
         }
 
         if (updates.length === 0) {
@@ -674,7 +699,7 @@ export async function getInactiveCharacters(request: HttpRequest, context: Invoc
                 c.MonthsAge as monthsAge,
                 u.Username as playerName,
                 u.UserID as playerId,
-                p.PackName as packName,
+                p.name as packName,
                 COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) as status,
                 c.DeathDate as deathDate,
                 (SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID) as lastPostDate,
@@ -685,7 +710,7 @@ export async function getInactiveCharacters(request: HttpRequest, context: Invoc
                 ) as daysSinceLastPost
             FROM Character c
             LEFT JOIN [User] u ON c.UserID = u.UserID
-            LEFT JOIN Pack p ON c.PackID = p.PackID
+            LEFT JOIN Packs p ON c.PackID = p.id
             WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) IN ('Inactive', 'Dead')
             ORDER BY c.CharacterName
         `);
@@ -744,7 +769,7 @@ export async function getCharactersToInactivate(request: HttpRequest, context: I
                 c.MonthsAge as monthsAge,
                 u.Username as playerName,
                 u.UserID as playerId,
-                p.PackName as packName,
+                p.name as packName,
                 (SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID) as lastPostDate,
                 (SELECT COUNT(*) FROM Post WHERE CharacterID = c.CharacterID) as totalPosts,
                 DATEDIFF(day, 
@@ -753,7 +778,7 @@ export async function getCharactersToInactivate(request: HttpRequest, context: I
                 ) as daysSinceLastPost
             FROM Character c
             LEFT JOIN [User] u ON c.UserID = u.UserID
-            LEFT JOIN Pack p ON c.PackID = p.PackID
+            LEFT JOIN Packs p ON c.PackID = p.id
             WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'
               AND DATEDIFF(day, 
                     COALESCE((SELECT MAX(Created) FROM Post WHERE CharacterID = c.CharacterID), c.Created), 

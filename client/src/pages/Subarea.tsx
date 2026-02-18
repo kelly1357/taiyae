@@ -113,6 +113,23 @@ const Subarea: React.FC = () => {
               {subarea.description && (
                 <p className="text-xs text-gray-600">{subarea.description}</p>
               )}
+              {subarea.claimedBy && (
+                <div className="mt-3 bg-[#f2f2f2] px-3 py-2 text-xs text-gray-700 text-center">
+                  Claimed territory of the{' '}
+                  <Link 
+                    to={`/pack/${subarea.claimedBy.slug}`} 
+                    className="font-semibold hover:underline"
+                    style={{
+                      background: `linear-gradient(to right, ${subarea.claimedBy.color1}, ${subarea.claimedBy.color2})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                  >
+                    {subarea.claimedBy.name}
+                  </Link>
+                </div>
+              )}
             </div>
             {activeCharacter && activeCharacter.status !== 'Dead' && (
               <button 

@@ -64,6 +64,10 @@ export interface Character {
   achievements: Achievement[];
   packId?: string;
   packName?: string;
+  packSlug?: string;
+  packColor1?: string;
+  packColor2?: string;
+  packRankName?: string;
   rank?: string;
   bio?: string;
   monthsAge?: number;
@@ -100,6 +104,13 @@ export interface ForumSubarea {
   name: string;
   description?: string;
   imageUrl?: string; // Background image for the subarea
+  claimedBy?: {
+    id: number;
+    name: string;
+    slug: string;
+    color1: string;
+    color2: string;
+  } | null;
 }
 
 export interface ForumRegion {

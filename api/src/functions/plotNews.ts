@@ -278,7 +278,7 @@ app.http('getPendingPlotNewsCount', {
 });
 
 // POST /api/plot-news/approve
-// Approve a plot news item
+// Approve a plot news item (and all related entries from multi-pack submissions)
 export async function approvePlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     // Verify staff authorization
     const auth = await verifyStaffAuth(request);
@@ -299,15 +299,39 @@ export async function approvePlotNews(request: HttpRequest, context: InvocationC
         }
 
         const pool = await getPool();
-        await pool.request()
+        
+        // First, get the details of the item being approved to find related entries
+        const itemResult = await pool.request()
             .input('plotNewsId', sql.Int, plotNewsId)
+            .query(`
+                SELECT NewsText, ThreadURL, SubmittedByUserID, SubmittedAt
+                FROM PlotNews
+                WHERE PlotNewsID = @plotNewsId
+            `);
+        
+        if (itemResult.recordset.length === 0) {
+            return { status: 404, body: "Plot news item not found" };
+        }
+        
+        const item = itemResult.recordset[0];
+        
+        // Approve all related entries (same text, URL, submitter, and submitted within 5 seconds)
+        await pool.request()
+            .input('newsText', sql.NVarChar, item.NewsText)
+            .input('threadURL', sql.NVarChar, item.ThreadURL)
+            .input('submittedByUserID', sql.Int, item.SubmittedByUserID)
+            .input('submittedAt', sql.DateTime, item.SubmittedAt)
             .input('userId', sql.Int, userId || null)
             .query(`
                 UPDATE PlotNews
                 SET IsApproved = 1,
                     ApprovedByUserID = @userId,
                     ApprovedAt = GETDATE()
-                WHERE PlotNewsID = @plotNewsId
+                WHERE NewsText = @newsText
+                    AND ISNULL(ThreadURL, '') = ISNULL(@threadURL, '')
+                    AND SubmittedByUserID = @submittedByUserID
+                    AND ABS(DATEDIFF(SECOND, SubmittedAt, @submittedAt)) <= 5
+                    AND IsApproved = 0
             `);
 
         // Broadcast updated count to staff group
@@ -445,4 +469,66 @@ app.http('deletePlotNews', {
     route: 'plot-news/{id}',
     extraOutputs: [signalROutput],
     handler: deletePlotNews
+});
+
+// GET /api/plot-news/pack/:packName
+// Get approved plot news for a specific pack (limit 4)
+// Returns all pack tags for items that include this pack
+export async function getPlotNewsByPack(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const packName = decodeURIComponent(request.params.packName || '');
+        
+        if (!packName) {
+            return { status: 400, body: "packName is required" };
+        }
+
+        const pool = await getPool();
+        // First get the 4 most recent approved items for this pack
+        const result = await pool.request()
+            .input('packName', sql.NVarChar, packName)
+            .query(`
+                SELECT TOP 4 
+                    pn.PlotNewsID,
+                    pn.PackName,
+                    pn.NewsText,
+                    pn.ThreadURL,
+                    pn.ApprovedAt,
+                    pn.SubmittedByUserID,
+                    (SELECT TOP 1 p.Subject FROM Post p WHERE p.ThreadID = 
+                        TRY_CAST(
+                            CASE 
+                                WHEN pn.ThreadURL LIKE '%/thread/%' 
+                                THEN SUBSTRING(pn.ThreadURL, CHARINDEX('/thread/', pn.ThreadURL) + 8, LEN(pn.ThreadURL))
+                                ELSE NULL 
+                            END 
+                        AS INT)
+                     ORDER BY p.PostID ASC) as ThreadTitle,
+                    -- Get all pack names for this same submission (same text, URL, submitter)
+                    (SELECT STRING_AGG(related.PackName, ',') 
+                     FROM PlotNews related 
+                     WHERE related.NewsText = pn.NewsText 
+                       AND ISNULL(related.ThreadURL, '') = ISNULL(pn.ThreadURL, '')
+                       AND related.SubmittedByUserID = pn.SubmittedByUserID
+                       AND related.IsApproved = 1
+                    ) as AllPackNames
+                FROM PlotNews pn
+                WHERE pn.IsApproved = 1 AND pn.PackName = @packName
+                ORDER BY pn.ApprovedAt DESC
+            `);
+
+        return {
+            status: 200,
+            jsonBody: result.recordset
+        };
+    } catch (error: any) {
+        context.error(error);
+        return { status: 500, jsonBody: { error: error.message } };
+    }
+}
+
+app.http('getPlotNewsByPack', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'plot-news/pack/{packName}',
+    handler: getPlotNewsByPack
 });

@@ -328,7 +328,7 @@ export default function HomepageAdmin() {
                             onChange={(e) => setEditForm(prev => ({ ...prev, packName: e.target.checked ? 'Rogue' : '' }))}
                             className="w-4 h-4"
                           />
-                          <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600">R</span>
+                          <span className="inline-block w-7 text-center py-px text-xs font-normal bg-gray-200 text-gray-600">R</span>
                           <span className="uppercase tracking-wide text-gray-600 text-sm" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogues</span>
                         </label>
                       </div>
@@ -383,8 +383,8 @@ export default function HomepageAdmin() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="inline-block px-3 py-px text-xs font-normal bg-gray-200 text-gray-600">
-                            {submission.PackName === 'Rogue' ? 'R' : submission.PackName?.charAt(0).toUpperCase() || '?'}
+                          <span className="inline-block w-7 text-center py-px text-xs font-normal bg-gray-200 text-gray-600">
+                            {submission.PackName === 'Rogue' ? 'R' : submission.PackName ? (submission.PackName.split(' ').length > 1 ? submission.PackName.split(' ').map(w => w.charAt(0).toUpperCase()).join('') : submission.PackName.slice(0, 2).toUpperCase()) : '?'}
                           </span>
                           <span className="uppercase tracking-wide text-gray-600 text-sm" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>
                             {submission.PackName || 'Unknown Pack'}
@@ -551,8 +551,8 @@ export default function HomepageAdmin() {
               Are you sure you want to delete this plot news submission?
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
-              <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
-                {deleteConfirm.PackName === 'Rogue' ? 'R' : deleteConfirm.PackName?.charAt(0).toUpperCase() || '?'}
+              <span className="inline-block w-7 text-center py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
+                {deleteConfirm.PackName === 'Rogue' ? 'R' : deleteConfirm.PackName ? (deleteConfirm.PackName.split(' ').length > 1 ? deleteConfirm.PackName.split(' ').map(w => w.charAt(0).toUpperCase()).join('') : deleteConfirm.PackName.slice(0, 2).toUpperCase()) : '?'}
               </span>
               <span className="text-sm text-gray-700">{deleteConfirm.NewsText}</span>
             </div>

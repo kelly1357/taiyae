@@ -28,6 +28,15 @@ interface UserAchievement {
   AwardedAt: string;
 }
 
+interface PackOption {
+  id: number;
+  name: string;
+  slug: string;
+  color1: string;
+  color2: string;
+  ranks: { id: number; name: string; displayOrder: number }[];
+}
+
 const CharacterProfile: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useOutletContext<LayoutContext>();
@@ -48,8 +57,9 @@ const CharacterProfile: React.FC = () => {
   
   // Moderator edit state
   const [showModeratorEdit, setShowModeratorEdit] = useState(false);
-  const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0, status: 'Active' as 'Active' | 'Inactive' | 'Dead' });
+  const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0, status: 'Active' as 'Active' | 'Inactive' | 'Dead', packId: null as number | null, packRankId: null as number | null });
   const [isModeratorSaving, setIsModeratorSaving] = useState(false);
+  const [packOptions, setPackOptions] = useState<PackOption[]>([]);
   
   // User achievements state
   const [userAchievements, setUserAchievements] = useState<UserAchievement[]>([]);
@@ -150,17 +160,36 @@ const CharacterProfile: React.FC = () => {
   };
 
   // Open moderator edit modal
-  const openModeratorEdit = () => {
+  const openModeratorEdit = async () => {
     if (character) {
       const totalMonths = (character as any).monthsAge || 0;
       const charStatus = (character as any).status || 'Active';
+      const charPackId = (character as any).packId || null;
+      const charPackRankId = (character as any).packRankId || null;
+      
       setModEditForm({
         name: character.name || '',
         sex: character.sex || '',
         years: Math.floor(totalMonths / 12),
         months: totalMonths % 12,
-        status: charStatus
+        status: charStatus,
+        packId: charPackId,
+        packRankId: charPackRankId
       });
+      
+      // Fetch packs if not already loaded
+      if (packOptions.length === 0) {
+        try {
+          const res = await fetch('/api/packs');
+          if (res.ok) {
+            const packs = await res.json();
+            setPackOptions(packs.filter((p: PackOption) => p.id)); // Filter out any invalid packs
+          }
+        } catch (error) {
+          console.error('Error fetching packs:', error);
+        }
+      }
+      
       setShowModeratorEdit(true);
     }
   };
@@ -180,6 +209,8 @@ const CharacterProfile: React.FC = () => {
       sex: modEditForm.sex,
       monthsAge: totalMonths,
       status: modEditForm.status,
+      packId: modEditForm.packId,
+      packRankId: modEditForm.packRankId,
       userId: user.id
     };
     
@@ -198,13 +229,24 @@ const CharacterProfile: React.FC = () => {
 
       if (response.ok) {
         console.log('Update successful!');
+        // Get pack info for display
+        const selectedPack = packOptions.find(p => p.id === modEditForm.packId);
+        const selectedRank = selectedPack?.ranks.find(r => r.id === modEditForm.packRankId);
+        
         // Update local character state
         setCharacter(prev => prev ? {
           ...prev,
           name: modEditForm.name,
           sex: modEditForm.sex,
           monthsAge: totalMonths,
-          status: modEditForm.status
+          status: modEditForm.status,
+          packId: modEditForm.packId,
+          packRankId: modEditForm.packRankId,
+          packName: selectedPack?.name || null,
+          packSlug: selectedPack?.slug || null,
+          packColor1: selectedPack?.color1 || null,
+          packColor2: selectedPack?.color2 || null,
+          packRankName: selectedRank?.name || null
         } as Character : null);
         setShowModeratorEdit(false);
       } else {
@@ -395,7 +437,23 @@ const CharacterProfile: React.FC = () => {
                       <td className="px-2 py-2 text-gray-700 border-r border-gray-300">{character.name}{character.surname ? ` ${character.surname}` : ''}</td>
                       <td className="px-2 py-2">
                         {character.packName ? (
-                          <span className="text-gray-700">{character.packName}</span>
+                          <Link to={`/pack/${character.packSlug}`} className="hover:opacity-80 block">
+                            <span 
+                              className="uppercase tracking-wide"
+                              style={{ 
+                                fontFamily: 'Baskerville, "Times New Roman", serif',
+                                background: `linear-gradient(to right, ${character.packColor1 || '#666'}, ${character.packColor2 || character.packColor1 || '#666'})`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text'
+                              }}
+                            >
+                              {character.packName}
+                            </span>
+                            {character.packRankName && (
+                              <span className="block text-xs text-gray-600">{character.packRankName}</span>
+                            )}
+                          </Link>
                         ) : (
                           <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
                         )}
@@ -1260,6 +1318,41 @@ const CharacterProfile: React.FC = () => {
                   {modEditForm.status === 'Active' && 'Character is active and can participate in roleplay.'}
                 </p>
               </div>
+
+              {/* Pack */}
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Pack</label>
+                <select
+                  value={modEditForm.packId ?? ''}
+                  onChange={(e) => {
+                    const newPackId = e.target.value ? parseInt(e.target.value) : null;
+                    setModEditForm(prev => ({ ...prev, packId: newPackId, packRankId: null }));
+                  }}
+                  className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                >
+                  <option value="">No Pack (Rogue)</option>
+                  {packOptions.filter(p => p.id).map(pack => (
+                    <option key={pack.id} value={pack.id}>{pack.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Pack Rank */}
+              {modEditForm.packId && (
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Pack Rank</label>
+                  <select
+                    value={modEditForm.packRankId ?? ''}
+                    onChange={(e) => setModEditForm(prev => ({ ...prev, packRankId: e.target.value ? parseInt(e.target.value) : null }))}
+                    className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                  >
+                    <option value="">Unranked</option>
+                    {packOptions.find(p => p.id === modEditForm.packId)?.ranks.map(rank => (
+                      <option key={rank.id} value={rank.id}>{rank.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-6">

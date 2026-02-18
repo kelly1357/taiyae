@@ -33,7 +33,8 @@ function getThread(request, context) {
                 SELECT 
                     p.PostID, p.Subject, p.Body, p.Created, p.Modified,
                     c.CharacterID as authorId, c.Slug as authorSlug, c.CharacterName as authorName, c.Surname as authorSurname, c.AvatarImage as authorImage,
-                    pk.PackName as packName, pk.Colors,
+                    pk.name as packName, pk.slug as packSlug, pk.color1 as packColor1, pk.color2 as packColor2,
+                    pr.name as packRankName,
                     c.Sex as sex, c.MonthsAge as age, hs.StatusValue as healthStatus,
                     c.Status as characterStatus,
                     (c.Experience + c.Physical + c.Knowledge) as skillPoints,
@@ -64,7 +65,8 @@ function getThread(request, context) {
                 LEFT JOIN Character c ON p.CharacterID = c.CharacterID
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN [User] oocUser ON p.UserID = oocUser.UserID
-                LEFT JOIN Pack pk ON c.PackID = pk.PackID
+                LEFT JOIN Packs pk ON c.PackID = pk.id
+                LEFT JOIN PackRanks pr ON c.packRankId = pr.id
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
                 LEFT JOIN Character mc ON p.ModifiedByCharacterId = mc.CharacterID
                 LEFT JOIN [User] mu ON p.ModifiedByUserId = mu.UserID
@@ -85,8 +87,10 @@ function getThread(request, context) {
                 authorSurname: p.authorSurname,
                 authorImage: p.authorImage,
                 packName: p.packName,
-                primaryColor: p.Colors ? p.Colors.split(',')[0] : null,
-                secondaryColor: p.Colors ? p.Colors.split(',')[1] : null,
+                packSlug: p.packSlug,
+                packRankName: p.packRankName,
+                primaryColor: p.packColor1 || null,
+                secondaryColor: p.packColor2 || null,
                 sex: p.sex,
                 age: p.age,
                 healthStatus: p.healthStatus,
@@ -114,8 +118,10 @@ function getThread(request, context) {
                 authorSurname: op.authorSurname,
                 authorImage: op.authorImage,
                 packName: op.packName,
-                primaryColor: op.Colors ? op.Colors.split(',')[0] : null,
-                secondaryColor: op.Colors ? op.Colors.split(',')[1] : null,
+                packSlug: op.packSlug,
+                packRankName: op.packRankName,
+                primaryColor: op.packColor1 || null,
+                secondaryColor: op.packColor2 || null,
                 sex: op.sex,
                 age: op.age,
                 healthStatus: op.healthStatus,

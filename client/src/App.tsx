@@ -8,6 +8,8 @@ import { useUser } from './contexts/UserContext';
 import Home from './pages/Home';
 import Region from './pages/Region';
 import Subarea from './pages/Subarea';
+import PackPage from './pages/PackPage';
+import Rogues from './pages/Rogues';
 import OOCForumPage from './pages/OOCForum';
 import OOCForums from './pages/OOCForums';
 import RegionDirectory from './pages/RegionDirectory';
@@ -31,6 +33,7 @@ import DeadCharacters from './pages/DeadCharacters';
 import Birthdays from './pages/Birthdays';
 import StaffPingsAdmin from './pages/StaffPingsAdmin';
 import UserApprovalsAdmin from './pages/UserApprovalsAdmin';
+import PackAdmin from './pages/PackAdmin';
 import Conversations from './pages/Conversations';
 import type { User, Character } from './types';
 
@@ -239,6 +242,8 @@ const App: React.FC = () => {
         <Route path="regions" element={<RegionDirectory />} />
         <Route path="region/:regionId" element={<Region />} />
         <Route path="subarea/:subareaId" element={<Subarea />} />
+        <Route path="pack/:packSlug" element={<PackPage />} />
+        <Route path="rogues" element={<Rogues />} />
         <Route path="ooc" element={<OOCForums />} />
         <Route path="ooc-forum/:forumId" element={<OOCForumPage />} />
         <Route path="thread/:threadId" element={<ThreadView />} />
@@ -268,6 +273,7 @@ const App: React.FC = () => {
         <Route path="admin/staff-pings" element={<StaffPingsAdmin />} />
         <Route path="admin/user-approvals" element={<UserApprovalsAdmin />} />
         <Route path="admin/achievements" element={<AchievementAdmin />} />
+        <Route path="admin/packs" element={<PackAdmin />} />
         <Route path="admin/homepage" element={<HomepageAdmin />} />
         <Route path="admin/inactive-characters" element={user ? <InactiveCharacters user={user} /> : <div className="text-center mt-20">Please log in to access this page.</div>} />
         {/* Wiki Routes */}

@@ -44,6 +44,7 @@ const Layout: React.FC<LayoutProps> = ({
   const [imageError, setImageError] = useState(false);
   const [isPingModalOpen, setIsPingModalOpen] = useState(false);
   const [guestCount, setGuestCount] = useState(0);
+  const [packs, setPacks] = useState<{ id: number; name: string; slug: string; color1: string }[]>([]);
   const location = useLocation();
 
   // Reset imageError when active character changes
@@ -127,6 +128,18 @@ const Layout: React.FC<LayoutProps> = ({
     const interval = setInterval(fetchGuestCount, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch active packs
+  useEffect(() => {
+    fetch('/api/packs')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setPacks(data.filter((p: { isActive: boolean }) => p.isActive));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -250,17 +263,40 @@ const Layout: React.FC<LayoutProps> = ({
               <div className="px-4 py-4 text-sm text-gray-800 space-y-2">
                 {(onlineList.length > 0 || guestCount > 0) ? (
                   <div className="flex flex-wrap items-center justify-center">
-                    {onlineList.map((character, index) => (
-                      <span key={character.id}>
-                        <Link 
-                          to={`/character/${character.slug || character.id}`}
-                          className={`hover:text-gray-600 ${character.isModerator || character.isAdmin ? 'bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded' : ''}`}
-                        >
-                          {character.name}
-                        </Link>
-                        {(index < onlineList.length - 1 || guestCount > 0) && <span className="mx-1 text-gray-400">·</span>}
-                      </span>
-                    ))}
+                    {onlineList.map((character, index) => {
+                      const isStaff = character.isModerator || character.isAdmin;
+                      const hasPackColor = !!character.packColor1;
+                      
+                      // Determine styling based on staff status and pack membership
+                      const linkStyle: React.CSSProperties = {};
+                      let className = 'hover:opacity-80';
+                      
+                      if (isStaff && hasPackColor) {
+                        // Staff in a pack: light pack color background, pack color text
+                        linkStyle.backgroundColor = `${character.packColor1}30`; // 30 = ~19% opacity
+                        linkStyle.color = character.packColor1;
+                        className += ' px-1.5 py-0.5 rounded';
+                      } else if (isStaff) {
+                        // Staff not in a pack: gray background
+                        className += ' bg-gray-200 text-gray-700 px-1.5 py-0.5 rounded';
+                      } else if (hasPackColor) {
+                        // Pack member (not staff): pack color text
+                        linkStyle.color = character.packColor1;
+                      }
+                      
+                      return (
+                        <span key={character.id}>
+                          <Link 
+                            to={`/character/${character.slug || character.id}`}
+                            className={className}
+                            style={linkStyle}
+                          >
+                            {character.name}
+                          </Link>
+                          {(index < onlineList.length - 1 || guestCount > 0) && <span className="mx-1 text-gray-400">·</span>}
+                        </span>
+                      );
+                    })}
                     {guestCount > 0 && (
                       <span className="text-gray-500">
                         {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
@@ -271,8 +307,18 @@ const Layout: React.FC<LayoutProps> = ({
                   <p className="text-gray-500 italic text-center">No one online.</p>
                 )}
                 <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="text-gray-500">Rogue</span>
+                  <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                    {packs.map((pack, index) => (
+                      <span key={pack.id}>
+                        <Link to={`/pack/${pack.slug}`} style={{ color: pack.color1 }} className="hover:underline">
+                          {pack.name}
+                        </Link>
+                        {(index < packs.length - 1) && <span className="ml-2 text-gray-400">·</span>}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <Link to="/rogues" className="text-gray-500 hover:underline">Rogue</Link>
                     <span>•</span>
                     <span className="bg-gray-200 text-gray-700 px-2 py-0.5 rounded">Staff</span>
                   </div>

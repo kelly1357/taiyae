@@ -23,7 +23,7 @@ const PlotNews: React.FC = () => {
 
   // Form state
   const [plotNewsForm, setPlotNewsForm] = useState({
-    packName: 'Rogue',
+    packNames: [] as string[],
     newsText: '',
     threadURL: ''
   });
@@ -31,10 +31,18 @@ const PlotNews: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<PlotNewsItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [packs, setPacks] = useState<{ id: number; name: string; slug: string; color1: string; isActive: boolean }[]>([]);
 
   useEffect(() => {
     fetchPlotNews();
   }, [currentPage]);
+
+  useEffect(() => {
+    fetch('/api/packs')
+      .then(res => res.json())
+      .then(data => setPacks(Array.isArray(data) ? data.filter((p: { isActive: boolean }) => p.isActive) : []))
+      .catch(() => {});
+  }, []);
 
   const fetchPlotNews = async () => {
     setLoading(true);
@@ -61,33 +69,42 @@ const PlotNews: React.FC = () => {
       setMessage({ type: 'error', text: 'Please enter a thread URL.' });
       return;
     }
+    if (plotNewsForm.packNames.length === 0) {
+      setMessage({ type: 'error', text: 'Please select at least one pack.' });
+      return;
+    }
 
     setIsSubmitting(true);
     setMessage(null);
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/plot-news', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          packName: plotNewsForm.packName,
-          newsText: plotNewsForm.newsText.trim(),
-          threadURL: plotNewsForm.threadURL.trim(),
-          userId: user?.id
-        })
-      });
+      // Submit one entry per pack
+      for (const packName of plotNewsForm.packNames) {
+        const response = await fetch('/api/plot-news', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            packName,
+            newsText: plotNewsForm.newsText.trim(),
+            threadURL: plotNewsForm.threadURL.trim(),
+            userId: user?.id
+          })
+        });
 
-      if (response.ok) {
-        setMessage({ type: 'success', text: 'Plot news submitted for review!' });
-        setPlotNewsForm({ packName: 'Rogue', newsText: '', threadURL: '' });
-      } else {
-        const error = await response.text();
-        setMessage({ type: 'error', text: error || 'Failed to submit plot news.' });
+        if (!response.ok) {
+          const error = await response.text();
+          setMessage({ type: 'error', text: error || 'Failed to submit plot news.' });
+          setIsSubmitting(false);
+          return;
+        }
       }
+
+      setMessage({ type: 'success', text: 'Plot news submitted for review!' });
+      setPlotNewsForm({ packNames: [], newsText: '', threadURL: '' });
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to submit plot news.' });
     } finally {
@@ -146,38 +163,69 @@ const PlotNews: React.FC = () => {
               <div className="text-center py-8 text-gray-500">No plot news yet.</div>
             ) : (
               <div className="space-y-3">
-                {plotNews.map((news) => (
-                  <div key={news.PlotNewsID} className="text-sm text-gray-800 pb-3 border-b border-gray-200 last:border-b-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        {news.SubmittedAt && (
-                          <div className="text-xs text-gray-400 uppercase mb-1 font-bold">
-                            SUBMITTED BY {news.SubmittedByUsername || 'Unknown'} ON ({new Date(news.SubmittedAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })})
-                          </div>
-                        )}
-                        <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
-                          {news.PackName === 'Rogue' ? 'R' : news.PackName.charAt(0).toUpperCase()}
-                        </span>
-                        {news.NewsText}
-                        {news.ThreadURL && (
-                          <span className="text-gray-600">
-                            {' '}
-                            (<a href={news.ThreadURL} className="text-gray-600 hover:text-gray-900 hover:underline font-bold">"{news.ThreadTitle || 'thread'}"</a>)
-                          </span>
+                {/* Group plot news by content */}
+                {(() => {
+                  const grouped = plotNews.reduce((acc, news) => {
+                    const key = `${news.NewsText}||${news.ThreadURL || ''}`;
+                    if (!acc[key]) {
+                      acc[key] = { ...news, packNames: [news.PackName], allIds: [news.PlotNewsID] };
+                    } else {
+                      acc[key].packNames.push(news.PackName);
+                      acc[key].allIds.push(news.PlotNewsID);
+                    }
+                    return acc;
+                  }, {} as Record<string, PlotNewsItem & { packNames: string[], allIds: number[] }>);
+                  
+                  return Object.values(grouped).map((news) => (
+                    <div key={news.PlotNewsID} className="text-sm text-gray-800 pb-3 border-b border-gray-200 last:border-b-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          {news.SubmittedAt && (
+                            <div className="text-xs text-gray-400 uppercase mb-1 font-bold">
+                              SUBMITTED BY {news.SubmittedByUsername || 'Unknown'} ON ({new Date(news.SubmittedAt).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })})
+                            </div>
+                          )}
+                          {news.packNames.map((packName) => {
+                            const pack = packs.find(p => p.name === packName);
+                            const isRogue = packName === 'Rogue';
+                            const initials = isRogue ? 'R' : packName.split(' ').length > 1 ? packName.split(' ').map(w => w.charAt(0).toUpperCase()).join('') : packName.slice(0, 2).toUpperCase();
+                            return (
+                              <span 
+                                key={packName}
+                                className="inline-block w-7 text-center py-px text-xs font-normal mr-1"
+                                style={pack ? { 
+                                  backgroundColor: `${pack.color1}30`, 
+                                  color: pack.color1 
+                                } : { 
+                                  backgroundColor: '#e5e7eb', 
+                                  color: '#4b5563' 
+                                }}
+                              >
+                                {initials}
+                              </span>
+                            );
+                          })}
+                          <span className="ml-1">{news.NewsText}</span>
+                          {news.ThreadURL && (
+                            <span className="text-gray-600">
+                              {' '}
+                              (<a href={news.ThreadURL} className="text-gray-600 hover:text-gray-900 hover:underline font-bold">"{news.ThreadTitle || 'thread'}"</a>)
+                            </span>
+                          )}
+                        </div>
+                        {(user?.isModerator || user?.isAdmin) && (
+                          <button
+                            onClick={() => setDeleteConfirm(news)}
+                            className="text-xs text-gray-400 hover:text-red-600 flex-shrink-0"
+                            title="Delete plot news"
+                          >
+                            ✕
+                          </button>
                         )}
                       </div>
-                      {(user?.isModerator || user?.isAdmin) && (
-                        <button
-                          onClick={() => setDeleteConfirm(news)}
-                          className="text-xs text-gray-400 hover:text-red-600 flex-shrink-0"
-                          title="Delete plot news"
-                        >
-                          ✕
-                        </button>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  ));
+                })()}
               </div>
             )}
 
@@ -215,17 +263,51 @@ const PlotNews: React.FC = () => {
                   {/* Pack Selection */}
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-2">Pack(s)</label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-2">
+                      {/* Rogues */}
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={plotNewsForm.packName === 'Rogue'}
-                          onChange={(e) => setPlotNewsForm(prev => ({ ...prev, packName: e.target.checked ? 'Rogue' : '' }))}
+                          checked={plotNewsForm.packNames.includes('Rogue')}
+                          onChange={(e) => setPlotNewsForm(prev => ({ 
+                            ...prev, 
+                            packNames: e.target.checked 
+                              ? [...prev.packNames, 'Rogue'] 
+                              : prev.packNames.filter(n => n !== 'Rogue')
+                          }))}
                           className="w-4 h-4"
                         />
-                        <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600">R</span>
+                        <span className="inline-block w-7 text-center py-px text-xs font-normal bg-gray-200 text-gray-600">R</span>
                         <span className="uppercase tracking-wide text-gray-600 text-sm" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogues</span>
                       </label>
+                      {/* Active Packs */}
+                      {packs.map(pack => (
+                        <label key={pack.id} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={plotNewsForm.packNames.includes(pack.name)}
+                            onChange={(e) => setPlotNewsForm(prev => ({ 
+                              ...prev, 
+                              packNames: e.target.checked 
+                                ? [...prev.packNames, pack.name] 
+                                : prev.packNames.filter(n => n !== pack.name)
+                            }))}
+                            className="w-4 h-4"
+                          />
+                          <span 
+                            className="inline-block w-7 text-center py-px text-xs font-normal text-white"
+                            style={{ backgroundColor: `${pack.color1}99` }}
+                          >
+                            {pack.name.split(' ').length > 1 ? pack.name.split(' ').map(w => w.charAt(0).toUpperCase()).join('') : pack.name.slice(0, 2).toUpperCase()}
+                          </span>
+                          <span 
+                            className="uppercase tracking-wide text-sm" 
+                            style={{ fontFamily: 'Baskerville, "Times New Roman", serif', color: pack.color1 }}
+                          >
+                            {pack.name}
+                          </span>
+                        </label>
+                      ))}
                     </div>
                   </div>
 
@@ -270,7 +352,7 @@ const PlotNews: React.FC = () => {
                   {/* Submit Button */}
                   <button
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !plotNewsForm.packName || !plotNewsForm.newsText.trim()}
+                    disabled={isSubmitting || plotNewsForm.packNames.length === 0 || !plotNewsForm.newsText.trim()}
                     className="w-full px-4 py-2 text-sm bg-[#2f3a2f] text-white hover:bg-[#3a4a3a] disabled:opacity-50"
                   >
                     {isSubmitting ? 'Submitting...' : 'Submit'}
@@ -299,8 +381,8 @@ const PlotNews: React.FC = () => {
               Are you sure you want to delete this plot news item?
             </p>
             <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
-              <span className="inline-block px-4 py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
-                {deleteConfirm.PackName === 'Rogue' ? 'R' : deleteConfirm.PackName.charAt(0).toUpperCase()}
+              <span className="inline-block w-7 text-center py-px text-xs font-normal bg-gray-200 text-gray-600 mr-2">
+                {deleteConfirm.PackName === 'Rogue' ? 'R' : deleteConfirm.PackName.split(' ').length > 1 ? deleteConfirm.PackName.split(' ').map(w => w.charAt(0).toUpperCase()).join('') : deleteConfirm.PackName.slice(0, 2).toUpperCase()}
               </span>
               <span className="text-sm text-gray-700">{deleteConfirm.NewsText}</span>
             </div>

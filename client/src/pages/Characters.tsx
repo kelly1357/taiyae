@@ -223,7 +223,25 @@ const Characters: React.FC = () => {
                   </td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">{char.age}</td>
                   <td className="px-3 py-3 text-gray-700 border-r border-gray-300">
-                    {char.packName ? char.packName : (
+                    {char.packName ? (
+                      <Link to={`/pack/${char.packSlug}`} className="hover:opacity-80 block">
+                        <span 
+                          className="uppercase tracking-wide"
+                          style={{ 
+                            fontFamily: 'Baskerville, "Times New Roman", serif',
+                            background: `linear-gradient(to right, ${char.packColor1 || '#666'}, ${char.packColor2 || char.packColor1 || '#666'})`,
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            backgroundClip: 'text'
+                          }}
+                        >
+                          {char.packName}
+                        </span>
+                        {char.packRankName && (
+                          <span className="block text-xs text-gray-600">{char.packRankName}</span>
+                        )}
+                      </Link>
+                    ) : (
                       <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
                     )}
                   </td>
@@ -305,7 +323,25 @@ const Characters: React.FC = () => {
                       <span>{char.age}</span>
                     </div>
                     <div>
-                      {char.packName ? char.packName : (
+                      {char.packName ? (
+                        <Link to={`/pack/${char.packSlug}`} className="hover:opacity-80 block">
+                          <span 
+                            className="uppercase tracking-wide"
+                            style={{ 
+                              fontFamily: 'Baskerville, "Times New Roman", serif',
+                              background: `linear-gradient(to right, ${char.packColor1 || '#666'}, ${char.packColor2 || char.packColor1 || '#666'})`,
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text'
+                            }}
+                          >
+                            {char.packName}
+                          </span>
+                          {char.packRankName && (
+                            <span className="block text-gray-500">{char.packRankName}</span>
+                          )}
+                        </Link>
+                      ) : (
                         <span className="uppercase tracking-wide text-gray-500" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
                       )}
                     </div>

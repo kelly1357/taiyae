@@ -14,6 +14,8 @@ interface PostAuthor {
   surname?: string;
   imageUrl: string;
   packName?: string;
+  packSlug?: string;
+  packRankName?: string;
   primaryColor?: string;
   secondaryColor?: string;
   rank?: string;
@@ -300,15 +302,23 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
           <tr>
             <td colSpan={2} className="px-2 py-2 text-center">
               {author.packName ? (
-                <span 
-                  className="inline-block text-xs font-bold uppercase tracking-wider py-0.5 px-2"
-                  style={{ 
-                    backgroundColor: author.primaryColor || '#444', 
-                    color: '#fff' 
-                  }}
-                >
-                  {author.packName}
-                </span>
+                <Link to={`/pack/${author.packSlug}`} className="hover:opacity-80">
+                  <span 
+                    className="uppercase tracking-wide block"
+                    style={{ 
+                      fontFamily: 'Baskerville, "Times New Roman", serif',
+                      background: `linear-gradient(to right, ${author.primaryColor || '#666'}, ${author.secondaryColor || author.primaryColor || '#666'})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text'
+                    }}
+                  >
+                    {author.packName}
+                  </span>
+                  {author.packRankName && (
+                    <span className="block text-xs text-gray-600">{author.packRankName}</span>
+                  )}
+                </Link>
               ) : (
                 <span className="uppercase tracking-wide text-gray-600" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogue</span>
               )}
@@ -804,6 +814,8 @@ const ThreadView: React.FC = () => {
     surname: thread.authorSurname,
     imageUrl: thread.authorImage,
     packName: thread.packName,
+    packSlug: thread.packSlug,
+    packRankName: thread.packRankName,
     primaryColor: thread.primaryColor,
     secondaryColor: thread.secondaryColor,
     rank: thread.rank,
@@ -1355,6 +1367,8 @@ const ThreadView: React.FC = () => {
                 surname: reply.authorSurname,
                 imageUrl: reply.authorImage,
                 packName: reply.packName,
+                packSlug: reply.packSlug,
+                packRankName: reply.packRankName,
                 primaryColor: reply.primaryColor,
                 secondaryColor: reply.secondaryColor,
                 rank: reply.rank,
