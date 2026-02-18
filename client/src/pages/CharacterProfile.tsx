@@ -57,7 +57,7 @@ const CharacterProfile: React.FC = () => {
   
   // Moderator edit state
   const [showModeratorEdit, setShowModeratorEdit] = useState(false);
-  const [modEditForm, setModEditForm] = useState({ name: '', sex: '', years: 0, months: 0, status: 'Active' as 'Active' | 'Inactive' | 'Dead', packId: null as number | null, packRankId: null as number | null });
+  const [modEditForm, setModEditForm] = useState({ name: '', sex: 'Male' as 'Male' | 'Female' | 'Other', years: 0, months: 0, status: 'Active' as 'Active' | 'Inactive' | 'Dead', packId: null as number | null, packRankId: null as number | null });
   const [isModeratorSaving, setIsModeratorSaving] = useState(false);
   const [packOptions, setPackOptions] = useState<PackOption[]>([]);
   
@@ -240,14 +240,13 @@ const CharacterProfile: React.FC = () => {
           sex: modEditForm.sex,
           monthsAge: totalMonths,
           status: modEditForm.status,
-          packId: modEditForm.packId,
-          packRankId: modEditForm.packRankId,
-          packName: selectedPack?.name || null,
-          packSlug: selectedPack?.slug || null,
-          packColor1: selectedPack?.color1 || null,
-          packColor2: selectedPack?.color2 || null,
-          packRankName: selectedRank?.name || null
-        } as Character : null);
+          packId: modEditForm.packId?.toString(),
+          packName: selectedPack?.name,
+          packSlug: selectedPack?.slug,
+          packColor1: selectedPack?.color1,
+          packColor2: selectedPack?.color2,
+          packRankName: selectedRank?.name
+        } : null);
         setShowModeratorEdit(false);
       } else {
         const error = await response.text();
@@ -1262,7 +1261,7 @@ const CharacterProfile: React.FC = () => {
                 <label className="block text-xs font-semibold uppercase tracking-wider text-gray-700 mb-1">Sex</label>
                 <select
                   value={modEditForm.sex}
-                  onChange={(e) => setModEditForm(prev => ({ ...prev, sex: e.target.value }))}
+                  onChange={(e) => setModEditForm(prev => ({ ...prev, sex: e.target.value as 'Male' | 'Female' | 'Other' }))}
                   className="w-full border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
                 >
                   <option value="">Select...</option>

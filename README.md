@@ -71,7 +71,7 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅ Subareas within regions
 
-[ ] Pack management: creating, editing, and function, hierarchy
+✅ Pack management: creating, editing, and function, hierarchy
 
 [ ] Skill points enhancement (quantity, verifications, starting SP claim)
 
