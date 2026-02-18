@@ -188,7 +188,8 @@ const Home: React.FC = () => {
     fetch('/api/packs')
       .then(res => res.json())
       .then(data => {
-        setPacks(data.filter((p: any) => p.isActive));
+        // Include all packs for tag coloring
+        setPacks(Array.isArray(data) ? data : []);
       })
       .catch(err => console.error('Failed to fetch packs:', err));
 
@@ -1185,7 +1186,13 @@ const Home: React.FC = () => {
                       </span>
                       <span 
                         className="uppercase tracking-wide text-sm" 
-                        style={{ fontFamily: 'Baskerville, "Times New Roman", serif', color: pack.color1 }}
+                        style={{ 
+                          fontFamily: 'Baskerville, "Times New Roman", serif',
+                          background: `linear-gradient(135deg, ${pack.color1}, ${pack.color2})`,
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text'
+                        }}
                       >
                         {pack.name}
                       </span>

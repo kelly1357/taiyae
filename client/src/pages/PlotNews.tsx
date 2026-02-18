@@ -31,7 +31,7 @@ const PlotNews: React.FC = () => {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<PlotNewsItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [packs, setPacks] = useState<{ id: number; name: string; slug: string; color1: string; isActive: boolean }[]>([]);
+  const [packs, setPacks] = useState<{ id: number; name: string; slug: string; color1: string; color2: string; isActive: boolean }[]>([]);
 
   useEffect(() => {
     fetchPlotNews();
@@ -40,7 +40,10 @@ const PlotNews: React.FC = () => {
   useEffect(() => {
     fetch('/api/packs')
       .then(res => res.json())
-      .then(data => setPacks(Array.isArray(data) ? data.filter((p: { isActive: boolean }) => p.isActive) : []))
+      .then(data => {
+        // Include all packs for tag coloring (active and inactive)
+        setPacks(Array.isArray(data) ? data : []);
+      })
       .catch(() => {});
   }, []);
 
@@ -302,7 +305,13 @@ const PlotNews: React.FC = () => {
                           </span>
                           <span 
                             className="uppercase tracking-wide text-sm" 
-                            style={{ fontFamily: 'Baskerville, "Times New Roman", serif', color: pack.color1 }}
+                            style={{ 
+                              fontFamily: 'Baskerville, "Times New Roman", serif',
+                              background: `linear-gradient(135deg, ${pack.color1}, ${pack.color2})`,
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text'
+                            }}
                           >
                             {pack.name}
                           </span>
