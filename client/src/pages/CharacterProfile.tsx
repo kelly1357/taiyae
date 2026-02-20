@@ -965,27 +965,34 @@ const CharacterProfile: React.FC = () => {
           <div className="mt-4 bg-gray-100 p-4">
             <div className="bg-white p-4">
               <h3 className="text-base font-bold text-gray-800 mb-3">Current Skill Points</h3>
-              <div style={{ width: 'calc(50% + 100px)' }}>
-                <div className="border border-gray-300">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      <tr className="border-b border-gray-300">
-                        <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-20">Experience</td>
-                        <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-20">Knowledge</td>
-                        <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-20">Physical</td>
-                        <td rowSpan={2} className="px-4 py-2 text-gray-700 text-center align-middle w-40">
-                          <span className="text-2xl font-bold">{character.totalSkill ?? 0}</span>
-                          <span className="text-sm ml-1">SP</span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-2 py-2 text-gray-700 border-r border-gray-300 w-20">{character.experience ?? 0}</td>
-                        <td className="px-2 py-2 text-gray-700 border-r border-gray-300 w-20">{character.knowledge ?? 0}</td>
-                        <td className="px-2 py-2 text-gray-700 border-r border-gray-300 w-20">{character.physical ?? 0}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+              <div className="flex items-start gap-4">
+                <div style={{ width: 'calc(50% + 100px)' }}>
+                  <div className="border border-gray-300">
+                    <table className="w-full text-sm">
+                      <tbody>
+                        <tr className="border-b border-gray-300">
+                          <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-20">Experience</td>
+                          <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-20">Knowledge</td>
+                          <td className="bg-gray-200 px-2 py-2 font-semibold uppercase text-xs text-gray-600 border-r border-gray-300 w-20">Physical</td>
+                          <td rowSpan={2} className="px-4 py-2 text-gray-700 text-center align-middle w-40">
+                            <span className="text-2xl font-bold">{character.totalSkill ?? 0}</span>
+                            <span className="text-sm ml-1">SP</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-2 text-gray-700 border-r border-gray-300 w-20">{character.experience ?? 0}</td>
+                          <td className="px-2 py-2 text-gray-700 border-r border-gray-300 w-20">{character.knowledge ?? 0}</td>
+                          <td className="px-2 py-2 text-gray-700 border-r border-gray-300 w-20">{character.physical ?? 0}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+                {character.hasClaimedStartingSP && (
+                  <span className="inline-flex items-center px-3 py-1.5 bg-gray-100 border border-gray-300 text-xs text-gray-500 font-medium whitespace-nowrap">
+                    Starting SP Claimed
+                  </span>
+                )}
               </div>
               
               {/* Threadlog Table */}

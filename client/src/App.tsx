@@ -35,6 +35,7 @@ import StaffPingsAdmin from './pages/StaffPingsAdmin';
 import UserApprovalsAdmin from './pages/UserApprovalsAdmin';
 import PackAdmin from './pages/PackAdmin';
 import Conversations from './pages/Conversations';
+import StartingSkillPoints from './pages/StartingSkillPoints';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -268,6 +269,7 @@ const App: React.FC = () => {
         <Route path="plot-news" element={<PlotNews />} />
         <Route path="sitewide-updates" element={<SitewideUpdates />} />
         <Route path="achievements" element={<UserAchievements />} />
+        <Route path="starting-skill-points" element={<StartingSkillPoints />} />
         <Route path="conversations" element={<Conversations />} />
         <Route path="admin/skill-points" element={<SkillPointsApproval />} />
         <Route path="admin/staff-pings" element={<StaffPingsAdmin />} />

@@ -102,6 +102,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                     COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) as status,
                     c.DeathDate as deathDate,
                     COALESCE(c.ShowInDropdown, 1) as showInDropdown,
+                    c.HasClaimedStartingSP as hasClaimedStartingSP,
                     CASE 
                         WHEN c.LastActiveAt > DATEADD(minute, -15, GETDATE()) THEN 1 
                         ELSE 0 

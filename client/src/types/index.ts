@@ -97,6 +97,7 @@ export interface Character {
   status?: CharacterStatus; // 'Active', 'Inactive', or 'Dead'
   deathDate?: string; // Horizon date of death (e.g., "HY0, Early Summer")
   showInDropdown?: boolean; // Whether to show in header dropdown (for inactive characters)
+  hasClaimedStartingSP?: boolean; // Whether starting skill points have been allocated
 }
 
 export interface ForumSubarea {

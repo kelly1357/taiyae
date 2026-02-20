@@ -256,6 +256,29 @@ const Layout: React.FC<LayoutProps> = ({
               </section>
             )}
 
+            {/* Starting Skill Points prompt */}
+            {user && activeCharacter && !activeCharacter.hasClaimedStartingSP && (
+              <section className="bg-white border border-gray-300 shadow">
+                <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                  Skill Points Available!
+                </div>
+                <div className="px-4 py-4 space-y-3 text-gray-800">
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">{activeCharacter.name}</span> hasn't claimed their starting skill points yet!
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Distribute your starting points across Experience, Physical, and Knowledge.
+                  </p>
+                  <Link
+                    to="/starting-skill-points"
+                    className="block w-full bg-orange-500 hover:bg-orange-400 text-white font-bold py-3 text-sm uppercase tracking-wide text-center transition-colors"
+                  >
+                    Claim Skill Points →
+                  </Link>
+                </div>
+              </section>
+            )}
+
             <section className="bg-white border border-gray-300 shadow">
               <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
                 Who's Online ({onlineList.length})
