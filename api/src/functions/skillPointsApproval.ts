@@ -38,6 +38,7 @@ async function getPendingSkillPointAssignments(request: HttpRequest, context: In
                 cspa.SkillPointID,
                 cspa.ThreadID,
                 cspa.IsModeratorApproved,
+                cspa.Note,
                 c.CharacterName AS CharacterName,
                 c.Surname AS CharacterSurname,
                 c.AvatarImage AS AvatarImage,

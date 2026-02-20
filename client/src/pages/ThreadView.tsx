@@ -360,6 +360,9 @@ const ThreadView: React.FC = () => {
   const [skillPointsData, setSkillPointsData] = useState<any[]>([]);
   const [skillPointsLoading, setSkillPointsLoading] = useState(false);
   const [selectedSkillPoints, setSelectedSkillPoints] = useState<number[]>([]);
+  // New: track quantity and notes per skill point
+  const [skillPointQuantities, setSkillPointQuantities] = useState<Record<number, number>>({});
+  const [skillPointNotes, setSkillPointNotes] = useState<Record<number, string[]>>({});
   const [skillPointsSearch, setSkillPointsSearch] = useState('');
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
   const [skillPointsConfirmation, setSkillPointsConfirmation] = useState<{ show: boolean; message: string; isError: boolean }>({ show: false, message: '', isError: false });
@@ -727,6 +730,8 @@ const ThreadView: React.FC = () => {
     setShowSkillPointsModal(true);
     setSkillPointsLoading(true);
     setSelectedSkillPoints([]);
+    setSkillPointQuantities({});
+    setSkillPointNotes({});
     setSkillPointsSearch('');
     
     try {
@@ -742,20 +747,82 @@ const ThreadView: React.FC = () => {
     }
   };
 
-  const toggleSkillPointSelection = (skillId: number) => {
-    setSelectedSkillPoints(prev => 
-      prev.includes(skillId) 
-        ? prev.filter(id => id !== skillId)
-        : [...prev, skillId]
-    );
+  const toggleSkillPointSelection = (skillId: number, item?: any) => {
+    setSelectedSkillPoints(prev => {
+      if (prev.includes(skillId)) {
+        // Deselecting — clean up quantity and notes
+        setSkillPointQuantities(q => { const n = { ...q }; delete n[skillId]; return n; });
+        setSkillPointNotes(n => { const nn = { ...n }; delete nn[skillId]; return nn; });
+        return prev.filter(id => id !== skillId);
+      } else {
+        // Selecting — initialize quantity to 1 and notes array
+        if (item?.AllowMultiple) {
+          setSkillPointQuantities(q => ({ ...q, [skillId]: 1 }));
+        }
+        if (item?.RequiresNote) {
+          const qty = item?.AllowMultiple ? 1 : 1;
+          setSkillPointNotes(n => ({ ...n, [skillId]: Array(qty).fill('') }));
+        }
+        return [...prev, skillId];
+      }
+    });
+  };
+
+  const updateSkillPointQuantity = (skillId: number, newQty: number, requiresNote: boolean) => {
+    const qty = Math.max(1, Math.min(20, newQty));
+    setSkillPointQuantities(prev => ({ ...prev, [skillId]: qty }));
+    if (requiresNote) {
+      setSkillPointNotes(prev => {
+        const existing = prev[skillId] || [];
+        const updated = Array(qty).fill('').map((_, i) => existing[i] || '');
+        return { ...prev, [skillId]: updated };
+      });
+    }
+  };
+
+  const updateSkillPointNote = (skillId: number, index: number, value: string) => {
+    setSkillPointNotes(prev => {
+      const notes = [...(prev[skillId] || [''])];
+      notes[index] = value;
+      return { ...prev, [skillId]: notes };
+    });
   };
 
   const handleSubmitSkillPointsClaim = async () => {
     if (!activeCharacter || !threadId || selectedSkillPoints.length === 0) return;
+
+    // Validate: check that required notes are filled in
+    const allItems = skillPointsData.flatMap((c: any) => c.items || []);
+    for (const skillId of selectedSkillPoints) {
+      const item = allItems.find((i: any) => i.SkillID === skillId);
+      if (item?.RequiresNote) {
+        const qty = item.AllowMultiple ? (skillPointQuantities[skillId] || 1) : 1;
+        const notes = skillPointNotes[skillId] || [];
+        for (let i = 0; i < qty; i++) {
+          if (!notes[i] || notes[i].trim() === '') {
+            setSkillPointsConfirmation({ show: true, message: `Please fill in the required details for "${item.Action}"${qty > 1 ? ` (instance ${i + 1})` : ''}.`, isError: true });
+            return;
+          }
+        }
+      }
+    }
     
     setIsSubmittingClaim(true);
     try {
       const token = localStorage.getItem('token');
+
+      // Build the new details format
+      const skillPointDetails = selectedSkillPoints.map(skillId => {
+        const item = allItems.find((i: any) => i.SkillID === skillId);
+        const qty = item?.AllowMultiple ? (skillPointQuantities[skillId] || 1) : 1;
+        const notes = skillPointNotes[skillId] || [];
+        return {
+          skillPointId: skillId,
+          quantity: qty,
+          notes: notes.slice(0, qty)
+        };
+      });
+
       const response = await fetch('/api/skill-points-claim', {
         method: 'POST',
         headers: {
@@ -765,7 +832,7 @@ const ThreadView: React.FC = () => {
         body: JSON.stringify({
           characterId: activeCharacter.id,
           threadId: parseInt(threadId),
-          skillPointIds: selectedSkillPoints
+          skillPointDetails
         })
       });
       
@@ -773,6 +840,8 @@ const ThreadView: React.FC = () => {
         const result = await response.json();
         setShowSkillPointsModal(false);
         setSelectedSkillPoints([]);
+        setSkillPointQuantities({});
+        setSkillPointNotes({});
         setSkillPointsConfirmation({ show: true, message: result.message || 'Skill points claim submitted successfully!', isError: false });
         // Refresh existing claims
         fetchExistingClaims();
@@ -786,6 +855,25 @@ const ThreadView: React.FC = () => {
     } finally {
       setIsSubmittingClaim(false);
     }
+  };
+
+  // Get contextual placeholder text for note inputs based on action type
+  const getNotePlaceholder = (action: string, instanceIndex?: number): string => {
+    const num = instanceIndex !== undefined ? ` ${instanceIndex + 1}` : '';
+    const lower = action.toLowerCase();
+    if (lower.includes('meet a new wolf')) return `Name of wolf met${num}`;
+    if (lower.includes('train someone')) return `Name of wolf trained${num}`;
+    if (lower.includes('receive') && lower.includes('training')) return `Name of trainer`;
+    if (lower.includes('spar')) return `Name of opponent${num}`;
+    if (lower.includes('fight')) return `Name of opponent${num}`;
+    if (lower.includes('kill a')) return `Name of wolf killed${num}`;
+    if (lower.includes('death of a friend')) return `Name of deceased${num}`;
+    if (lower.includes('save another')) return `Name of wolf saved`;
+    if (lower.includes('joining or starting')) return `Name of pack`;
+    if (lower.includes('gain important knowledge')) return `What was learned?${num}`;
+    if (lower.includes('perform a pack duty')) return `Describe the duty performed${num}`;
+    if (lower.includes('personal trauma')) return `Describe what happened`;
+    return `Details${num}`;
   };
 
   // Filter skill points based on search
@@ -1036,7 +1124,12 @@ const ThreadView: React.FC = () => {
                     <tbody>
                       {existingClaims.map((claim, idx) => (
                         <tr key={claim.AssignmentID || idx} className="border-b border-gray-100 last:border-0">
-                          <td className="py-1.5 text-gray-700">{claim.Action}</td>
+                          <td className="py-1.5 text-gray-700">
+                            <div>{claim.Action}</div>
+                            {claim.Note && (
+                              <div className="text-xs text-gray-500 italic">↳ {claim.Note}</div>
+                            )}
+                          </td>
                           <td className="py-1.5 text-center text-gray-600">{claim.E || '-'}</td>
                           <td className="py-1.5 text-center text-gray-600">{claim.P || '-'}</td>
                           <td className="py-1.5 text-center text-gray-600">{claim.K || '-'}</td>
@@ -1215,34 +1308,96 @@ const ThreadView: React.FC = () => {
                           </div>
                         </div>
                         <div className="space-y-1">
-                          {category.items?.map((item: any) => (
-                            <label
-                              key={item.SkillID}
-                              className={`flex items-start gap-3 p-2 border cursor-pointer transition-colors ${
-                                selectedSkillPoints.includes(item.SkillID)
-                                  ? 'border-green-500 bg-green-50'
-                                  : 'border-gray-200 hover:bg-gray-50'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedSkillPoints.includes(item.SkillID)}
-                                onChange={() => toggleSkillPointSelection(item.SkillID)}
-                                className="mt-1"
-                              />
-                              <div className="flex-1 text-sm">
-                                <div className="font-medium text-gray-900">{item.Action}</div>
-                                {item.ActionDescription && (
-                                  <div className="text-xs text-gray-600">{item.ActionDescription}</div>
+                          {category.items?.map((item: any) => {
+                            const isSelected = selectedSkillPoints.includes(item.SkillID);
+                            const qty = item.AllowMultiple ? (skillPointQuantities[item.SkillID] || 1) : 1;
+                            const notes = skillPointNotes[item.SkillID] || [];
+                            return (
+                              <div
+                                key={item.SkillID}
+                                className={`border transition-colors ${
+                                  isSelected
+                                    ? 'border-green-500 bg-green-50'
+                                    : 'border-gray-200 hover:bg-gray-50'
+                                }`}
+                              >
+                                <label className="flex items-start gap-3 p-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => toggleSkillPointSelection(item.SkillID, item)}
+                                    className="mt-1"
+                                  />
+                                  <div className="flex-1 text-sm">
+                                    <div className="font-medium text-gray-900">{item.Action}</div>
+                                    {item.ActionDescription && (
+                                      <div className="text-xs text-gray-600">{item.ActionDescription}</div>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-gray-500 text-right whitespace-nowrap">
+                                    <span className="inline-block w-8 text-center">{item.E || 0}</span>
+                                    <span className="inline-block w-8 text-center">{item.P || 0}</span>
+                                    <span className="inline-block w-8 text-center">{item.K || 0}</span>
+                                  </div>
+                                </label>
+
+                                {/* Quantity selector + Note inputs (shown when selected) */}
+                                {isSelected && (item.AllowMultiple || item.RequiresNote) && (
+                                  <div className="px-9 pb-3 space-y-2">
+                                    {/* Quantity selector for AllowMultiple actions */}
+                                    {item.AllowMultiple && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-xs text-gray-600 font-medium">Quantity:</span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.preventDefault(); updateSkillPointQuantity(item.SkillID, qty - 1, !!item.RequiresNote); }}
+                                          className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold rounded"
+                                          disabled={qty <= 1}
+                                        >
+                                          −
+                                        </button>
+                                        <span className="text-sm font-semibold text-gray-900 w-6 text-center">{qty}</span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => { e.preventDefault(); updateSkillPointQuantity(item.SkillID, qty + 1, !!item.RequiresNote); }}
+                                          className="w-6 h-6 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-bold rounded"
+                                          disabled={qty >= 20}
+                                        >
+                                          +
+                                        </button>
+                                        {qty > 1 && (
+                                          <span className="text-xs text-gray-500 ml-1">
+                                            ({(item.TOTAL || 0) * qty} SP total)
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* Note input(s) — one per instance for multi, or one for single */}
+                                    {item.RequiresNote && (
+                                      <div className="space-y-1">
+                                        {Array.from({ length: qty }).map((_, i) => (
+                                          <div key={i} className="flex items-center gap-2">
+                                            {qty > 1 && (
+                                              <span className="text-xs text-gray-400 w-4 text-right">{i + 1}.</span>
+                                            )}
+                                            <input
+                                              type="text"
+                                              placeholder={getNotePlaceholder(item.Action, qty > 1 ? i : undefined) + ' (required)'}
+                                              value={notes[i] || ''}
+                                              onChange={(e) => updateSkillPointNote(item.SkillID, i, e.target.value)}
+                                              onClick={(e) => e.stopPropagation()}
+                                              className="flex-1 px-2 py-1 border border-gray-300 text-xs text-black focus:outline-none focus:border-gray-400"
+                                            />
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-500 text-right whitespace-nowrap">
-                                <span className="inline-block w-8 text-center">{item.E || 0}</span>
-                                <span className="inline-block w-8 text-center">{item.P || 0}</span>
-                                <span className="inline-block w-8 text-center">{item.K || 0}</span>
-                              </div>
-                            </label>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     ))

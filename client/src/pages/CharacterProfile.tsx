@@ -13,6 +13,7 @@ interface SkillPointClaim {
   ThreadID: number;
   CharacterID: number;
   Action: string;
+  Note?: string;
   E: number;
   P: number;
   K: number;
@@ -1132,21 +1133,72 @@ const CharacterProfile: React.FC = () => {
                                         </td>
                                         <td className="px-3 py-3 text-gray-700 border-r border-gray-300">
                                           {threadSkillPoints[entry.threadId]?.length > 0 ? (
-                                            <div className="space-y-5">
-                                              {threadSkillPoints[entry.threadId].map((sp, idx) => (
-                                                <div key={idx} className="flex items-center justify-between gap-2">
-                                                  <span>{sp.Action}</span>
-                                                  {(user?.isModerator || user?.isAdmin) && (
-                                                    <button
-                                                      onClick={() => setShowUndoConfirm(sp)}
-                                                      className="text-xs text-gray-400 hover:text-red-600"
-                                                      title="Undo approval"
-                                                    >
-                                                      ✕
-                                                    </button>
-                                                  )}
-                                                </div>
-                                              ))}
+                                            <div className="space-y-3">
+                                              {(() => {
+                                                // Group claims by Action name so multiple instances appear under one heading
+                                                const claims = threadSkillPoints[entry.threadId];
+                                                const grouped: { action: string; items: SkillPointClaim[] }[] = [];
+                                                claims.forEach(sp => {
+                                                  const existing = grouped.find(g => g.action === sp.Action);
+                                                  if (existing) {
+                                                    existing.items.push(sp);
+                                                  } else {
+                                                    grouped.push({ action: sp.Action, items: [sp] });
+                                                  }
+                                                });
+                                                return grouped.map((group, gIdx) => (
+                                                  <div key={gIdx}>
+                                                    <div className="flex items-center justify-between gap-2">
+                                                      <span className="font-medium">{group.action}{group.items.length > 1 ? ` ×${group.items.length}` : ''}</span>
+                                                      {group.items.length === 1 && !group.items[0].Note && (user?.isModerator || user?.isAdmin) && (
+                                                        <button
+                                                          onClick={() => setShowUndoConfirm(group.items[0])}
+                                                          className="text-xs text-gray-400 hover:text-red-600"
+                                                          title="Undo approval"
+                                                        >
+                                                          ✕
+                                                        </button>
+                                                      )}
+                                                    </div>
+                                                    {/* Show individual notes as sub-items */}
+                                                    {group.items.some(sp => sp.Note) && (
+                                                      <div className="ml-3 mt-0.5 space-y-0.5">
+                                                        {group.items.map((sp, spIdx) => (
+                                                          <div key={spIdx} className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                                                            <span className="italic">↳ {sp.Note || '—'}</span>
+                                                            {(user?.isModerator || user?.isAdmin) && (
+                                                              <button
+                                                                onClick={() => setShowUndoConfirm(sp)}
+                                                                className="text-gray-400 hover:text-red-600 flex-shrink-0"
+                                                                title="Undo approval"
+                                                              >
+                                                                ✕
+                                                              </button>
+                                                            )}
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    )}
+                                                    {/* For items without notes, show undo buttons individually if multiple */}
+                                                    {group.items.length > 1 && !group.items.some(sp => sp.Note) && (user?.isModerator || user?.isAdmin) && (
+                                                      <div className="ml-3 mt-0.5 space-y-0.5">
+                                                        {group.items.map((sp, spIdx) => (
+                                                          <div key={spIdx} className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                                                            <span>Instance {spIdx + 1}</span>
+                                                            <button
+                                                              onClick={() => setShowUndoConfirm(sp)}
+                                                              className="text-gray-400 hover:text-red-600 flex-shrink-0"
+                                                              title="Undo approval"
+                                                            >
+                                                              ✕
+                                                            </button>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                ));
+                                              })()}
                                             </div>
                                           ) : (
                                             <span className="text-gray-500">—</span>

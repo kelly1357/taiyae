@@ -8,7 +8,9 @@ export async function getSkillPoints(request: HttpRequest, context: InvocationCo
   try {
     const pool = await getPool();
     const result = await pool.request().query(`
-      SELECT SkillID, Category, CategoryDescription, [Action], [ActionDescription], E, P, K, TOTAL
+      SELECT SkillID, Category, CategoryDescription, [Action], [ActionDescription], E, P, K, TOTAL,
+        ISNULL(AllowMultiple, 0) AS AllowMultiple,
+        ISNULL(RequiresNote, 0) AS RequiresNote
       FROM SkillPoints
     `);
 
@@ -29,7 +31,9 @@ export async function getSkillPoints(request: HttpRequest, context: InvocationCo
         E: row.E,
         P: row.P,
         K: row.K,
-        TOTAL: row.TOTAL
+        TOTAL: row.TOTAL,
+        AllowMultiple: row.AllowMultiple,
+        RequiresNote: row.RequiresNote
       });
     });
 

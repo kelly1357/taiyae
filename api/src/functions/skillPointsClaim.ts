@@ -8,10 +8,20 @@ import { verifyCharacterOwnershipOrStaff, verifyStaffAuth } from "../auth";
 export async function submitSkillPointsClaim(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const body: any = await request.json();
-        const { characterId, threadId, skillPointIds } = body;
+        const { characterId, threadId, skillPointIds, skillPointDetails } = body;
 
-        if (!characterId || !threadId || !skillPointIds || !Array.isArray(skillPointIds) || skillPointIds.length === 0) {
-            return { status: 400, body: "characterId, threadId, and skillPointIds array are required" };
+        // Support new format with details (notes/quantity) or legacy format with just IDs
+        if (!characterId || !threadId) {
+            return { status: 400, body: "characterId and threadId are required" };
+        }
+
+        // skillPointDetails is the new format: [{ skillPointId, note?, quantity? }, ...]
+        // skillPointIds is the legacy format: [1, 2, 3, ...]
+        const hasDetails = Array.isArray(skillPointDetails) && skillPointDetails.length > 0;
+        const hasIds = Array.isArray(skillPointIds) && skillPointIds.length > 0;
+
+        if (!hasDetails && !hasIds) {
+            return { status: 400, body: "skillPointDetails or skillPointIds array is required" };
         }
 
         // Verify user owns this character
@@ -57,17 +67,45 @@ export async function submitSkillPointsClaim(request: HttpRequest, context: Invo
         // Insert each skill point claim
         // IsModeratorApproved: NULL = pending, 1 = approved, 0 = rejected
         const insertedIds: number[] = [];
-        for (const skillPointId of skillPointIds) {
-            const result = await pool.request()
-                .input('characterId', sql.Int, characterId)
-                .input('skillPointId', sql.Int, skillPointId)
-                .input('threadId', sql.Int, threadId)
-                .query(`
-                    INSERT INTO CharacterSkillPointsAssignment (CharacterID, SkillPointID, ThreadID, IsModeratorApproved)
-                    OUTPUT INSERTED.AssignmentID
-                    VALUES (@characterId, @skillPointId, @threadId, NULL)
-                `);
-            insertedIds.push(result.recordset[0].AssignmentID);
+
+        if (hasDetails) {
+            // New format: each entry can have a note and quantity
+            // For AllowMultiple actions, quantity > 1 creates multiple rows (one per instance, each with its own note)
+            for (const detail of skillPointDetails) {
+                const { skillPointId, notes, quantity } = detail;
+                const qty = quantity || 1;
+                // notes is an array of strings, one per instance
+                const notesList: string[] = Array.isArray(notes) ? notes : (detail.note ? [detail.note] : []);
+
+                for (let i = 0; i < qty; i++) {
+                    const note = notesList[i] || null;
+                    const result = await pool.request()
+                        .input('characterId', sql.Int, characterId)
+                        .input('skillPointId', sql.Int, skillPointId)
+                        .input('threadId', sql.Int, threadId)
+                        .input('note', sql.NVarChar(500), note)
+                        .query(`
+                            INSERT INTO CharacterSkillPointsAssignment (CharacterID, SkillPointID, ThreadID, IsModeratorApproved, Note)
+                            OUTPUT INSERTED.AssignmentID
+                            VALUES (@characterId, @skillPointId, @threadId, NULL, @note)
+                        `);
+                    insertedIds.push(result.recordset[0].AssignmentID);
+                }
+            }
+        } else {
+            // Legacy format: just skill point IDs, no notes
+            for (const skillPointId of skillPointIds) {
+                const result = await pool.request()
+                    .input('characterId', sql.Int, characterId)
+                    .input('skillPointId', sql.Int, skillPointId)
+                    .input('threadId', sql.Int, threadId)
+                    .query(`
+                        INSERT INTO CharacterSkillPointsAssignment (CharacterID, SkillPointID, ThreadID, IsModeratorApproved)
+                        OUTPUT INSERTED.AssignmentID
+                        VALUES (@characterId, @skillPointId, @threadId, NULL)
+                    `);
+                insertedIds.push(result.recordset[0].AssignmentID);
+            }
         }
 
         return {
@@ -110,6 +148,7 @@ export async function getSkillPointsClaims(request: HttpRequest, context: Invoca
                     a.AssignmentID,
                     a.SkillPointID,
                     a.IsModeratorApproved,
+                    a.Note,
                     sp.Category,
                     sp.[Action],
                     sp.E,
@@ -162,6 +201,7 @@ export async function getCharacterSkillPoints(request: HttpRequest, context: Inv
                     a.AssignmentID,
                     a.ThreadID,
                     a.CharacterID,
+                    a.Note,
                     sp.[Action],
                     sp.E,
                     sp.P,

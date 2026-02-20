@@ -17,6 +17,7 @@ interface SkillPointAssignment {
   K: number;
   ThreadTitle: string;
   IsDuplicate: number;
+  Note?: string;
 }
 
 const SkillPointsApproval: React.FC = () => {
@@ -178,7 +179,10 @@ const SkillPointsApproval: React.FC = () => {
                     
                     {/* Skill Action */}
                     <td className="px-3 py-2 text-gray-700 border-r border-gray-300">
-                      {assignment.SkillAction}
+                      <div>{assignment.SkillAction}</div>
+                      {assignment.Note && (
+                        <div className="text-xs text-gray-500 mt-0.5 italic">↳ {assignment.Note}</div>
+                      )}
                       {assignment.IsDuplicate === 1 && (
                         <span className="ml-2 px-1.5 py-0.5 text-xs font-bold uppercase bg-red-600 text-white rounded">
                           Duplicate
@@ -270,6 +274,9 @@ const SkillPointsApproval: React.FC = () => {
                       </Link>
                       <div className="text-xs text-gray-600 mt-1">
                         <span className="font-medium">{assignment.SkillAction}</span>
+                        {assignment.Note && (
+                          <div className="text-gray-500 italic mt-0.5">↳ {assignment.Note}</div>
+                        )}
                       </div>
                       <div className="text-xs text-gray-700 mt-1 flex items-center gap-1">
                         <span className="font-medium">E:</span>{assignment.E || 0}
