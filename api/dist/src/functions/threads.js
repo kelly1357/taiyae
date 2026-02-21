@@ -29,12 +29,12 @@ function getThreads(request, context) {
             let orderByClause;
             if (subareaId) {
                 whereClause = 't.SubareaID = @filterId';
-                orderByClause = 'ORDER BY lastPost.Created DESC';
+                orderByClause = 'ORDER BY t.IsPinned DESC, lastPost.Created DESC';
                 requestBuilder.input('filterId', sql.NVarChar, subareaId);
             }
             else if (regionId) {
                 whereClause = 't.RegionId = @filterId';
-                orderByClause = 'ORDER BY lastPost.Created DESC';
+                orderByClause = 'ORDER BY t.IsPinned DESC, lastPost.Created DESC';
                 requestBuilder.input('filterId', sql.Int, parseInt(regionId));
             }
             else {
@@ -772,9 +772,6 @@ function toggleThreadPin(request, context) {
                 return { status: 404, body: "Thread not found" };
             }
             const thread = threadCheck.recordset[0];
-            if (!thread.OOCForumID) {
-                return { status: 400, body: "Only OOC forum threads can be pinned" };
-            }
             // Toggle the pin status
             const newPinStatus = !thread.IsPinned;
             yield pool.request()

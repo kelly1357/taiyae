@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useLayoutEffect } from 'react';
 import { useParams, Link, useLocation, useOutletContext } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import type { ForumRegion, Thread, Character } from '../types';
+import type { ForumRegion, Thread, Character, User } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
 
@@ -9,6 +9,7 @@ import { useBackground } from '../contexts/BackgroundContext';
 interface ThreadSummary extends Omit<Thread, 'replies'> {
   authorName: string;
   replyCount: number;
+  isPinned?: boolean;
   subheader?: string;
   authorSlug?: string;
   lastReplyAuthorName?: string;
@@ -18,12 +19,13 @@ interface ThreadSummary extends Omit<Thread, 'replies'> {
 
 interface RegionContext {
   activeCharacter?: Character;
+  user?: User;
 }
 
 const Region: React.FC = () => {
   const { regionId } = useParams<{ regionId: string }>();
   const location = useLocation();
-  const { activeCharacter } = useOutletContext<RegionContext>();
+  const { activeCharacter, user } = useOutletContext<RegionContext>();
   const passedRegion = (location.state as { region?: ForumRegion })?.region;
   
   const [region, setRegion] = useState<ForumRegion | null>(passedRegion || null);
@@ -31,7 +33,10 @@ const Region: React.FC = () => {
   const [loading, setLoading] = useState(!passedRegion);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPhotoMode, setShowPhotoMode] = useState(false);
+  const [pinningThreadId, setPinningThreadId] = useState<string | null>(null);
   const { setBackgroundUrl, resetBackground } = useBackground();
+
+  const isModerator = user?.isModerator || user?.isAdmin;
 
   // Set background immediately if we have region data from navigation state
   useLayoutEffect(() => {
@@ -42,6 +47,26 @@ const Region: React.FC = () => {
       resetBackground();
     };
   }, [passedRegion, setBackgroundUrl, resetBackground]);
+
+  const handleTogglePin = async (threadId: string) => {
+    setPinningThreadId(threadId);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST', headers: { 'X-Authorization': `Bearer ${token}` } });
+      if (response.ok) {
+        fetchThreads();
+      } else if (response.status === 401) {
+        alert('Your session has expired. Please log out and log back in.');
+      } else {
+        const errText = await response.text().catch(() => response.statusText);
+        alert(`Failed to toggle pin: ${errText}`);
+      }
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+    } finally {
+      setPinningThreadId(null);
+    }
+  };
 
   const fetchThreads = () => {
     if (!regionId) return;
@@ -160,14 +185,29 @@ const Region: React.FC = () => {
               <tbody>
                 {threads.length > 0 ? (
                   threads.map(thread => (
-                    <tr key={thread.id} className="hover:bg-gray-50 transition-colors border-t border-gray-300">
+                    <tr key={thread.id} className={`hover:bg-gray-50 transition-colors border-t border-gray-300 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
                       <td className="px-4 py-3 border-r border-gray-300">
-                        <Link to={`/thread/${thread.id}`} state={{ region }} className="forum-link font-medium">
-                          {thread.title}
-                        </Link>
-                        {thread.subheader && (
-                          <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
-                        )}
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1">
+                            <Link to={`/thread/${thread.id}`} state={{ region }} className="forum-link font-medium">
+                              {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
+                              {thread.title}
+                            </Link>
+                            {thread.subheader && (
+                              <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
+                            )}
+                          </div>
+                          {isModerator && (
+                            <button
+                              onClick={() => handleTogglePin(thread.id)}
+                              disabled={pinningThreadId === thread.id}
+                              className={`text-xs px-2 py-1 rounded ${thread.isPinned ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} ${pinningThreadId === thread.id ? 'opacity-50 cursor-wait' : ''}`}
+                              title={thread.isPinned ? 'Unpin thread' : 'Pin thread'}
+                            >
+                              {pinningThreadId === thread.id ? '...' : (thread.isPinned ? 'Unpin' : 'Pin')}
+                            </button>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-gray-700 border-r border-gray-300">
                         {thread.authorSlug ? (
@@ -212,13 +252,28 @@ const Region: React.FC = () => {
             <div className="md:hidden">
               {threads.length > 0 ? (
                 threads.map(thread => (
-                  <div key={thread.id} className="border-b border-gray-300 p-3 hover:bg-gray-50">
-                    <Link to={`/thread/${thread.id}`} state={{ region }} className="forum-link font-medium block">
-                      {thread.title}
-                    </Link>
-                    {thread.subheader && (
-                      <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
-                    )}
+                  <div key={thread.id} className={`border-b border-gray-300 p-3 hover:bg-gray-50 ${thread.isPinned ? 'bg-amber-50' : ''}`}>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <Link to={`/thread/${thread.id}`} state={{ region }} className="forum-link font-medium block">
+                          {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
+                          {thread.title}
+                        </Link>
+                        {thread.subheader && (
+                          <div className="text-xs text-gray-500 mt-0.5">{thread.subheader}</div>
+                        )}
+                      </div>
+                      {isModerator && (
+                        <button
+                          onClick={() => handleTogglePin(thread.id)}
+                          disabled={pinningThreadId === thread.id}
+                          className={`text-xs px-2 py-1 rounded ${thread.isPinned ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} ${pinningThreadId === thread.id ? 'opacity-50 cursor-wait' : ''}`}
+                          title={thread.isPinned ? 'Unpin thread' : 'Pin thread'}
+                        >
+                          {pinningThreadId === thread.id ? '...' : (thread.isPinned ? 'Unpin' : 'Pin')}
+                        </button>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                       <span>by {thread.authorSlug ? (
                         <Link to={`/character/${thread.authorSlug}`} className="forum-link font-bold">

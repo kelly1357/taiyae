@@ -21,11 +21,11 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
         
         if (subareaId) {
             whereClause = 't.SubareaID = @filterId';
-            orderByClause = 'ORDER BY lastPost.Created DESC';
+            orderByClause = 'ORDER BY t.IsPinned DESC, lastPost.Created DESC';
             requestBuilder.input('filterId', sql.NVarChar, subareaId);
         } else if (regionId) {
             whereClause = 't.RegionId = @filterId';
-            orderByClause = 'ORDER BY lastPost.Created DESC';
+            orderByClause = 'ORDER BY t.IsPinned DESC, lastPost.Created DESC';
             requestBuilder.input('filterId', sql.Int, parseInt(regionId));
         } else {
             whereClause = 't.OOCForumID = @filterId';
@@ -832,10 +832,6 @@ export async function toggleThreadPin(request: HttpRequest, context: InvocationC
         }
 
         const thread = threadCheck.recordset[0];
-
-        if (!thread.OOCForumID) {
-            return { status: 400, body: "Only OOC forum threads can be pinned" };
-        }
 
         // Toggle the pin status
         const newPinStatus = !thread.IsPinned;

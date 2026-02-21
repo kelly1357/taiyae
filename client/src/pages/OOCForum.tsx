@@ -49,6 +49,11 @@ const OOCForumPage: React.FC = () => {
       const response = await fetch(`/api/threads/${threadId}/pin`, { method: 'POST', headers: { 'X-Authorization': `Bearer ${token}` } });
       if (response.ok) {
         fetchThreads();
+      } else if (response.status === 401) {
+        alert('Your session has expired. Please log out and log back in.');
+      } else {
+        const errText = await response.text().catch(() => response.statusText);
+        alert(`Failed to toggle pin: ${errText}`);
       }
     } catch (error) {
       console.error('Error toggling pin:', error);
