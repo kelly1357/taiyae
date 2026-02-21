@@ -141,15 +141,6 @@ const SitewideUpdates: React.FC = () => {
             )}
           </>
         )}
-
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="text-sm text-gray-600 hover:text-gray-800"
-          >
-            ← Back to Home
-          </Link>
-        </div>
       </div>
     </section>
   );

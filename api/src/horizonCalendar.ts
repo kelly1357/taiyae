@@ -82,5 +82,5 @@ export function getHorizonDate(realDate: Date = new Date()): HorizonDate {
  */
 export function formatHorizonDateString(realDate: Date = new Date()): string {
   const hDate = getHorizonDate(realDate);
-  return `HY${hDate.year}, ${hDate.phaseName}`;
+  return `${hDate.phaseName}, HY${hDate.year}.`;
 }

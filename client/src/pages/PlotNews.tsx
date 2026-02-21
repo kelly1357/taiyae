@@ -284,7 +284,7 @@ const PlotNews: React.FC = () => {
                         <span className="uppercase tracking-wide text-gray-600 text-sm" style={{ fontFamily: 'Baskerville, "Times New Roman", serif' }}>Rogues</span>
                       </label>
                       {/* Active Packs */}
-                      {packs.map(pack => (
+                      {packs.filter(p => p.isActive).map(pack => (
                         <label key={pack.id} className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="checkbox"
@@ -372,12 +372,6 @@ const PlotNews: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
-
-        <div className="mt-6">
-          <Link to="/" className="text-sm text-gray-600 hover:text-gray-900 hover:underline">
-            ← Back to Home
-          </Link>
         </div>
       </div>
 

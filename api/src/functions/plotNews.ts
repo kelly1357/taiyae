@@ -10,11 +10,16 @@ const signalROutput = output.generic({
     hubName: 'messaging',
 });
 
-// Helper to get current pending count
+// Helper to get current pending count (counts grouped submissions, not individual rows)
 async function getCurrentPendingCount(): Promise<number> {
     const pool = await getPool();
     const result = await pool.request().query(`
-        SELECT COUNT(*) as count FROM PlotNews WHERE IsApproved = 0
+        SELECT COUNT(*) as count FROM (
+            SELECT 1
+            FROM PlotNews
+            WHERE IsApproved = 0
+            GROUP BY NewsText, ISNULL(ThreadURL, ''), SubmittedByUserID
+        ) grouped
     `);
     return result.recordset[0].count;
 }
@@ -92,12 +97,12 @@ export async function getApprovedPlotNews(request: HttpRequest, context: Invocat
         const pool = await getPool();
         const result = await pool.request()
             .query(`
-                SELECT TOP 3 
-                    pn.PlotNewsID,
-                    pn.PackName,
+                SELECT TOP 3
+                    MIN(pn.PlotNewsID) as PlotNewsID,
+                    STRING_AGG(pn.PackName, ',') WITHIN GROUP (ORDER BY pn.PackName) as PackNames,
                     pn.NewsText,
                     pn.ThreadURL,
-                    pn.ApprovedAt,
+                    MAX(pn.ApprovedAt) as ApprovedAt,
                     (SELECT TOP 1 p.Subject FROM Post p WHERE p.ThreadID = 
                         TRY_CAST(
                             CASE 
@@ -109,7 +114,8 @@ export async function getApprovedPlotNews(request: HttpRequest, context: Invocat
                      ORDER BY p.PostID ASC) as ThreadTitle
                 FROM PlotNews pn
                 WHERE pn.IsApproved = 1
-                ORDER BY pn.ApprovedAt DESC
+                GROUP BY pn.NewsText, pn.ThreadURL
+                ORDER BY MAX(pn.ApprovedAt) DESC
             `);
 
         return {
@@ -211,18 +217,20 @@ export async function getPendingPlotNews(request: HttpRequest, context: Invocati
         const result = await pool.request()
             .query(`
                 SELECT 
-                    p.PlotNewsID,
-                    p.PackName,
+                    MIN(p.PlotNewsID) as PlotNewsID,
+                    STRING_AGG(p.PackName, ',') WITHIN GROUP (ORDER BY p.PackName) as PackNames,
+                    STRING_AGG(CAST(p.PlotNewsID AS VARCHAR), ',') as AllIds,
                     p.NewsText,
                     p.ThreadURL,
-                    p.ThreadTitle,
+                    MIN(p.ThreadTitle) as ThreadTitle,
                     p.SubmittedByUserID,
-                    p.SubmittedAt,
+                    MIN(p.SubmittedAt) as SubmittedAt,
                     u.Username as SubmittedByUsername
                 FROM PlotNews p
                 LEFT JOIN [dbo].[User] u ON p.SubmittedByUserID = u.UserID
                 WHERE p.IsApproved = 0
-                ORDER BY p.SubmittedAt DESC
+                GROUP BY p.NewsText, p.ThreadURL, p.SubmittedByUserID, u.Username
+                ORDER BY MIN(p.SubmittedAt) DESC
             `);
 
         return {
@@ -255,9 +263,12 @@ export async function getPendingPlotNewsCount(request: HttpRequest, context: Inv
         const pool = await getPool();
         const result = await pool.request()
             .query(`
-                SELECT COUNT(*) as count
-                FROM PlotNews
-                WHERE IsApproved = 0
+                SELECT COUNT(*) as count FROM (
+                    SELECT 1
+                    FROM PlotNews
+                    WHERE IsApproved = 0
+                    GROUP BY NewsText, ISNULL(ThreadURL, ''), SubmittedByUserID
+                ) grouped
             `);
 
         return {
@@ -438,11 +449,35 @@ export async function deletePlotNews(request: HttpRequest, context: InvocationCo
         }
 
         const pool = await getPool();
-        await pool.request()
+
+        // Get the item details to find related entries
+        const itemResult = await pool.request()
             .input('plotNewsId', sql.Int, parseInt(plotNewsId))
             .query(`
-                DELETE FROM PlotNews
+                SELECT NewsText, ThreadURL, SubmittedByUserID, SubmittedAt
+                FROM PlotNews
                 WHERE PlotNewsID = @plotNewsId
+            `);
+
+        if (itemResult.recordset.length === 0) {
+            return { status: 404, body: "Plot news item not found" };
+        }
+
+        const item = itemResult.recordset[0];
+
+        // Delete all related entries (same submission group)
+        await pool.request()
+            .input('newsText', sql.NVarChar, item.NewsText)
+            .input('threadURL', sql.NVarChar, item.ThreadURL)
+            .input('submittedByUserID', sql.Int, item.SubmittedByUserID)
+            .input('submittedAt', sql.DateTime, item.SubmittedAt)
+            .query(`
+                DELETE FROM PlotNews
+                WHERE NewsText = @newsText
+                    AND ISNULL(ThreadURL, '') = ISNULL(@threadURL, '')
+                    AND SubmittedByUserID = @submittedByUserID
+                    AND ABS(DATEDIFF(SECOND, SubmittedAt, @submittedAt)) <= 5
+                    AND IsApproved = 0
             `);
 
         // Broadcast updated count to staff group

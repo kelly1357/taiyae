@@ -336,7 +336,7 @@ const Layout: React.FC<LayoutProps> = ({
                         <Link to={`/pack/${pack.slug}`} style={{ color: pack.color1 }} className="hover:underline">
                           {pack.name}
                         </Link>
-                        {(index < packs.length - 1) && <span className="ml-2 text-gray-400">·</span>}
+                        {(index < packs.length - 1) && <span className="ml-2">•</span>}
                       </span>
                     ))}
                   </div>

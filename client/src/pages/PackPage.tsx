@@ -133,7 +133,7 @@ const PackPage: React.FC = () => {
       {!pack.isActive && (
         <div className="bg-gray-100 border border-gray-300 px-4 py-3 text-center mb-6">
           <span className="text-gray-700 font-semibold">
-            This pack was disbanded on {new Date(pack.disbandedDate!).toLocaleDateString()}
+            This pack was disbanded during {pack.disbandedDate}
           </span>
         </div>
       )}

@@ -116,7 +116,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                 FROM Character c
                 LEFT JOIN [User] u ON c.UserID = u.UserID
                 LEFT JOIN HealthStatus hs ON c.HealthStatus_Id = hs.StatusID
-                LEFT JOIN Packs p ON c.PackID = p.id
+                LEFT JOIN Packs p ON c.PackID = p.id AND p.isActive = 1
                 LEFT JOIN PackRanks pr ON c.packRankId = pr.id
                 LEFT JOIN Height h ON c.HeightID = h.HeightID
                 LEFT JOIN Build b ON c.BuildID = b.BuildID

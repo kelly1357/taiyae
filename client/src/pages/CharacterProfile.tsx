@@ -1092,147 +1092,149 @@ const CharacterProfile: React.FC = () => {
                                       </tr>
                                     </thead>
                                     <tbody>
-                                      <tr className="border-t border-gray-300">
-                                        <td className="px-3 py-3 border-r border-gray-300">
-                                          {editingThreadId === entry.threadId ? (
-                                            <div className="space-y-2">
-                                              <textarea
-                                                value={editingSummary}
-                                                onChange={(e) => setEditingSummary(e.target.value)}
-                                                className="w-full h-24 p-2 border border-gray-300 text-sm text-black resize-none focus:outline-none focus:border-gray-400"
-                                                placeholder="Enter thread summary (HTML allowed)..."
-                                              />
-                                              <div className="flex gap-2">
-                                                <button
-                                                  onClick={() => saveSummary(entry.threadId)}
-                                                  className="px-3 py-1 bg-[#2f3a2f] text-white text-xs hover:bg-[#3a4a3a] transition-colors"
-                                                >
-                                                  Save
-                                                </button>
-                                                <button
-                                                  onClick={cancelEditingSummary}
-                                                  className="px-3 py-1 bg-gray-300 text-gray-700 text-xs hover:bg-gray-400 transition-colors"
-                                                >
-                                                  Cancel
-                                                </button>
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div>
-                                              {threadSummaries[entry.threadId] ? (
-                                                <div 
-                                                  className="text-gray-700"
-                                                  dangerouslySetInnerHTML={{ __html: threadSummaries[entry.threadId] }}
+                                      {(() => {
+                                        // Group claims by Action name, summing E/P/K per group
+                                        const claims = threadSkillPoints[entry.threadId] || [];
+                                        const grouped: { action: string; items: SkillPointClaim[]; totalE: number; totalP: number; totalK: number }[] = [];
+                                        claims.forEach(sp => {
+                                          const existing = grouped.find(g => g.action === sp.Action);
+                                          if (existing) {
+                                            existing.items.push(sp);
+                                            existing.totalE += sp.E;
+                                            existing.totalP += sp.P;
+                                            existing.totalK += sp.K;
+                                          } else {
+                                            grouped.push({ action: sp.Action, items: [sp], totalE: sp.E, totalP: sp.P, totalK: sp.K });
+                                          }
+                                        });
+
+                                        const rowCount = Math.max(grouped.length, 1);
+
+                                        const summaryCell = (
+                                          <td className="px-3 py-3 border-r border-gray-300 align-top" rowSpan={rowCount}>
+                                            {editingThreadId === entry.threadId ? (
+                                              <div className="space-y-2">
+                                                <textarea
+                                                  value={editingSummary}
+                                                  onChange={(e) => setEditingSummary(e.target.value)}
+                                                  className="w-full h-24 p-2 border border-gray-300 text-sm text-black resize-none focus:outline-none focus:border-gray-400"
+                                                  placeholder="Enter thread summary (HTML allowed)..."
                                                 />
-                                              ) : (
-                                                <span className="text-gray-500 italic">Coming soon</span>
-                                              )}
-                                              {isOwner && (
-                                                <button
-                                                  onClick={() => startEditingSummary(entry.threadId)}
-                                                  className="mt-2 text-xs text-gray-500 hover:text-gray-700 hover:underline block"
-                                                >
-                                                  Edit
-                                                </button>
-                                              )}
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td className="px-3 py-3 text-gray-700 border-r border-gray-300">
-                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
-                                            <div className="space-y-3">
-                                              {(() => {
-                                                // Group claims by Action name so multiple instances appear under one heading
-                                                const claims = threadSkillPoints[entry.threadId];
-                                                const grouped: { action: string; items: SkillPointClaim[] }[] = [];
-                                                claims.forEach(sp => {
-                                                  const existing = grouped.find(g => g.action === sp.Action);
-                                                  if (existing) {
-                                                    existing.items.push(sp);
-                                                  } else {
-                                                    grouped.push({ action: sp.Action, items: [sp] });
-                                                  }
-                                                });
-                                                return grouped.map((group, gIdx) => (
-                                                  <div key={gIdx}>
-                                                    <div className="flex items-center justify-between gap-2">
-                                                      <span className="font-medium">{group.action}{group.items.length > 1 ? ` ×${group.items.length}` : ''}</span>
-                                                      {group.items.length === 1 && !group.items[0].Note && (user?.isModerator || user?.isAdmin) && (
+                                                <div className="flex gap-2">
+                                                  <button
+                                                    onClick={() => saveSummary(entry.threadId)}
+                                                    className="px-3 py-1 bg-[#2f3a2f] text-white text-xs hover:bg-[#3a4a3a] transition-colors"
+                                                  >
+                                                    Save
+                                                  </button>
+                                                  <button
+                                                    onClick={cancelEditingSummary}
+                                                    className="px-3 py-1 bg-gray-300 text-gray-700 text-xs hover:bg-gray-400 transition-colors"
+                                                  >
+                                                    Cancel
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <div>
+                                                {threadSummaries[entry.threadId] ? (
+                                                  <div 
+                                                    className="text-gray-700"
+                                                    dangerouslySetInnerHTML={{ __html: threadSummaries[entry.threadId] }}
+                                                  />
+                                                ) : (
+                                                  <span className="text-gray-500 italic">Coming soon</span>
+                                                )}
+                                                {isOwner && (
+                                                  <button
+                                                    onClick={() => startEditingSummary(entry.threadId)}
+                                                    className="mt-2 text-xs text-gray-500 hover:text-gray-700 hover:underline block"
+                                                  >
+                                                    Edit
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )}
+                                          </td>
+                                        );
+
+                                        if (grouped.length === 0) {
+                                          return (
+                                            <tr className="border-t border-gray-300">
+                                              {summaryCell}
+                                              <td className="px-3 py-3 text-gray-700 border-r border-gray-300"><span className="text-gray-500">—</span></td>
+                                              <td className="px-2 py-3 text-center border-r border-gray-300"><span className="text-gray-500">—</span></td>
+                                              <td className="px-2 py-3 text-center border-r border-gray-300"><span className="text-gray-500">—</span></td>
+                                              <td className="px-2 py-3 text-center"><span className="text-gray-500">—</span></td>
+                                            </tr>
+                                          );
+                                        }
+
+                                        return grouped.map((group, gIdx) => (
+                                          <tr key={gIdx} className={gIdx === 0 ? 'border-t border-gray-300' : ''}>
+                                            {gIdx === 0 && summaryCell}
+                                            <td className="px-3 py-2 text-gray-700 border-r border-gray-300 align-top">
+                                              <div className="flex items-center justify-between gap-2">
+                                                <span className="font-medium">{group.action}{group.items.length > 1 ? ` ×${group.items.length}` : ''}</span>
+                                                {group.items.length === 1 && !group.items[0].Note && (user?.isModerator || user?.isAdmin) && (
+                                                  <button
+                                                    onClick={() => setShowUndoConfirm(group.items[0])}
+                                                    className="text-xs text-gray-400 hover:text-red-600"
+                                                    title="Undo approval"
+                                                  >
+                                                    ✕
+                                                  </button>
+                                                )}
+                                              </div>
+                                              {/* Show individual notes as sub-items */}
+                                              {group.items.some(sp => sp.Note) && (
+                                                <div className="ml-3 mt-0.5 space-y-0.5">
+                                                  {group.items.map((sp, spIdx) => (
+                                                    <div key={spIdx} className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                                                      <span className="italic">↳ {sp.Note || '—'}</span>
+                                                      {(user?.isModerator || user?.isAdmin) && (
                                                         <button
-                                                          onClick={() => setShowUndoConfirm(group.items[0])}
-                                                          className="text-xs text-gray-400 hover:text-red-600"
+                                                          onClick={() => setShowUndoConfirm(sp)}
+                                                          className="text-gray-400 hover:text-red-600 flex-shrink-0"
                                                           title="Undo approval"
                                                         >
                                                           ✕
                                                         </button>
                                                       )}
                                                     </div>
-                                                    {/* Show individual notes as sub-items */}
-                                                    {group.items.some(sp => sp.Note) && (
-                                                      <div className="ml-3 mt-0.5 space-y-0.5">
-                                                        {group.items.map((sp, spIdx) => (
-                                                          <div key={spIdx} className="flex items-center justify-between gap-2 text-xs text-gray-500">
-                                                            <span className="italic">↳ {sp.Note || '—'}</span>
-                                                            {(user?.isModerator || user?.isAdmin) && (
-                                                              <button
-                                                                onClick={() => setShowUndoConfirm(sp)}
-                                                                className="text-gray-400 hover:text-red-600 flex-shrink-0"
-                                                                title="Undo approval"
-                                                              >
-                                                                ✕
-                                                              </button>
-                                                            )}
-                                                          </div>
-                                                        ))}
-                                                      </div>
-                                                    )}
-                                                    {/* For items without notes, show undo buttons individually if multiple */}
-                                                    {group.items.length > 1 && !group.items.some(sp => sp.Note) && (user?.isModerator || user?.isAdmin) && (
-                                                      <div className="ml-3 mt-0.5 space-y-0.5">
-                                                        {group.items.map((sp, spIdx) => (
-                                                          <div key={spIdx} className="flex items-center justify-between gap-2 text-xs text-gray-500">
-                                                            <span>Instance {spIdx + 1}</span>
-                                                            <button
-                                                              onClick={() => setShowUndoConfirm(sp)}
-                                                              className="text-gray-400 hover:text-red-600 flex-shrink-0"
-                                                              title="Undo approval"
-                                                            >
-                                                              ✕
-                                                            </button>
-                                                          </div>
-                                                        ))}
-                                                      </div>
-                                                    )}
-                                                  </div>
-                                                ));
-                                              })()}
-                                            </div>
-                                          ) : (
-                                            <span className="text-gray-500">—</span>
-                                          )}
-                                        </td>
-                                        <td className="px-2 py-3 text-center border-r border-gray-300">
-                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
-                                            <span className="text-gray-700">{threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.E, 0)}</span>
-                                          ) : (
-                                            <span className="text-gray-500">—</span>
-                                          )}
-                                        </td>
-                                        <td className="px-2 py-3 text-center border-r border-gray-300">
-                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
-                                            <span className="text-gray-700">{threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.P, 0)}</span>
-                                          ) : (
-                                            <span className="text-gray-500">—</span>
-                                          )}
-                                        </td>
-                                        <td className="px-2 py-3 text-center">
-                                          {threadSkillPoints[entry.threadId]?.length > 0 ? (
-                                            <span className="text-gray-700">{threadSkillPoints[entry.threadId].reduce((sum, sp) => sum + sp.K, 0)}</span>
-                                          ) : (
-                                            <span className="text-gray-500">—</span>
-                                          )}
-                                        </td>
-                                      </tr>
+                                                  ))}
+                                                </div>
+                                              )}
+                                              {/* For items without notes, show undo buttons individually if multiple */}
+                                              {group.items.length > 1 && !group.items.some(sp => sp.Note) && (user?.isModerator || user?.isAdmin) && (
+                                                <div className="ml-3 mt-0.5 space-y-0.5">
+                                                  {group.items.map((sp, spIdx) => (
+                                                    <div key={spIdx} className="flex items-center justify-between gap-2 text-xs text-gray-500">
+                                                      <span>Instance {spIdx + 1}</span>
+                                                      <button
+                                                        onClick={() => setShowUndoConfirm(sp)}
+                                                        className="text-gray-400 hover:text-red-600 flex-shrink-0"
+                                                        title="Undo approval"
+                                                      >
+                                                        ✕
+                                                      </button>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </td>
+                                            <td className="px-2 py-2 text-center border-r border-gray-300 align-top">
+                                              <span className="text-gray-700">{group.totalE}</span>
+                                            </td>
+                                            <td className="px-2 py-2 text-center border-r border-gray-300 align-top">
+                                              <span className="text-gray-700">{group.totalP}</span>
+                                            </td>
+                                            <td className="px-2 py-2 text-center align-top">
+                                              <span className="text-gray-700">{group.totalK}</span>
+                                            </td>
+                                          </tr>
+                                        ));
+                                      })()}
                                     </tbody>
                                   </table>
                                 </td>

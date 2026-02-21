@@ -78,7 +78,8 @@ type SortDirection = 'asc' | 'desc';
 
 interface PlotNewsItem {
   PlotNewsID: number;
-  PackName: string;
+  PackName?: string;
+  PackNames?: string;
   NewsText: string;
   ThreadURL?: string;
   ThreadTitle?: string;
@@ -524,10 +525,17 @@ const Home: React.FC = () => {
                   {(() => {
                     const grouped = plotNews.reduce((acc, news) => {
                       const key = `${news.NewsText}||${news.ThreadURL || ''}`;
+                      const newsPackNames = news.PackNames 
+                        ? news.PackNames.split(',').map(s => s.trim()) 
+                        : (news.PackName ? [news.PackName] : []);
                       if (!acc[key]) {
-                        acc[key] = { ...news, packNames: [news.PackName] };
+                        acc[key] = { ...news, packNames: [...newsPackNames] };
                       } else {
-                        acc[key].packNames.push(news.PackName);
+                        newsPackNames.forEach(pn => {
+                          if (!acc[key].packNames.includes(pn)) {
+                            acc[key].packNames.push(pn);
+                          }
+                        });
                       }
                       return acc;
                     }, {} as Record<string, PlotNewsItem & { packNames: string[] }>);
@@ -679,7 +687,7 @@ const Home: React.FC = () => {
                     </span>
                   </Link>
                   {/* Active Packs */}
-                  {packs.map(pack => (
+                  {packs.filter(p => p.isActive).map(pack => (
                     <Link key={pack.id} to={`/pack/${pack.slug}`} className="flex items-center gap-2 hover:opacity-80">
                       <span 
                         className="inline-block w-7 text-center py-px text-xs font-normal text-white"

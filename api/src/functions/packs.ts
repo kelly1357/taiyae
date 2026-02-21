@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getPool } from "../db";
 import * as sql from 'mssql';
 import { verifyStaffAuth } from "../auth";
+import { formatHorizonDateString } from "../horizonCalendar";
 
 // GET all packs (or single pack by slug)
 export async function getPacks(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
@@ -60,6 +61,7 @@ export async function getPacks(request: HttpRequest, context: InvocationContext)
 
             return {
                 ...pack,
+                disbandedDate: pack.disbandedDate ? formatHorizonDateString(new Date(pack.disbandedDate)) : null,
                 stats: {
                     pupsBorn: pack.pupsBorn || 0,
                     deaths: pack.deaths || 0,
@@ -182,6 +184,7 @@ export async function getPackBySlug(request: HttpRequest, context: InvocationCon
         return { 
             jsonBody: {
                 ...pack,
+                disbandedDate: pack.disbandedDate ? formatHorizonDateString(new Date(pack.disbandedDate)) : null,
                 stats: {
                     pupsBorn: pack.pupsBorn || 0,
                     deaths: pack.deaths || 0,
