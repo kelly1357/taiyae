@@ -580,7 +580,7 @@ export default function HomepageAdmin() {
         </div>
       </section>
 
-      {/* ─── Delete Confirmation ─── */}}
+      {/* ─── Delete Confirmation ─── */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setDeleteConfirm(null)}>
           <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
