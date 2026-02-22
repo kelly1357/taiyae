@@ -36,6 +36,9 @@ import UserApprovalsAdmin from './pages/UserApprovalsAdmin';
 import PackAdmin from './pages/PackAdmin';
 import Conversations from './pages/Conversations';
 import StartingSkillPoints from './pages/StartingSkillPoints';
+import ConfirmEmail from './pages/ConfirmEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import type { User, Character } from './types';
 
 // Wiki pages
@@ -278,6 +281,9 @@ const App: React.FC = () => {
         <Route path="admin/packs" element={<PackAdmin />} />
         <Route path="admin/homepage" element={<HomepageAdmin />} />
         <Route path="admin/inactive-characters" element={user ? <InactiveCharacters user={user} /> : <div className="text-center mt-20">Please log in to access this page.</div>} />
+        <Route path="confirm-email" element={<ConfirmEmail />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+        <Route path="reset-password" element={<ResetPassword />} />
         {/* Wiki Routes */}
         <Route path="wiki/absences-and-scarcity" element={<AbsencesAndScarcity />} />
         <Route path="wiki/achievements" element={<Achievements />} />

@@ -1,9 +1,11 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { getPool } from "../db";
 import * as sql from 'mssql';
+import { sendConfirmationEmail, sendPasswordResetEmail } from '../email';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'taiyae-secure-random-key-1234567890';
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -38,6 +40,8 @@ export async function register(request: HttpRequest, context: InvocationContext)
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
         const result = await pool.request()
             .input('Username', sql.NVarChar, username)
@@ -45,18 +49,26 @@ export async function register(request: HttpRequest, context: InvocationContext)
             .input('PasswordHash', sql.VarChar, hashedPassword)
             .input('Auth_Provider', sql.NVarChar, 'email')
             .input('Created', sql.DateTime, new Date())
+            .input('Email_Verified', sql.Bit, 0)
+            .input('Verification_Token', sql.VarChar, verificationToken)
+            .input('Verification_Token_Expiry', sql.DateTime, tokenExpiry)
             .query(`
-                INSERT INTO [User] (Username, Email, PasswordHash, Auth_Provider, Created)
+                INSERT INTO [User] (Username, Email, PasswordHash, Auth_Provider, Created, Email_Verified, Verification_Token, Verification_Token_Expiry)
                 OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.UserStatusID
-                VALUES (@Username, @Email, @PasswordHash, @Auth_Provider, @Created)
+                VALUES (@Username, @Email, @PasswordHash, @Auth_Provider, @Created, @Email_Verified, @Verification_Token, @Verification_Token_Expiry)
             `);
 
-        const user = result.recordset[0];
-        const token = generateToken(user);
+        // Send verification email
+        try {
+            await sendConfirmationEmail(email, verificationToken);
+        } catch (emailError) {
+            context.error('Failed to send verification email:', emailError);
+            // User was created but email failed — they can use resend
+        }
 
         return {
             status: 201,
-            jsonBody: { user, token }
+            jsonBody: { message: 'Account created! Please check your email to verify your account.', needsVerification: true }
         };
     } catch (error) {
         context.error(error);
@@ -88,6 +100,19 @@ export async function login(request: HttpRequest, context: InvocationContext): P
 
         if (!isValid) {
             return { status: 401, body: "Invalid credentials" };
+        }
+
+        // Check if email is verified (only for email auth users)
+        if (user.Auth_Provider === 'email' && !user.Email_Verified) {
+            return {
+                status: 403,
+                jsonBody: {
+                    error: 'email_not_verified',
+                    message: 'Please verify your email before logging in. Check your inbox for a verification link.',
+                    needsConfirmation: true,
+                    email: user.Email
+                }
+            };
         }
 
         // Check if user is banned
@@ -174,16 +199,17 @@ export async function googleLogin(request: HttpRequest, context: InvocationConte
         let user = result.recordset[0];
 
         if (!user) {
-            // Create new user
+            // Create new user (Google users are auto-verified)
             const insertResult = await pool.request()
                 .input('Username', sql.NVarChar, name)
                 .input('Email', sql.NVarChar, email)
                 .input('Auth_Provider', sql.NVarChar, 'google')
                 .input('Created', sql.DateTime, new Date())
+                .input('Email_Verified', sql.Bit, 1)
                 .query(`
-                    INSERT INTO [User] (Username, Email, Auth_Provider, Created)
+                    INSERT INTO [User] (Username, Email, Auth_Provider, Created, Email_Verified)
                     OUTPUT INSERTED.UserID, INSERTED.Username, INSERTED.Email, INSERTED.Auth_Provider, INSERTED.UserStatusID
-                    VALUES (@Username, @Email, @Auth_Provider, @Created)
+                    VALUES (@Username, @Email, @Auth_Provider, @Created, @Email_Verified)
                 `);
             user = insertResult.recordset[0];
         } else {
@@ -386,4 +412,242 @@ app.http('updateUser', {
     authLevel: 'anonymous',
     route: 'users/{id}',
     handler: updateUser
+});
+
+// ─── Email Confirmation ───
+
+export async function confirmEmail(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const token = request.query.get('token');
+
+        if (!token) {
+            return { status: 400, jsonBody: { error: 'Missing verification token' } };
+        }
+
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('Token', sql.VarChar, token)
+            .query(`
+                SELECT UserID, Email, Email_Verified, Verification_Token_Expiry
+                FROM [User]
+                WHERE Verification_Token = @Token AND Auth_Provider = 'email'
+            `);
+
+        const user = result.recordset[0];
+
+        if (!user) {
+            return { status: 400, jsonBody: { error: 'Invalid or expired verification link.' } };
+        }
+
+        if (user.Email_Verified) {
+            return { status: 200, jsonBody: { message: 'Your email is already verified. You can log in.' } };
+        }
+
+        if (user.Verification_Token_Expiry && new Date(user.Verification_Token_Expiry) < new Date()) {
+            return { status: 400, jsonBody: { error: 'This verification link has expired. Please request a new one.', expired: true, email: user.Email } };
+        }
+
+        // Mark as verified and clear token
+        await pool.request()
+            .input('UserID', sql.Int, user.UserID)
+            .query(`
+                UPDATE [User]
+                SET Email_Verified = 1, Verification_Token = NULL, Verification_Token_Expiry = NULL
+                WHERE UserID = @UserID
+            `);
+
+        return { status: 200, jsonBody: { message: 'Email verified successfully! You can now log in.' } };
+    } catch (error) {
+        context.error('Confirm email error:', error);
+        return { status: 500, jsonBody: { error: 'Internal Server Error' } };
+    }
+}
+
+app.http('confirmEmail', {
+    methods: ['GET'],
+    authLevel: 'anonymous',
+    route: 'confirm-email',
+    handler: confirmEmail
+});
+
+// ─── Resend Confirmation Email ───
+
+export async function resendConfirmation(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const body: any = await request.json();
+        const { email } = body;
+
+        if (!email) {
+            return { status: 400, jsonBody: { error: 'Email is required' } };
+        }
+
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('Email', sql.NVarChar, email)
+            .query(`
+                SELECT UserID, Email_Verified, Auth_Provider
+                FROM [User]
+                WHERE Email = @Email
+            `);
+
+        const user = result.recordset[0];
+
+        // Always return success to prevent user enumeration
+        if (!user || user.Auth_Provider !== 'email' || user.Email_Verified) {
+            return { status: 200, jsonBody: { message: 'If an unverified account exists with that email, a new verification link has been sent.' } };
+        }
+
+        // Generate new token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        await pool.request()
+            .input('UserID', sql.Int, user.UserID)
+            .input('Token', sql.VarChar, verificationToken)
+            .input('Expiry', sql.DateTime, tokenExpiry)
+            .query(`
+                UPDATE [User]
+                SET Verification_Token = @Token, Verification_Token_Expiry = @Expiry
+                WHERE UserID = @UserID
+            `);
+
+        try {
+            await sendConfirmationEmail(email, verificationToken);
+        } catch (emailError) {
+            context.error('Failed to resend verification email:', emailError);
+            return { status: 500, jsonBody: { error: 'Failed to send verification email. Please try again later.' } };
+        }
+
+        return { status: 200, jsonBody: { message: 'If an unverified account exists with that email, a new verification link has been sent.' } };
+    } catch (error) {
+        context.error('Resend confirmation error:', error);
+        return { status: 500, jsonBody: { error: 'Internal Server Error' } };
+    }
+}
+
+app.http('resendConfirmation', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'resend-confirmation',
+    handler: resendConfirmation
+});
+
+// ─── Forgot Password ───
+
+export async function forgotPassword(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const body: any = await request.json();
+        const { email } = body;
+
+        if (!email) {
+            return { status: 400, jsonBody: { error: 'Email is required' } };
+        }
+
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('Email', sql.NVarChar, email)
+            .query(`
+                SELECT UserID, Auth_Provider
+                FROM [User]
+                WHERE Email = @Email
+            `);
+
+        const user = result.recordset[0];
+
+        // Always return success to prevent user enumeration
+        // Only process for email auth users
+        if (user && user.Auth_Provider === 'email') {
+            const resetToken = crypto.randomBytes(32).toString('hex');
+            const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+            await pool.request()
+                .input('UserID', sql.Int, user.UserID)
+                .input('Token', sql.VarChar, resetToken)
+                .input('Expiry', sql.DateTime, tokenExpiry)
+                .query(`
+                    UPDATE [User]
+                    SET Reset_Token = @Token, Reset_Token_Expiry = @Expiry
+                    WHERE UserID = @UserID
+                `);
+
+            try {
+                await sendPasswordResetEmail(email, resetToken);
+            } catch (emailError) {
+                context.error('Failed to send password reset email:', emailError);
+            }
+        }
+
+        return { status: 200, jsonBody: { message: 'If an account exists with that email, a password reset link has been sent.' } };
+    } catch (error) {
+        context.error('Forgot password error:', error);
+        return { status: 500, jsonBody: { error: 'Internal Server Error' } };
+    }
+}
+
+app.http('forgotPassword', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'forgot-password',
+    handler: forgotPassword
+});
+
+// ─── Reset Password ───
+
+export async function resetPassword(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    try {
+        const body: any = await request.json();
+        const { token, password } = body;
+
+        if (!token || !password) {
+            return { status: 400, jsonBody: { error: 'Token and new password are required' } };
+        }
+
+        // Validate password strength
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return { status: 400, jsonBody: { error: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character.' } };
+        }
+
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('Token', sql.VarChar, token)
+            .query(`
+                SELECT UserID, Reset_Token_Expiry, Auth_Provider
+                FROM [User]
+                WHERE Reset_Token = @Token AND Auth_Provider = 'email'
+            `);
+
+        const user = result.recordset[0];
+
+        if (!user) {
+            return { status: 400, jsonBody: { error: 'Invalid or expired reset link.' } };
+        }
+
+        if (user.Reset_Token_Expiry && new Date(user.Reset_Token_Expiry) < new Date()) {
+            return { status: 400, jsonBody: { error: 'This reset link has expired. Please request a new one.' } };
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await pool.request()
+            .input('UserID', sql.Int, user.UserID)
+            .input('PasswordHash', sql.VarChar, hashedPassword)
+            .query(`
+                UPDATE [User]
+                SET PasswordHash = @PasswordHash, Reset_Token = NULL, Reset_Token_Expiry = NULL
+                WHERE UserID = @UserID
+            `);
+
+        return { status: 200, jsonBody: { message: 'Password has been reset successfully. You can now log in with your new password.' } };
+    } catch (error) {
+        context.error('Reset password error:', error);
+        return { status: 500, jsonBody: { error: 'Internal Server Error' } };
+    }
+}
+
+app.http('resetPassword', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    route: 'reset-password',
+    handler: resetPassword
 });

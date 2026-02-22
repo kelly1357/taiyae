@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface LoginProps {
   onLogin: (user: any) => void;
@@ -17,6 +17,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [isBanned, setIsBanned] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState('');
+  const [resending, setResending] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   const validateEmail = (email: string) => {
@@ -32,6 +36,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
     e.preventDefault();
     setError('');
     setIsBanned(false);
+    setNeedsConfirmation(false);
+    setSuccessMessage('');
 
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
@@ -64,6 +70,13 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
       }
 
       if (response.ok) {
+        // Registration now returns a verification message instead of a token
+        if (data.needsVerification) {
+          setSuccessMessage(data.message || 'Account created! Please check your email to verify your account.');
+          setIsRegistering(false);
+          return;
+        }
+
         localStorage.setItem('token', data.token);
         const isModerator = data.user.Is_Moderator === true || data.user.Is_Moderator === 1 || data.user.isModerator === true;
         const isAdmin = data.user.Is_Admin === true || data.user.Is_Admin === 1 || data.user.isAdmin === true;
@@ -166,6 +179,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
   if (compact) {
     return (
       <div className="text-gray-900">
+        {successMessage && (
+          <div className="p-2 rounded mb-3 text-xs bg-green-100 border border-green-400 text-green-700">
+            {successMessage}
+          </div>
+        )}
+
         {error && (
           <div className={`p-2 rounded mb-3 text-xs ${
             isBanned
@@ -173,6 +192,30 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
               : 'bg-red-100 border border-red-400 text-red-700'
           }`}>
             {error}
+            {needsConfirmation && (
+              <button
+                onClick={async () => {
+                  setResending(true);
+                  try {
+                    await fetch('/api/resend-confirmation', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: confirmationEmail }),
+                    });
+                    setError('A new verification email has been sent. Please check your inbox.');
+                    setNeedsConfirmation(false);
+                  } catch {
+                    setError('Failed to resend. Please try again.');
+                  } finally {
+                    setResending(false);
+                  }
+                }}
+                disabled={resending}
+                className="block mt-1 underline font-medium"
+              >
+                {resending ? 'Sending...' : 'Resend verification email'}
+              </button>
+            )}
           </div>
         )}
 
@@ -210,6 +253,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
               className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-[#2f3a2f] focus:border-[#2f3a2f]"
               required
             />
+            {!isRegistering && (
+              <Link to="/forgot-password" className="text-xs text-[#617eb3] hover:text-[#4b6596] mt-1 inline-block">Forgot password?</Link>
+            )}
           </div>
 
           <button
@@ -262,6 +308,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
           {isRegistering ? 'Create Account' : 'Sign In'}
         </h2>
 
+        {successMessage && (
+          <div className="p-3 rounded mb-4 text-sm bg-green-100 border border-green-400 text-green-700">
+            {successMessage}
+          </div>
+        )}
+
         {error && (
           <div className={`p-3 rounded mb-4 text-sm ${
             isBanned
@@ -269,6 +321,30 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
               : 'bg-red-100 border border-red-400 text-red-700'
           }`}>
             {error}
+            {needsConfirmation && (
+              <button
+                onClick={async () => {
+                  setResending(true);
+                  try {
+                    await fetch('/api/resend-confirmation', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email: confirmationEmail }),
+                    });
+                    setError('A new verification email has been sent. Please check your inbox.');
+                    setNeedsConfirmation(false);
+                  } catch {
+                    setError('Failed to resend. Please try again.');
+                  } finally {
+                    setResending(false);
+                  }
+                }}
+                disabled={resending}
+                className="block mt-1 underline font-medium"
+              >
+                {resending ? 'Sending...' : 'Resend verification email'}
+              </button>
+            )}
           </div>
         )}
 
@@ -310,6 +386,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
               <p className="text-xs text-gray-500 mt-1">
                 Must be at least 8 characters with uppercase, lowercase, number, and special char.
               </p>
+            )}
+            {!isRegistering && (
+              <Link to="/forgot-password" className="text-xs text-[#617eb3] hover:text-[#4b6596] mt-1 inline-block">Forgot password?</Link>
             )}
           </div>
 
