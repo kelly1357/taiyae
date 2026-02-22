@@ -134,7 +134,7 @@ const Subarea: React.FC = () => {
       <section className={`bg-white border border-gray-300 shadow ${showPhotoMode ? 'invisible' : ''}`}>
         <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
           <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">
-            <Link to={`/region/${parentRegion.id}`} className="hover:text-white">{parentRegion.name}</Link>
+            <Link to={`/region/${parentRegion.slug}`} className="hover:text-white">{parentRegion.name}</Link>
             <span className="mx-2">›</span>
             {subarea.name}
           </h2>

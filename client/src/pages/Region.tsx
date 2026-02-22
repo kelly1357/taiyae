@@ -69,8 +69,8 @@ const Region: React.FC = () => {
   };
 
   const fetchThreads = () => {
-    if (!regionId) return;
-    fetch(`/api/threads?regionId=${regionId}`)
+    if (!region) return;
+    fetch(`/api/threads?regionId=${region.id}`)
       .then(res => res.json())
       .then(data => {
         setThreads(data);
@@ -86,7 +86,7 @@ const Region: React.FC = () => {
       fetch('/api/region')
         .then(res => res.json())
         .then((data: ForumRegion[]) => {
-          const found = data.find(r => String(r.id) === regionId);
+          const found = data.find(r => r.slug === regionId);
           setRegion(found || null);
           // Set the background when region data loads
           if (found?.imageUrl) {
@@ -94,15 +94,18 @@ const Region: React.FC = () => {
           }
         });
     }
+  }, [regionId, passedRegion, setBackgroundUrl]);
 
-    // Fetch threads
-    fetch(`/api/threads?regionId=${regionId}`)
+  // Fetch threads once region is resolved (need numeric region.id)
+  useEffect(() => {
+    if (!region) return;
+    fetch(`/api/threads?regionId=${region.id}`)
       .then(res => res.json())
       .then(data => {
         setThreads(data);
         setLoading(false);
       });
-  }, [regionId, passedRegion, setBackgroundUrl]);
+  }, [region]);
 
   if (loading) return <div>Loading...</div>;
   if (!region) return <div>Region not found</div>;

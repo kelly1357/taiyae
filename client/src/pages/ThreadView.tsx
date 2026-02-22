@@ -676,7 +676,7 @@ const ThreadView: React.FC = () => {
         setShowDeleteThreadConfirm(false);
         // Navigate back to region or home
         if (thread?.regionId) {
-          window.location.href = `/region/${thread.regionId}`;
+          window.location.href = `/region/${thread.regionSlug || thread.regionId}`;
         } else if (thread?.oocForumId) {
           window.location.href = `/ooc-forums/${thread.oocForumId}`;
         } else {
@@ -954,7 +954,7 @@ const ThreadView: React.FC = () => {
                 {thread.oocForumName || 'OOC Forum'}
               </Link>
             ) : (
-              <Link to={`/region/${thread.regionId}`} className="hover:text-white">
+              <Link to={`/region/${thread.regionSlug || thread.regionId}`} className="hover:text-white">
                 {thread.regionName || 'Thread'}
               </Link>
             )}

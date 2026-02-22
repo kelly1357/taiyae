@@ -20,19 +20,6 @@ const getRelativeTime = (dateString: string): string => {
   return date.toLocaleDateString();
 };
 
-interface RegionStats {
-  activeThreads: number;
-  totalPosts: number;
-  latestThread?: {
-    id: string;
-    title: string;
-    authorName?: string;
-    authorId?: number;
-    updatedAt: string;
-    isOnline?: boolean;
-  };
-}
-
 interface CharacterStats {
   totalCharacters: number;
   maleCount: number;
@@ -97,8 +84,6 @@ const Home: React.FC = () => {
   const [regions, setRegions] = useState<ForumRegion[]>([]);
   const [oocForums, setOocForums] = useState<OOCForum[]>([]);
   const [loading, setLoading] = useState(true);
-  const [regionStats, setRegionStats] = useState<Record<string, RegionStats>>({});
-  const [statsLoading, setStatsLoading] = useState(false);
   const [characterStats, setCharacterStats] = useState<CharacterStats | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('areas');
   const [allThreads, setAllThreads] = useState<ThreadItem[]>([]);
@@ -300,76 +285,6 @@ const Home: React.FC = () => {
         setLatestPostsLoading(false);
       });
   }, [viewMode]);
-
-  useEffect(() => {
-    if (!regions.length) return;
-
-    let cancelled = false;
-    setStatsLoading(true);
-
-    const loadStats = async () => {
-      const entries = await Promise.all(
-        regions.map(async (region) => {
-          try {
-            const response = await fetch(`/api/threads?regionId=${region.id}`);
-            if (!response.ok) {
-              throw new Error(`Failed to load threads for region ${region.id}`);
-            }
-
-            const threads: Array<{
-              id: string;
-              title: string;
-              authorName?: string;
-              authorId?: number;
-              updatedAt: string;
-              replyCount: number;
-              isOnline?: boolean;
-              lastReplyAuthorName?: string;
-              lastReplyAuthorId?: number;
-              lastReplyIsOnline?: boolean;
-            }> = await response.json();
-
-            if (!Array.isArray(threads) || threads.length === 0) {
-              return [region.id, { activeThreads: 0, totalPosts: 0 }] as const;
-            }
-
-            const totalPosts = threads.reduce((sum, thread) => sum + (thread.replyCount + 1), 0);
-            const latestThread = threads[0];
-
-            return [
-              region.id,
-              {
-                activeThreads: threads.length,
-                totalPosts,
-                latestThread: {
-                  id: latestThread.id,
-                  title: latestThread.title,
-                  authorName: latestThread.lastReplyAuthorName || latestThread.authorName,
-                  authorId: latestThread.lastReplyAuthorId || latestThread.authorId,
-                  updatedAt: latestThread.updatedAt,
-                  isOnline: latestThread.lastReplyIsOnline ?? latestThread.isOnline,
-                },
-              },
-            ] as const;
-          } catch (error) {
-            console.error(error);
-            return [region.id, { activeThreads: 0, totalPosts: 0 }] as const;
-          }
-        })
-      );
-
-      if (!cancelled) {
-        setRegionStats(Object.fromEntries(entries));
-        setStatsLoading(false);
-      }
-    };
-
-    loadStats();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [regions]);
 
   // Fetch character statistics
   useEffect(() => {
@@ -756,14 +671,13 @@ const Home: React.FC = () => {
           {viewMode === 'areas' && (
           <div>
             {regions.map((region) => {
-              const stats = regionStats[region.id];
               // Use headerImageUrl from database if available, otherwise fall back to hardcoded map
               const heroImage = region.headerImageUrl || regionImages[region.name];
 
               return (
                 <div key={region.id} className="px-4 py-4">
                   {heroImage ? (
-                    <Link to={`/region/${region.id}`} state={{ region }} className="relative block cursor-pointer mx-0.5">
+                    <Link to={`/region/${region.slug || region.id}`} state={{ region }} className="relative block cursor-pointer mx-0.5">
                       <img
                         src={heroImage}
                         alt={`${region.name} landscape`}
@@ -777,7 +691,7 @@ const Home: React.FC = () => {
                     </Link>
                   ) : (
                     <Link
-                      to={`/region/${region.id}`}
+                      to={`/region/${region.slug || region.id}`}
                       state={{ region }}
                       className="text-xl font-semibold text-black mb-2 block"
                     >
@@ -798,11 +712,9 @@ const Home: React.FC = () => {
                           <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
                             <div className="space-y-2">
                               <div>
-                                {stats ? (
-                                  <span>
-                                    <span className="font-semibold">{stats.activeThreads.toLocaleString()}</span> active threads, <span className="font-semibold">{stats.totalPosts.toLocaleString()}</span> posts
-                                  </span>
-                                ) : statsLoading ? 'Loading…' : '—'}
+                                <span>
+                                  <span className="font-semibold">{(region.activeThreadCount || 0).toLocaleString()}</span> active threads, <span className="font-semibold">{(region.postCount || 0).toLocaleString()}</span> posts
+                                </span>
                               </div>
                               {region.subareas && region.subareas.length > 0 && (
                                 <div className="text-sm text-gray-700 mt-3">
@@ -825,31 +737,31 @@ const Home: React.FC = () => {
                             </div>
                           </td>
                           <td className="align-top px-4 py-3 text-gray-800">
-                            {stats?.latestThread ? (
+                            {region.latestThread ? (
                               <div className="space-y-1">
                                 <Link
-                                  to={`/thread/${stats.latestThread.id}`}
+                                  to={`/thread/${region.latestThread.id}`}
                                   state={{ region }}
                                   className="font-semibold text-gray-900 hover:text-[#4b6596]"
                                 >
-                                  {stats.latestThread.title}
+                                  {region.latestThread.title}
                                 </Link>
                                 <div className="text-sm text-gray-700">
-                                  by {stats.latestThread.authorId ? (
-                                    <Link to={`/character/${stats.latestThread.authorId}`} className="font-bold hover:text-[#4b6596]">
-                                      {stats.latestThread.authorName || 'Unknown'}
+                                  by {region.latestThread.authorId ? (
+                                    <Link to={`/character/${region.latestThread.authorId}`} className="font-bold hover:text-[#4b6596]">
+                                      {region.latestThread.authorName || 'Unknown'}
                                     </Link>
                                   ) : (
-                                    <span className="font-bold">{stats.latestThread.authorName || 'Unknown'}</span>
+                                    <span className="font-bold">{region.latestThread.authorName || 'Unknown'}</span>
                                   )}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {getRelativeTime(stats.latestThread.updatedAt)}
+                                  {getRelativeTime(region.latestThread.updatedAt)}
                                 </div>
                               </div>
                             ) : (
                               <div className="text-sm text-gray-600">
-                                {statsLoading ? 'Loading latest post…' : 'No threads yet'}
+                                No threads yet
                               </div>
                             )}
                           </td>
@@ -983,7 +895,7 @@ const Home: React.FC = () => {
                             </td>
                             <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
                               <Link
-                                to={`/region/${thread.regionId}`}
+                                to={`/region/${region?.slug || thread.regionId}`}
                                 state={{ region }}
                                 className="text-gray-900 hover:text-[#4b6596]"
                               >
@@ -1065,7 +977,7 @@ const Home: React.FC = () => {
                               </td>
                               <td className="align-top px-4 py-3 text-gray-800 border-r border-gray-300">
                                 <Link
-                                  to={`/region/${thread.regionId}`}
+                                  to={`/region/${region?.slug || thread.regionId}`}
                                   state={{ region }}
                                   className="text-gray-900 hover:text-[#4b6596]"
                                 >

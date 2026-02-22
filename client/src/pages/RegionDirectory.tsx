@@ -536,7 +536,7 @@ const RegionDirectory: React.FC = () => {
                 </div>
                 
                 {region.imageUrl ? (
-                  <Link to={`/region/${region.id}`}>
+                  <Link to={`/region/${region.slug}`}>
                     <img src={region.imageUrl} alt={region.name} className="w-full h-40 object-cover border-b border-gray-300 hover:opacity-90 transition-opacity" />
                   </Link>
                 ) : (
@@ -566,7 +566,7 @@ const RegionDirectory: React.FC = () => {
                     )}
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                    <Link to={`/region/${region.id}`} className="text-gray-900 hover:underline text-sm font-bold">
+                    <Link to={`/region/${region.slug}`} className="text-gray-900 hover:underline text-sm font-bold">
                       View Region
                     </Link>
                     {isAdmin && (

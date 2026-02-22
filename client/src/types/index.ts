@@ -124,6 +124,14 @@ export interface ForumRegion {
   slug?: string; // URL-friendly version of region name
   activeThreadCount?: number; // Number of active threads
   postCount?: number; // Total posts in region
+  latestThread?: {
+    id: string;
+    title: string;
+    authorName?: string;
+    authorId?: number;
+    updatedAt: string;
+    isOnline?: boolean;
+  };
 }
 
 export interface OOCForum {
