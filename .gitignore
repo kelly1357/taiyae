@@ -1,3 +1,4 @@
 node_modules
 local.settings.json
 database/
+scripts/update-azure-settings.py
