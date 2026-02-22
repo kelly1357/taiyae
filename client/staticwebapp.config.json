@@ -3,7 +3,8 @@
     "apiRuntime": "node:20"
   },
   "navigationFallback": {
-    "rewrite": "/index.html"
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/assets/*", "*.{js,mjs,css,png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf,eot,json,map,wasm,webp,avif}"]
   },
   "routes": [
     {
@@ -17,12 +18,13 @@
     }
   },
   "globalHeaders": {
-    "content-security-policy": "default-src https: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
+    "content-security-policy": "default-src 'self' https: data: blob: wss: 'unsafe-eval' 'unsafe-inline'; object-src 'none'"
   },
   "mimeTypes": {
     ".js": "application/javascript",
     ".mjs": "application/javascript",
     ".json": "application/json",
-    ".wasm": "application/wasm"
+    ".wasm": "application/wasm",
+    ".css": "text/css"
   }
 }
