@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /my-characters
+Disallow: /account
+Disallow: /conversations
+Disallow: /confirm-email
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://horizonwolves.com/sitemap.xml

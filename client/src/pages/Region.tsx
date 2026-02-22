@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import type { ForumRegion, Thread, Character, User } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 
 // Extended type to match the API response which includes joined fields
 interface ThreadSummary extends Omit<Thread, 'replies'> {
@@ -37,6 +38,7 @@ const Region: React.FC = () => {
   const { setBackgroundUrl, resetBackground } = useBackground();
 
   const isModerator = user?.isModerator || user?.isAdmin;
+  useCustomPageTitle(region?.name);
 
   // Set background immediately if we have region data from navigation state
   useLayoutEffect(() => {

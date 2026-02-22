@@ -4,6 +4,7 @@ import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom
 import RichTextEditor from '../components/RichTextEditor';
 import AbsenceIndicator from '../components/AbsenceIndicator';
 import { useBackground } from '../contexts/BackgroundContext';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 import type { Character, ForumRegion, User } from '../types';
 
 // Helper type for the API response which flattens character/pack info
@@ -341,6 +342,7 @@ const ThreadView: React.FC = () => {
 
   const [thread, setThread] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  useCustomPageTitle(thread?.title);
   const [replyContent, setReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | number | null>(null);

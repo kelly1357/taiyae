@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import type { ForumSubarea, ForumRegion, Thread, Character, User } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 
 // Extended type to match the API response which includes joined fields
 interface ThreadSummary extends Omit<Thread, 'replies'> {
@@ -36,6 +37,7 @@ const Subarea: React.FC = () => {
   const { setBackgroundUrl, resetBackground } = useBackground();
 
   const isModerator = user?.isModerator || user?.isAdmin;
+  useCustomPageTitle(subarea?.name);
 
   const handleTogglePin = async (threadId: string) => {
     setPinningThreadId(threadId);

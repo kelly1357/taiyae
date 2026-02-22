@@ -4,6 +4,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import Header from './Header';
 import PingStaffModal from './PingStaffModal';
 import { useBackground } from '../contexts/BackgroundContext';
+import { usePageTitle } from '../hooks/usePageTitle';
 import Login from '../pages/Login';
 import type { User, Character } from '../types';
 
@@ -41,6 +42,7 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const onlineList = onlineCharacters ?? [];
   const { backgroundUrl, isGrayscale } = useBackground();
+  usePageTitle();
   const [imageError, setImageError] = useState(false);
   const [isPingModalOpen, setIsPingModalOpen] = useState(false);
   const [guestCount, setGuestCount] = useState(0);
