@@ -178,9 +178,11 @@ export default function HomepageAdmin() {
     setDeleting(submission.PlotNewsID);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/plot-news/${submission.PlotNewsID}`, {
-        method: 'DELETE',
-        headers: { 'X-Authorization': `Bearer ${token}` },
+      const ids = (submission.AllIds || String(submission.PlotNewsID)).split(',').map(Number);
+      const response = await fetch('/api/plot-news/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ ids }),
       });
       if (response.ok) {
         setPlotNewsSubmissions(prev => prev.filter(s => s.PlotNewsID !== submission.PlotNewsID));
@@ -226,13 +228,15 @@ export default function HomepageAdmin() {
       }
 
       // Delete rows for removed packs
-      for (let i = 0; i < oldPackNames.length; i++) {
-        if (!newPackNames.includes(oldPackNames[i]) && oldIds[i]) {
-          await fetch(`/api/plot-news/${oldIds[i]}`, {
-            method: 'DELETE',
-            headers: { 'X-Authorization': `Bearer ${token}` },
-          });
-        }
+      const idsToDelete = oldPackNames
+        .map((p, i) => (!newPackNames.includes(p) && oldIds[i]) ? oldIds[i] : null)
+        .filter((id): id is number => id !== null);
+      if (idsToDelete.length > 0) {
+        await fetch('/api/plot-news/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ ids: idsToDelete }),
+        });
       }
 
       // Insert rows for added packs
