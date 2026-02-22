@@ -16,6 +16,7 @@ interface Region {
   description: string;
   imageUrl?: string;
   headerImageUrl?: string;
+  slug?: string;
   subareas: Subarea[];
 }
 
