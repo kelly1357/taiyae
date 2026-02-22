@@ -1,15 +1,22 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getPool } from "../db";
 
-// GET /api/activity-tracker - Get characters that need activity (haven't posted recently)
+// GET /api/activity-tracker - Get characters at risk of inactivation at the next monthly check
 export async function getActivityTracker(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const pool = await getPool();
         
-        // Cutoff date: December 31, 2025
-        const cutoffDate = new Date('2025-12-31T23:59:59.999Z');
+        // Next check = last day of the current month
+        const now = new Date();
+        const nextCheckDate = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999));
         
-        // Get all active characters who haven't posted since the cutoff date or never posted
+        // Characters are inactivated if they haven't posted within 30 days of the check.
+        // So the cutoff is: nextCheckDate - 30 days. Any character whose last IC post
+        // is before this date (or who never posted) will be 30+ days inactive by the check.
+        const cutoffDate = new Date(nextCheckDate);
+        cutoffDate.setDate(cutoffDate.getDate() - 30);
+        
+        // Get all active characters whose last IC post is before the cutoff (or never posted)
         const result = await pool.request()
             .input('cutoffDate', cutoffDate)
             .query(`
@@ -27,7 +34,7 @@ export async function getActivityTracker(request: HttpRequest, context: Invocati
                     ) as LastICPostAt
                 FROM Character c
                 JOIN [User] u ON c.UserID = u.UserID
-                WHERE c.Is_Active = 1
+                WHERE COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'
                 AND (
                     NOT EXISTS (
                         SELECT 1 FROM Post p
@@ -44,6 +51,7 @@ export async function getActivityTracker(request: HttpRequest, context: Invocati
             status: 200, 
             jsonBody: {
                 characters: result.recordset,
+                nextCheckDate: nextCheckDate.toISOString(),
                 cutoffDate: cutoffDate.toISOString()
             }
         };

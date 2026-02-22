@@ -23,7 +23,6 @@ const ActivityTracker: React.FC = () => {
 
   useEffect(() => {
     fetchInactiveCharacters();
-    calculateNextCheckDate();
     fetchBirthdayCount();
   }, []);
 
@@ -45,36 +44,21 @@ const ActivityTracker: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setCharacters(data.characters || []);
+        
+        // Use dates from API
+        const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'numeric', day: 'numeric', year: 'numeric' };
+        if (data.nextCheckDate) {
+          setNextCheckDate(new Date(data.nextCheckDate).toLocaleDateString('en-US', options));
+        }
+        if (data.cutoffDate) {
+          setPostCutoffDate(new Date(data.cutoffDate).toLocaleDateString('en-US', options));
+        }
       }
     } catch (error) {
       console.error('Error fetching activity data:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateNextCheckDate = () => {
-    // Activity checks happen on the last day of each month
-    const now = new Date();
-    let nextCheck: Date;
-    
-    // Get the last day of the current month
-    const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
-    // If we're past the last day of the month, get the last day of next month
-    if (now > lastDayOfCurrentMonth) {
-      nextCheck = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-    } else {
-      nextCheck = lastDayOfCurrentMonth;
-    }
-    
-    // Post cutoff is 7 days before the check
-    const cutoff = new Date(nextCheck);
-    cutoff.setDate(cutoff.getDate() - 7);
-    
-    const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'numeric', day: 'numeric', year: 'numeric' };
-    setNextCheckDate(nextCheck.toLocaleDateString('en-US', options));
-    setPostCutoffDate(cutoff.toLocaleDateString('en-US', options));
   };
 
   const handleSort = (field: SortField) => {
@@ -147,11 +131,10 @@ const ActivityTracker: React.FC = () => {
         
         <div className="text-sm text-gray-800 space-y-3 mb-6">
           <p>
-            • All characters who haven't posted since the last check are automatically shown in this list. 
-            Note that directly after a check, all characters will start out on the list!
+            • This list shows all active characters who will not have posted within 30 days by the next activity check.
           </p>
           <p>
-            • To get your character's name off the list, just make an IC post before the next check.
+            • To get your character's name off the list, just make an IC post before the cutoff date.
           </p>
           <p>
             • Characters left on the list by the next check date will become Inactive.
@@ -159,7 +142,7 @@ const ActivityTracker: React.FC = () => {
         </div>
 
         <div className="bg-gray-100 border border-gray-300 px-4 py-3 mb-6 text-sm text-gray-700">
-          The next check is scheduled for <strong>{nextCheckDate}</strong>, and the post cutoff will be <strong>{postCutoffDate}</strong>.
+          The next check is scheduled for <strong>{nextCheckDate}</strong>. Characters must have an IC post after <strong>{postCutoffDate}</strong> (30 days before the check) to stay active.
         </div>
 
         {/* The List Section */}
