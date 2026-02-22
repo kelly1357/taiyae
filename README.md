@@ -75,9 +75,9 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 
 ✅  Skill points enhancement (quantity, verifications, starting SP claim)
 
-[ ] Forgot password feature
+✅ Forgot password feature
 
-[ ] Email server
+✅ Email server
 
 ✅  User Status: Active, Joining, Banned
 
@@ -120,7 +120,5 @@ The project originated as **Taiyae** in the early 2000s on AvidGamers before eve
 🤓 Marshall - **Backend and infrastructure engineering**
 
 🙋🏼‍♀️ Kelly - **Frontend design and feature definition** 
-
-🐺 Chelsie - **Developer TBD**
 
 🦾 Claude Code - **Code architect and implementation**

@@ -106,6 +106,10 @@ const Login: React.FC<LoginProps> = ({ onLogin, compact = false }) => {
         if (data.error === 'banned') {
           setIsBanned(true);
           setError(data.message || 'Your account has been banned.');
+        } else if (data.error === 'email_not_verified' || data.needsConfirmation) {
+          setNeedsConfirmation(true);
+          setConfirmationEmail(data.email || email);
+          setError('Please verify your email address before logging in.');
         } else {
           setError(data.body || data.message || 'Authentication failed');
         }
