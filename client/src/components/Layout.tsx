@@ -372,16 +372,12 @@ const Layout: React.FC<LayoutProps> = ({
                 Cbox | <span className="font-bold">Discord</span>
               </div>
               <div className="p-0">
-                <iframe 
-                  src="https://www3.cbox.ws/box/?boxid=3551299&boxtag=D5M2uo" 
-                  width="100%" 
-                  height="450" 
-                  allowTransparency={true}
-                  allow="autoplay" 
-                  frameBorder="0" 
-                  marginHeight={0} 
-                  marginWidth={0} 
-                  scrolling="auto"
+                <iframe
+                  src="https://www3.cbox.ws/box/?boxid=3551299&boxtag=D5M2uo"
+                  width="100%"
+                  height="450"
+                  allow="autoplay"
+                  style={{ border: 0, margin: 0 }}
                   title="Cbox Chat"
                 ></iframe>
               </div>
