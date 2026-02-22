@@ -231,9 +231,9 @@ const Weather: React.FC = () => {
 
         {/* Flavor Text */}
         <div className="mt-8 text-xs text-gray-500 italic text-center">
-          Weather patterns based on the Pacific Northwest climate of the early 1900s.
+          Weather patterns based on the Pacific Northwest climate of the early 1800s.
           <br />
-          The Horizon Valley experiences four distinct seasons with weather typical of the Washington State region.
+          The Horizon Valley experiences four distinct seasons shaped by the cooler, harsher conditions of the era.
         </div>
       </div>
     </section>
