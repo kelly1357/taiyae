@@ -54,6 +54,10 @@ a {
 .dropdown-link {
   color: black !important;
 }
+.dropdown-link span.bg-red-600,
+.dropdown-link span.bg-red-500 {
+  color: white !important;
+}
 .dropdown-link:hover {
   color: black !important;
   background-color: #f3f4f6;

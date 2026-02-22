@@ -250,7 +250,7 @@ app.http('getPendingPlotNews', {
     handler: getPendingPlotNews
 });
 
-// GET /api/plot-news/pending/count
+// GET /api/plot-news/pending-count
 // Get count of pending plot news (for notification badge)
 export async function getPendingPlotNewsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     // Verify staff authorization
@@ -284,7 +284,7 @@ export async function getPendingPlotNewsCount(request: HttpRequest, context: Inv
 app.http('getPendingPlotNewsCount', {
     methods: ['GET'],
     authLevel: 'anonymous',
-    route: 'plot-news/pending/count',
+    route: 'plot-news/pending-count',
     handler: getPendingPlotNewsCount
 });
 
