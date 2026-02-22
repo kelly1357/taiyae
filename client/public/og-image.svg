@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <!-- Background gradient - dark forest atmosphere -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1f2e"/>
+      <stop offset="50%" style="stop-color:#2d3548"/>
+      <stop offset="100%" style="stop-color:#1f2937"/>
+    </linearGradient>
+    <!-- Subtle light from above -->
+    <radialGradient id="glow" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" style="stop-color:#4b5563;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#1a1f2e;stop-opacity:0"/>
+    </radialGradient>
+    <!-- Mountain gradient -->
+    <linearGradient id="mountain" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#374151"/>
+      <stop offset="100%" style="stop-color:#1f2937"/>
+    </linearGradient>
+    <!-- Tree gradient -->
+    <linearGradient id="tree" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d3548"/>
+      <stop offset="100%" style="stop-color:#1a1f2e"/>
+    </linearGradient>
+    <!-- Fog effect -->
+    <linearGradient id="fog" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#9ca3af;stop-opacity:0"/>
+      <stop offset="30%" style="stop-color:#9ca3af;stop-opacity:0.06"/>
+      <stop offset="50%" style="stop-color:#9ca3af;stop-opacity:0.08"/>
+      <stop offset="70%" style="stop-color:#9ca3af;stop-opacity:0.06"/>
+      <stop offset="100%" style="stop-color:#9ca3af;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Distant mountains -->
+  <path d="M0,420 L100,340 L200,370 L350,280 L450,350 L550,300 L650,260 L750,310 L850,270 L950,330 L1050,290 L1150,350 L1200,320 L1200,630 L0,630 Z" fill="url(#mountain)" opacity="0.5"/>
+  <path d="M0,450 L80,380 L180,410 L300,350 L420,400 L500,360 L620,330 L720,380 L840,340 L940,390 L1060,350 L1140,380 L1200,360 L1200,630 L0,630 Z" fill="url(#mountain)" opacity="0.7"/>
+
+  <!-- Treeline silhouettes - back row -->
+  <g fill="#1f2937" opacity="0.8">
+    <!-- Back trees -->
+    <path d="M-10,470 L10,390 L20,420 L30,370 L40,410 L60,470 Z"/>
+    <path d="M50,470 L70,380 L80,410 L90,360 L100,400 L120,470 Z"/>
+    <path d="M110,470 L130,370 L140,400 L150,350 L160,390 L180,470 Z"/>
+    <path d="M170,470 L190,385 L200,415 L210,365 L220,405 L240,470 Z"/>
+    <path d="M230,470 L250,375 L260,405 L270,355 L280,395 L300,470 Z"/>
+    <path d="M290,470 L310,380 L320,410 L330,360 L340,400 L360,470 Z"/>
+    <path d="M350,470 L370,370 L380,400 L390,345 L400,385 L420,470 Z"/>
+    <path d="M410,470 L430,385 L440,415 L450,365 L460,405 L480,470 Z"/>
+    <path d="M470,470 L490,375 L500,405 L510,355 L520,395 L540,470 Z"/>
+    <path d="M530,470 L550,380 L560,410 L570,358 L580,398 L600,470 Z"/>
+    <path d="M590,470 L610,372 L620,402 L630,352 L640,392 L660,470 Z"/>
+    <path d="M650,470 L670,385 L680,415 L690,363 L700,403 L720,470 Z"/>
+    <path d="M710,470 L730,378 L740,408 L750,356 L760,396 L780,470 Z"/>
+    <path d="M770,470 L790,370 L800,400 L810,348 L820,388 L840,470 Z"/>
+    <path d="M830,470 L850,382 L860,412 L870,360 L880,400 L900,470 Z"/>
+    <path d="M890,470 L910,375 L920,405 L930,353 L940,393 L960,470 Z"/>
+    <path d="M950,470 L970,380 L980,410 L990,358 L1000,398 L1020,470 Z"/>
+    <path d="M1010,470 L1030,372 L1040,402 L1050,350 L1060,390 L1080,470 Z"/>
+    <path d="M1070,470 L1090,378 L1100,408 L1110,356 L1120,396 L1140,470 Z"/>
+    <path d="M1130,470 L1150,385 L1160,415 L1170,363 L1180,403 L1210,470 Z"/>
+  </g>
+
+  <!-- Fog layer -->
+  <rect x="0" y="380" width="1200" height="80" fill="url(#fog)"/>
+
+  <!-- Front treeline silhouettes -->
+  <g fill="#111827" opacity="0.9">
+    <path d="M-20,530 L10,430 L25,470 L40,410 L55,460 L80,530 Z"/>
+    <path d="M60,530 L90,440 L105,475 L120,420 L135,465 L160,530 Z"/>
+    <path d="M140,530 L165,445 L178,478 L192,425 L205,468 L230,530 Z"/>
+    <path d="M940,530 L965,435 L978,470 L992,415 L1005,460 L1030,530 Z"/>
+    <path d="M1020,530 L1045,440 L1058,475 L1072,418 L1085,463 L1110,530 Z"/>
+    <path d="M1090,530 L1115,445 L1128,478 L1142,422 L1155,467 L1180,530 Z"/>
+    <path d="M1160,530 L1185,438 L1198,472 L1212,420 L1225,465 L1250,530 Z"/>
+  </g>
+
+  <!-- Ground -->
+  <rect x="0" y="530" width="1200" height="100" fill="#111827"/>
+
+  <!-- Wolf silhouette - centered, standing on ridge -->
+  <g transform="translate(520, 430) scale(0.9)" fill="#111827">
+    <!-- Wolf body - howling pose -->
+    <path d="
+      M80,85 
+      C75,80 68,60 65,45 
+      C63,35 60,25 55,18 
+      C52,13 48,5 45,0 
+      C44,2 43,8 44,15 
+      C45,22 48,30 50,38 
+      C47,35 42,30 38,28 
+      C40,33 43,38 46,43 
+      C43,42 39,40 35,39 
+      C38,43 42,46 47,48 
+      C50,52 52,60 55,68 
+      C58,75 62,80 65,85 
+      L60,85 
+      C55,82 45,78 35,80 
+      C25,82 15,85 5,88 
+      C0,90 -5,92 -10,95 
+      C-8,95 -2,93 5,92 
+      C-5,97 -8,105 -6,112 
+      L-2,112 
+      C-3,105 -1,97 5,92 
+      C15,90 25,88 35,87 
+      C30,95 28,105 27,112 
+      L31,112 
+      C32,105 34,95 38,90 
+      C50,88 60,88 70,90 
+      C75,92 78,95 80,100 
+      C82,105 83,108 83,112 
+      L87,112 
+      C87,105 85,98 82,92 
+      C90,95 95,100 98,108 
+      C99,110 100,112 100,112 
+      L104,112 
+      C103,105 98,95 90,88 
+      C95,85 92,82 88,80 
+      C85,78 82,82 80,85 
+      Z
+    " opacity="0.95"/>
+  </g>
+
+  <!-- Second smaller wolf silhouette -->
+  <g transform="translate(680, 455) scale(0.55)" fill="#111827">
+    <path d="
+      M80,85 
+      C78,82 74,72 72,62 
+      C70,55 68,50 65,48 
+      C62,50 58,55 55,62 
+      C52,55 48,50 45,48 
+      C42,50 40,55 38,62 
+      C35,55 30,50 25,48 
+      C22,50 18,55 15,65 
+      C10,70 5,78 0,85 
+      C-2,88 -3,92 -2,95 
+      C0,95 5,92 10,90 
+      C8,97 6,105 7,112 
+      L11,112 
+      C12,105 13,97 15,92 
+      C25,90 35,88 45,87 
+      C40,95 38,105 39,112 
+      L43,112 
+      C44,105 46,95 50,90 
+      C60,88 70,87 80,90 
+      C82,95 84,105 84,112 
+      L88,112 
+      C88,105 86,95 82,88 
+      C85,85 82,82 80,85 
+      Z
+    " opacity="0.9"/>
+  </g>
+
+  <!-- Decorative line -->
+  <line x1="400" y1="248" x2="800" y2="248" stroke="#6b7280" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Title text: HORIZON -->
+  <text x="600" y="300" text-anchor="middle" fill="#e5e7eb" font-family="Baskerville, 'Times New Roman', Georgia, serif" font-size="88" font-weight="400" letter-spacing="24">HORIZON</text>
+
+  <!-- Decorative line -->
+  <line x1="400" y1="318" x2="800" y2="318" stroke="#6b7280" stroke-width="0.5" opacity="0.6"/>
+
+  <!-- Tagline -->
+  <text x="600" y="352" text-anchor="middle" fill="#9ca3af" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="300" letter-spacing="6">WOLF ROLEPLAY</text>
+
+  <!-- Subtle stars -->
+  <circle cx="150" cy="80" r="1" fill="#d1d5db" opacity="0.4"/>
+  <circle cx="320" cy="50" r="1.2" fill="#d1d5db" opacity="0.3"/>
+  <circle cx="500" cy="100" r="0.8" fill="#d1d5db" opacity="0.5"/>
+  <circle cx="700" cy="60" r="1" fill="#d1d5db" opacity="0.35"/>
+  <circle cx="850" cy="90" r="1.3" fill="#d1d5db" opacity="0.4"/>
+  <circle cx="1000" cy="45" r="0.9" fill="#d1d5db" opacity="0.3"/>
+  <circle cx="1100" cy="110" r="1.1" fill="#d1d5db" opacity="0.45"/>
+  <circle cx="250" cy="130" r="0.7" fill="#d1d5db" opacity="0.25"/>
+  <circle cx="450" cy="40" r="1" fill="#d1d5db" opacity="0.3"/>
+  <circle cx="780" cy="130" r="0.8" fill="#d1d5db" opacity="0.35"/>
+  <circle cx="950" cy="120" r="1" fill="#d1d5db" opacity="0.3"/>
+  <circle cx="80" cy="150" r="0.9" fill="#d1d5db" opacity="0.2"/>
+
+  <!-- Subtle border -->
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="#374151" stroke-width="1" opacity="0.3"/>
+</svg>
