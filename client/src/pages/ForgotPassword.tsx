@@ -36,7 +36,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <section className="bg-white border border-gray-300 shadow max-w-lg mx-auto mt-8">
+    <section className="bg-white border border-gray-300 shadow">
       <div className="bg-[#2f3a2f] px-4 py-2 dark-header">
         <h2 className="text-xs font-normal uppercase tracking-wider text-[#fff9]">Forgot Password</h2>
       </div>
