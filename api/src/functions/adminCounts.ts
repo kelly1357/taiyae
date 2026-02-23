@@ -63,6 +63,6 @@ export async function getAdminCounts(request: HttpRequest, context: InvocationCo
 app.http('getAdminCounts', {
     methods: ['GET'],
     authLevel: 'anonymous',
-    route: 'admin/counts',
+    route: 'staff-counts',
     handler: getAdminCounts
 });

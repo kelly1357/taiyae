@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-        const res = await fetch('/api/admin/counts', {
+        const res = await fetch('/api/staff-counts', {
           headers: { 'X-Authorization': `Bearer ${token}` }
         });
         if (!res.ok) return;
