@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import AbsenceIndicator from '../components/AbsenceIndicator';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 import type { Character, ThreadlogEntry, User } from '../types';
 
 interface LayoutContext {
@@ -69,6 +70,7 @@ const CharacterProfile: React.FC = () => {
   const isOwner = user && character && (
     Number(user.id) === Number((character as any).odUserId)
   );
+  useCustomPageTitle(character?.name);
 
   // Debug log
   console.log('isOwner check:', { userId: user?.id, charOdUserId: (character as any)?.odUserId, isOwner });

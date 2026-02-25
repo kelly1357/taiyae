@@ -4,6 +4,7 @@ import { useParams, Link, useLocation, useOutletContext } from 'react-router-dom
 import type { OOCForum, Thread, User } from '../types';
 import NewThreadModal from '../components/NewThreadModal';
 import { useBackground } from '../contexts/BackgroundContext';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 
 interface ThreadSummary extends Omit<Thread, 'replies'> {
   authorName: string;
@@ -34,6 +35,7 @@ const OOCForumPage: React.FC = () => {
   const { resetBackground } = useBackground();
 
   const isModerator = user?.isModerator || user?.isAdmin;
+  useCustomPageTitle(forum?.title);
 
   // Reset background on unmount (or set specific one if desired)
   useEffect(() => {

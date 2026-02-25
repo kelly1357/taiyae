@@ -61,21 +61,18 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     const fetchAllCounts = async () => {
       try {
         const token = localStorage.getItem('token');
-        const authHeaders = { 'X-Authorization': `Bearer ${token}` };
-        const [skillPoints, plotNews, achievements, inactiveChars, staffPings, userApprovals] = await Promise.all([
-          fetch('/api/skill-points-approval/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/plot-news/pending/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/achievements/requests/pending/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/moderation/characters-to-inactivate/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/staff-pings/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 }),
-          fetch('/api/user-approval/count', { headers: authHeaders }).then(r => r.ok ? r.json() : { count: 0 })
-        ]);
-        setPendingSkillPointsCount(skillPoints.count || 0);
-        setPendingPlotNewsCount(plotNews.count || 0);
-        setPendingAchievementsCount(achievements.count || 0);
-        setPendingInactiveCharactersCount(inactiveChars.count || 0);
-        setPendingStaffPingsCount(staffPings.count || 0);
-        setPendingUserApprovalsCount(userApprovals.count || 0);
+        if (!token) return;
+        const res = await fetch('/api/staff-counts', {
+          headers: { 'X-Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setPendingSkillPointsCount(data.skillPoints || 0);
+        setPendingPlotNewsCount(data.plotNews || 0);
+        setPendingAchievementsCount(data.achievements || 0);
+        setPendingInactiveCharactersCount(data.inactiveCharacters || 0);
+        setPendingStaffPingsCount(data.staffPings || 0);
+        setPendingUserApprovalsCount(data.userApprovals || 0);
       } catch {
         // Silently fail
       }
@@ -83,6 +80,9 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
 
     // Initial fetch
     fetchAllCounts();
+
+    // Refresh counts periodically (every 60 seconds)
+    const interval = setInterval(fetchAllCounts, 60 * 1000);
 
     // Listen for SignalR admin count updates
     const handleAdminCountUpdate = (event: Event) => {
@@ -108,6 +108,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
     window.addEventListener('signalr:adminCountUpdate', handleAdminCountUpdate);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener('signalr:adminCountUpdate', handleAdminCountUpdate);
     };
   }, [isModerator, isAdmin]);
@@ -319,7 +320,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
             <DropdownLink to="#">Social Media</DropdownLink>
           </NavDropdown>
           {(isModerator || isAdmin) && (
-            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
+            <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
               {/* Approvals Section */}
               <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-200">Approvals</div>
               <DropdownLink to="/admin/user-approvals">
@@ -352,6 +353,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
               <DropdownLink to="/admin/inactive-characters">
                 <span className="flex items-center justify-between w-full">
                   Characters
+                  {pendingInactiveCharactersCount > 0 && <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingInactiveCharactersCount}</span>}
                 </span>
               </DropdownLink>
               <DropdownLink to="/admin/packs">

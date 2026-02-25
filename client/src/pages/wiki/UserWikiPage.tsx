@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import RichTextEditor from '../../components/RichTextEditor';
 import WikiSearchBox from '../../components/WikiSearchBox';
+import { useCustomPageTitle } from '../../hooks/usePageTitle';
 import type { User } from '../../types';
 
 interface WikiPageData {
@@ -38,6 +39,7 @@ const UserWikiPage: React.FC = () => {
   const isCreator = pageData?.CreatedByUserID === user?.id;
   const canEdit = user && !pageData?.IsHandbook; // Any logged-in user can edit user pages
   const canDelete = isCreator || isModerator;
+  useCustomPageTitle(pageData?.Title);
 
   useEffect(() => {
     const fetchPage = async () => {

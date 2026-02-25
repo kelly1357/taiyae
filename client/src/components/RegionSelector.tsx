@@ -51,7 +51,7 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({ onSelect, className = '
       >
         <option value="" disabled>Select a region...</option>
         {regions.map(region => (
-          <option key={region.id} value={region.id}>
+          <option key={region.id} value={region.slug || region.id}>
             {region.name}
           </option>
         ))}

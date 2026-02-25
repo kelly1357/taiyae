@@ -1,7 +1,9 @@
 /**
  * Pacific Northwest Weather Generator
  * Generates deterministic weather based on Horizon season and week number
- * Designed for the Horizon Valley setting (Washington State area, early 1900s)
+ * Designed for the Horizon Valley setting (Washington State area, early 1800s)
+ * Climate reflects the tail end of the Little Ice Age — cooler temperatures,
+ * harsher winters, heavier precipitation, and shorter/milder summers.
  * 
  * Each season phase has 28 days = 4 weeks
  * Week labels: "Early Summer Week 1", "Early Summer Week 2", etc.
@@ -73,36 +75,38 @@ const WEATHER_CONDITIONS: Record<string, WeatherCondition> = {
   thunderstorm: { type: 'thunderstorm', description: 'Thunderstorm', icon: '⛈️' },
 };
 
-// Season-based temperature ranges (Fahrenheit) for Pacific Northwest
+// Season-based temperature ranges (Fahrenheit) for Pacific Northwest, early 1800s
+// Reflects Little Ice Age conditions: ~4-5°F cooler than modern averages
 const SEASON_TEMP_RANGES: Record<string, { high: [number, number]; low: [number, number] }> = {
-  'Full Winter': { high: [35, 45], low: [25, 35] },
-  'Late Winter': { high: [40, 50], low: [30, 40] },
-  'Early Spring': { high: [50, 60], low: [35, 45] },
-  'Full Spring': { high: [55, 68], low: [40, 50] },
-  'Late Spring': { high: [62, 75], low: [45, 55] },
-  'Early Summer': { high: [70, 82], low: [52, 62] },
-  'Full Summer': { high: [78, 92], low: [58, 68] },
-  'Late Summer': { high: [72, 85], low: [55, 65] },
-  'Early Autumn': { high: [60, 72], low: [45, 55] },
-  'Full Autumn': { high: [50, 62], low: [38, 48] },
-  'Late Autumn': { high: [42, 52], low: [32, 42] },
-  'Early Winter': { high: [38, 48], low: [28, 38] },
+  'Full Winter': { high: [28, 38], low: [18, 28] },
+  'Late Winter': { high: [33, 44], low: [22, 33] },
+  'Early Spring': { high: [44, 55], low: [30, 40] },
+  'Full Spring': { high: [50, 62], low: [35, 45] },
+  'Late Spring': { high: [56, 68], low: [40, 50] },
+  'Early Summer': { high: [64, 76], low: [47, 57] },
+  'Full Summer': { high: [72, 84], low: [52, 62] },
+  'Late Summer': { high: [66, 78], low: [50, 60] },
+  'Early Autumn': { high: [55, 66], low: [40, 50] },
+  'Full Autumn': { high: [44, 56], low: [33, 43] },
+  'Late Autumn': { high: [36, 46], low: [26, 36] },
+  'Early Winter': { high: [32, 42], low: [22, 32] },
 };
 
 // Weather probability weights by season (higher = more likely)
+// Early 1800s: harsher winters, more precipitation, more overcast days
 const SEASON_WEATHER_WEIGHTS: Record<string, Record<string, number>> = {
-  'Full Winter': { clear: 10, 'partly-cloudy': 15, cloudy: 20, overcast: 25, rain: 15, snow: 25, 'heavy-snow': 10, fog: 15, sleet: 8 },
-  'Late Winter': { clear: 15, 'partly-cloudy': 20, cloudy: 20, overcast: 20, rain: 25, drizzle: 15, snow: 15, fog: 15 },
-  'Early Spring': { clear: 20, 'partly-cloudy': 25, cloudy: 20, overcast: 15, rain: 30, drizzle: 20, fog: 10 },
-  'Full Spring': { clear: 30, 'partly-cloudy': 30, cloudy: 15, rain: 25, drizzle: 15, thunderstorm: 5 },
-  'Late Spring': { clear: 35, 'partly-cloudy': 30, cloudy: 15, rain: 20, drizzle: 10, thunderstorm: 8 },
-  'Early Summer': { clear: 45, 'partly-cloudy': 30, cloudy: 10, rain: 10, thunderstorm: 5 },
-  'Full Summer': { clear: 55, 'partly-cloudy': 25, cloudy: 8, rain: 5, thunderstorm: 7 },
-  'Late Summer': { clear: 45, 'partly-cloudy': 30, cloudy: 12, rain: 10, thunderstorm: 5, fog: 5 },
-  'Early Autumn': { clear: 30, 'partly-cloudy': 25, cloudy: 20, overcast: 15, rain: 25, drizzle: 15, fog: 15 },
-  'Full Autumn': { clear: 20, 'partly-cloudy': 20, cloudy: 25, overcast: 20, rain: 30, drizzle: 20, fog: 20 },
-  'Late Autumn': { clear: 15, 'partly-cloudy': 15, cloudy: 25, overcast: 25, rain: 30, drizzle: 15, fog: 20, sleet: 5 },
-  'Early Winter': { clear: 12, 'partly-cloudy': 15, cloudy: 22, overcast: 25, rain: 20, snow: 20, fog: 18, sleet: 8 },
+  'Full Winter': { clear: 6, 'partly-cloudy': 10, cloudy: 20, overcast: 28, rain: 12, snow: 32, 'heavy-snow': 18, fog: 18, sleet: 12 },
+  'Late Winter': { clear: 10, 'partly-cloudy': 15, cloudy: 22, overcast: 24, rain: 22, drizzle: 12, snow: 22, 'heavy-snow': 8, fog: 18, sleet: 8 },
+  'Early Spring': { clear: 15, 'partly-cloudy': 20, cloudy: 22, overcast: 20, rain: 32, drizzle: 22, snow: 8, fog: 14 },
+  'Full Spring': { clear: 22, 'partly-cloudy': 25, cloudy: 18, overcast: 10, rain: 30, drizzle: 18, thunderstorm: 5, fog: 8 },
+  'Late Spring': { clear: 28, 'partly-cloudy': 28, cloudy: 18, rain: 25, drizzle: 14, thunderstorm: 6, fog: 5 },
+  'Early Summer': { clear: 38, 'partly-cloudy': 28, cloudy: 14, rain: 15, drizzle: 8, thunderstorm: 5 },
+  'Full Summer': { clear: 45, 'partly-cloudy': 28, cloudy: 12, rain: 10, drizzle: 5, thunderstorm: 6 },
+  'Late Summer': { clear: 38, 'partly-cloudy': 28, cloudy: 16, rain: 14, drizzle: 8, thunderstorm: 5, fog: 8 },
+  'Early Autumn': { clear: 22, 'partly-cloudy': 22, cloudy: 22, overcast: 18, rain: 30, drizzle: 18, fog: 18 },
+  'Full Autumn': { clear: 14, 'partly-cloudy': 16, cloudy: 26, overcast: 24, rain: 34, drizzle: 22, fog: 24, sleet: 5 },
+  'Late Autumn': { clear: 10, 'partly-cloudy': 12, cloudy: 26, overcast: 28, rain: 28, drizzle: 15, snow: 8, fog: 24, sleet: 10 },
+  'Early Winter': { clear: 8, 'partly-cloudy': 12, cloudy: 22, overcast: 28, rain: 18, snow: 26, 'heavy-snow': 10, fog: 20, sleet: 12 },
 };
 
 // Wind directions

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 
 interface PackMember {
   id: number;
@@ -69,6 +70,7 @@ const PackPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [plotNews, setPlotNews] = useState<PlotNewsItem[]>([]);
   const [allPacks, setAllPacks] = useState<PackInfo[]>([]);
+  useCustomPageTitle(pack?.name);
 
   useEffect(() => {
     if (!packSlug) return;

@@ -250,7 +250,7 @@ app.http('getPendingPlotNews', {
     handler: getPendingPlotNews
 });
 
-// GET /api/plot-news/pending/count
+// GET /api/plot-news/pending-count
 // Get count of pending plot news (for notification badge)
 export async function getPendingPlotNewsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     // Verify staff authorization
@@ -284,7 +284,7 @@ export async function getPendingPlotNewsCount(request: HttpRequest, context: Inv
 app.http('getPendingPlotNewsCount', {
     methods: ['GET'],
     authLevel: 'anonymous',
-    route: 'plot-news/pending/count',
+    route: 'plot-news/pending-count',
     handler: getPendingPlotNewsCount
 });
 
@@ -432,8 +432,8 @@ app.http('updatePlotNews', {
     handler: updatePlotNews
 });
 
-// DELETE /api/plot-news/:id
-// Delete a plot news item
+// DELETE /api/plot-news/delete
+// Delete a group of plot news items by their IDs
 export async function deletePlotNews(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     // Verify staff authorization
     const auth = await verifyStaffAuth(request);
@@ -442,51 +442,27 @@ export async function deletePlotNews(request: HttpRequest, context: InvocationCo
     }
 
     try {
-        const plotNewsId = request.params.id;
+        const body = await request.json() as { ids: number[] };
+        const ids = body.ids;
 
-        if (!plotNewsId) {
-            return { status: 400, body: "plotNewsId is required" };
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return { status: 400, jsonBody: { error: "ids array is required" } };
         }
 
         const pool = await getPool();
 
-        // Get the item details to find related entries
-        const itemResult = await pool.request()
-            .input('plotNewsId', sql.Int, parseInt(plotNewsId))
-            .query(`
-                SELECT NewsText, ThreadURL, SubmittedByUserID, SubmittedAt
-                FROM PlotNews
-                WHERE PlotNewsID = @plotNewsId
-            `);
+        // Build parameterized IN clause
+        const req = pool.request();
+        const params = ids.map((id, i) => {
+            req.input(`id${i}`, sql.Int, id);
+            return `@id${i}`;
+        });
 
-        if (itemResult.recordset.length === 0) {
-            return { status: 404, body: "Plot news item not found" };
-        }
-
-        const item = itemResult.recordset[0];
-
-        // Delete all related entries (same submission group)
-        await pool.request()
-            .input('newsText', sql.NVarChar, item.NewsText)
-            .input('threadURL', sql.NVarChar, item.ThreadURL)
-            .input('submittedByUserID', sql.Int, item.SubmittedByUserID)
-            .input('submittedAt', sql.DateTime, item.SubmittedAt)
-            .query(`
-                DELETE FROM PlotNews
-                WHERE NewsText = @newsText
-                    AND ISNULL(ThreadURL, '') = ISNULL(@threadURL, '')
-                    AND SubmittedByUserID = @submittedByUserID
-                    AND ABS(DATEDIFF(SECOND, SubmittedAt, @submittedAt)) <= 5
-                    AND IsApproved = 0
-            `);
-
-        // Broadcast updated count to staff group
-        const newCount = await getCurrentPendingCount();
-        context.extraOutputs.set(signalROutput, [{
-            target: 'adminCountUpdate',
-            groupName: 'staff',
-            arguments: [{ type: 'plotNews', count: newCount }]
-        }]);
+        await req.query(`
+            DELETE FROM PlotNews
+            WHERE PlotNewsID IN (${params.join(',')})
+              AND IsApproved = 0
+        `);
 
         return {
             status: 200,
@@ -499,10 +475,9 @@ export async function deletePlotNews(request: HttpRequest, context: InvocationCo
 }
 
 app.http('deletePlotNews', {
-    methods: ['DELETE'],
+    methods: ['POST'],
     authLevel: 'anonymous',
-    route: 'plot-news/{id}',
-    extraOutputs: [signalROutput],
+    route: 'plot-news/delete',
     handler: deletePlotNews
 });
 

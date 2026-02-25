@@ -4,6 +4,7 @@ import { useParams, Link, useOutletContext, useLocation } from 'react-router-dom
 import RichTextEditor from '../components/RichTextEditor';
 import AbsenceIndicator from '../components/AbsenceIndicator';
 import { useBackground } from '../contexts/BackgroundContext';
+import { useCustomPageTitle } from '../hooks/usePageTitle';
 import type { Character, ForumRegion, User } from '../types';
 
 // Helper type for the API response which flattens character/pack info
@@ -341,6 +342,7 @@ const ThreadView: React.FC = () => {
 
   const [thread, setThread] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  useCustomPageTitle(thread?.title);
   const [replyContent, setReplyContent] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | number | null>(null);
@@ -676,7 +678,7 @@ const ThreadView: React.FC = () => {
         setShowDeleteThreadConfirm(false);
         // Navigate back to region or home
         if (thread?.regionId) {
-          window.location.href = `/region/${thread.regionId}`;
+          window.location.href = `/region/${thread.regionSlug || thread.regionId}`;
         } else if (thread?.oocForumId) {
           window.location.href = `/ooc-forums/${thread.oocForumId}`;
         } else {
@@ -954,7 +956,7 @@ const ThreadView: React.FC = () => {
                 {thread.oocForumName || 'OOC Forum'}
               </Link>
             ) : (
-              <Link to={`/region/${thread.regionId}`} className="hover:text-white">
+              <Link to={`/region/${thread.regionSlug || thread.regionId}`} className="hover:text-white">
                 {thread.regionName || 'Thread'}
               </Link>
             )}

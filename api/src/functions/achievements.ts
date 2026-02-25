@@ -342,7 +342,7 @@ export async function getPendingAchievementRequests(request: HttpRequest, contex
     }
 }
 
-// GET /api/achievements/requests/pending/count - Get count of pending requests
+// GET /api/achievements/requests/pending-count - Get count of pending requests
 export async function getPendingAchievementRequestsCount(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     // Verify staff authorization
     const auth = await verifyStaffAuth(request);
@@ -551,7 +551,7 @@ app.http('getPendingAchievementRequests', {
 app.http('getPendingAchievementRequestsCount', {
     methods: ['GET'],
     authLevel: 'anonymous',
-    route: 'achievements/requests/pending/count',
+    route: 'achievements/requests/pending-count',
     handler: getPendingAchievementRequestsCount
 });
 
