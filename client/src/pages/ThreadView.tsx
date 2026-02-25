@@ -949,7 +949,7 @@ const ThreadView: React.FC = () => {
     if (lower.includes('fight')) return `Name of opponent${num}`;
     if (lower.includes('kill a')) return `Name of wolf killed${num}`;
     if (lower.includes('death of a friend')) return `Name of deceased${num}`;
-    if (lower.includes('save another')) return `Name of wolf saved`;
+    if (lower.includes('save a life')) return `Name of wolf saved`;
     if (lower.includes('joining or starting')) return `Name of pack`;
     if (lower.includes('gain important knowledge')) return `What was learned?${num}`;
     if (lower.includes('perform a pack duty')) return `Describe the duty performed${num}`;
