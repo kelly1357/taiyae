@@ -317,7 +317,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           <NavDropdown id="ooc" label="OOC">
             <DropdownLink to="/ooc">Out of Character</DropdownLink>
             <DropdownLink to="/ooc-forum/7">IC Archives</DropdownLink>
-            <DropdownLink to="#">Social Media</DropdownLink>
+            <DropdownLink to="/wiki/user/social-media">Social Media</DropdownLink>
           </NavDropdown>
           {(isModerator || isAdmin) && (
             <NavDropdown id="admin" label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
@@ -545,7 +545,7 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
           <MobileNavSection label="OOC">
             <MobileDropdownLink to="/ooc">Out of Character</MobileDropdownLink>
             <MobileDropdownLink to="/ooc-forum/7">IC Archives</MobileDropdownLink>
-            <MobileDropdownLink to="#">Social Media</MobileDropdownLink>
+            <MobileDropdownLink to="/wiki/user/social-media">Social Media</MobileDropdownLink>
           </MobileNavSection>
           {(isModerator || isAdmin) && (
             <MobileNavSection label={<span className="flex items-center gap-1">Admin{(pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount) > 0 && <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{pendingSkillPointsCount + pendingPlotNewsCount + pendingAchievementsCount + pendingInactiveCharactersCount + pendingStaffPingsCount + pendingUserApprovalsCount}</span>}</span>}>
