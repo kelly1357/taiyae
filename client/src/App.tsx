@@ -179,16 +179,23 @@ const App: React.FC = () => {
     }
   };
 
-  // Auto-logout when any authenticated API call returns 401 (expired token)
+  // Auto-logout when an authenticated API call returns 401 (expired token)
   useEffect(() => {
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
       const response = await originalFetch(...args);
       if (response.status === 401) {
-        // Only auto-logout if we think we're logged in and this was an authenticated request
         const token = localStorage.getItem('token');
         const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request)?.url || '';
-        if (token && url.includes('/api/') && !url.includes('/api/auth/')) {
+        // Only auto-logout if the request actually sent the auth token
+        const init = args[1] as RequestInit | undefined;
+        const headers = init?.headers;
+        const sentAuth = headers && (
+          (headers instanceof Headers && headers.has('X-Authorization')) ||
+          (typeof headers === 'object' && !Array.isArray(headers) && 'X-Authorization' in headers) ||
+          (Array.isArray(headers) && headers.some(([k]) => k === 'X-Authorization'))
+        );
+        if (token && sentAuth && url.includes('/api/') && !url.includes('/api/auth/')) {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);
