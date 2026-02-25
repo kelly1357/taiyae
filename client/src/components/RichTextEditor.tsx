@@ -18,6 +18,28 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
+/**
+ * Normalize HTML so that <br> tags inside <p> elements become separate paragraphs.
+ * This ensures TipTap treats each visual "line" as its own block node,
+ * so H2/bullet/etc apply only to the current line, not the entire chunk.
+ */
+function normalizeContent(html: string): string {
+  if (!html) return html;
+  return html.replace(/<p>([\s\S]*?)<\/p>/gi, (match, inner) => {
+    // Split by <br>, <br/>, <br /> variants
+    const parts = inner.split(/<br\s*\/?>/gi);
+    if (parts.length <= 1) return match;
+    return parts
+      .map((p: string) => p.trim())
+      .filter((p: string) => p.length > 0)
+      .map((p: string) => `<p>${p}</p>`)
+      .join('');
+  });
+}
+
+// Prevent mousedown from stealing focus away from the editor.
+const preventFocusLoss = (e: React.MouseEvent) => e.preventDefault();
+
 const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
   if (!editor) return null;
 
@@ -36,9 +58,10 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
   };
 
   return (
-    <div className="flex flex-wrap gap-1 p-2 bg-gray-100 border-b border-gray-300 rounded-t">
+    <div className="flex flex-wrap gap-1 p-2">
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('bold') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -46,6 +69,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('italic') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -53,6 +77,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('underline') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -60,6 +85,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('strike') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -70,6 +96,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('heading', { level: 2 }) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -77,6 +104,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('heading', { level: 3 }) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -87,6 +115,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('bulletList') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -94,6 +123,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('orderedList') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -104,6 +134,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('blockquote') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -111,6 +142,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('codeBlock') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -121,6 +153,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={addLink}
         className={`px-2 py-1 rounded text-sm border ${editor.isActive('link') ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
       >
@@ -128,6 +161,7 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
       </button>
       <button
         type="button"
+        onMouseDown={preventFocusLoss}
         onClick={addImage}
         className="px-2 py-1 rounded text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-200"
       >
@@ -138,13 +172,21 @@ const MenuBar: React.FC<{ editor: any }> = ({ editor }) => {
 };
 
 const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeholder }) => {
-  // Use ref to store onChange to prevent editor recreation
   const onChangeRef = React.useRef(onChange);
   onChangeRef.current = onChange;
   
+  const [editMode, setEditMode] = React.useState<'visual' | 'code'>('visual');
+  const [codeContent, setCodeContent] = React.useState(value);
+  
+  // Track the last value we sent to the parent so we can detect truly external changes
+  const lastEmittedValue = React.useRef(value);
+  
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        link: false,      // We configure Link separately below
+        underline: false,  // We configure Underline separately below
+      }),
       Underline,
       TextStyle,
       Color,
@@ -166,19 +208,82 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       }),
       Image,
     ],
-    content: value,
+    content: normalizeContent(value),
     onUpdate: ({ editor }: { editor: any }) => {
-      onChangeRef.current(editor.getHTML());
+      const html = editor.getHTML();
+      lastEmittedValue.current = html;
+      onChangeRef.current(html);
     },
   }, []);  // Empty deps array - only create editor once
 
+  // Only sync from parent when the value was changed externally
+  // (i.e. not as a result of our own onUpdate callback).
+  // This handles: clearing after post, loading different post for editing, etc.
+  React.useEffect(() => {
+    if (!editor) return;
+    // If the new value matches what we last emitted, it's just our own update echoing back
+    if (value === lastEmittedValue.current) return;
+    // Truly external change — update the editor
+    lastEmittedValue.current = value;
+    editor.commands.setContent(normalizeContent(value), false);
+    setCodeContent(value);
+  }, [value, editor]);
+
+  const handleModeSwitch = (mode: 'visual' | 'code') => {
+    if (mode === 'code' && editMode === 'visual') {
+      if (editor) {
+        setCodeContent(editor.getHTML());
+      }
+    } else if (mode === 'visual' && editMode === 'code') {
+      if (editor) {
+        editor.commands.setContent(normalizeContent(codeContent), false);
+        onChangeRef.current(editor.getHTML());
+      }
+    }
+    setEditMode(mode);
+  };
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCodeContent(e.target.value);
+    onChangeRef.current(e.target.value);
+  };
+
   return (
     <div className="rich-text-editor border border-gray-300 rounded overflow-hidden">
-      <MenuBar editor={editor} />
-      <EditorContent 
-        editor={editor} 
-        className="bg-white text-gray-900 min-h-[150px] p-4 prose prose-slate max-w-none"
-      />
+      <div className="flex items-center justify-between bg-gray-100 border-b border-gray-300">
+        {editMode === 'visual' && <MenuBar editor={editor} />}
+        {editMode === 'code' && <div className="flex-1" />}
+        <div className="flex gap-1 p-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => handleModeSwitch('visual')}
+            className={`px-2 py-1 rounded text-xs border ${editMode === 'visual' ? 'bg-[#2f3a2f] text-white border-[#2f3a2f]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
+          >
+            Visual
+          </button>
+          <button
+            type="button"
+            onClick={() => handleModeSwitch('code')}
+            className={`px-2 py-1 rounded text-xs border ${editMode === 'code' ? 'bg-[#2f3a2f] text-white border-[#2f3a2f]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-200'}`}
+          >
+            Code
+          </button>
+        </div>
+      </div>
+      {editMode === 'visual' ? (
+        <EditorContent 
+          editor={editor} 
+          className="bg-white text-gray-900 min-h-[150px] p-4 prose prose-slate max-w-none"
+        />
+      ) : (
+        <textarea
+          value={codeContent}
+          onChange={handleCodeChange}
+          className="w-full bg-white text-gray-900 min-h-[200px] p-4 font-mono text-xs border-none outline-none resize-y"
+          placeholder="Edit HTML code..."
+          spellCheck={false}
+        />
+      )}
       <style>{`
         .rich-text-editor .ProseMirror {
           outline: none;
@@ -190,6 +295,10 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
           float: left;
           height: 0;
           pointer-events: none;
+        }
+        .rich-text-editor .ProseMirror p {
+          margin: 0.5rem 0;
+          line-height: 1.6;
         }
         .rich-text-editor .ProseMirror blockquote {
           border-left: 3px solid #D1D5DB;

@@ -16,7 +16,7 @@ function generateToken(user: any) {
         id: user.UserID, 
         username: user.Username, 
         email: user.Email 
-    }, JWT_SECRET, { expiresIn: '24h' });
+    }, JWT_SECRET, { expiresIn: '7d' });
 }
 
 export async function register(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {

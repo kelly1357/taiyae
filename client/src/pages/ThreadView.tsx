@@ -91,7 +91,7 @@ const OOCPlayerInfoPanel: React.FC<{
   }, [userId]);
 
   return (
-    <div className={`w-full md:w-72 bg-white p-3 flex flex-col ${isOriginalPost ? 'md:order-2' : ''}`}>
+    <div className={`w-full md:w-72 shrink-0 bg-white p-3 flex flex-col ${isOriginalPost ? 'md:order-2' : ''}`}>
       {/* Avatar - same width as table, rectangular like character panel */}
       <div className="mb-2 w-full">
         {userLoading ? (
@@ -237,7 +237,7 @@ const formatAge = (monthsAge: string | number | undefined): string => {
 // Character info panel component with table styling
 const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolean }> = ({ author, isOriginalPost }) => {
   return (
-    <div className={`w-full md:w-72 bg-white p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2' : ''}`}>
+    <div className={`w-full md:w-72 shrink-0 bg-white p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2' : ''}`}>
       {/* Avatar - same width as table */}
       <Link to={`/character/${author.slug || author.id}`} className="mb-2 w-full">
         <img 
@@ -1465,7 +1465,7 @@ const ThreadView: React.FC = () => {
           <div className="p-4 mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
             <div className="flex flex-col-reverse md:flex-row gap-4">
               {/* Content on LEFT */}
-              <div className="flex-grow p-4 relative bg-white md:order-1">
+              <div className="flex-grow min-w-0 p-4 relative bg-white md:order-1">
                 {/* Edit button - only for post owner (character match OR user match for OOC) */}
                 {((activeCharacter && String(activeCharacter.id) === String(mainAuthor.id)) || (user && String(user.id) === String(mainAuthor.userId))) && (
                   <div className="absolute top-2 right-2">
@@ -1557,7 +1557,7 @@ const ThreadView: React.FC = () => {
                     <CharacterInfoPanel author={replyAuthor} isOriginalPost={false} />
                   )}
                   {/* Content on RIGHT */}
-                  <div className="flex-grow p-4 relative bg-white">
+                  <div className="flex-grow min-w-0 p-4 relative bg-white">
                     <div className="absolute top-2 right-2 flex gap-1">
                       {/* Edit button - only for post owner (character match OR user match for OOC) */}
                       {((activeCharacter && String(activeCharacter.id) === String(replyAuthor.id)) || (user && String(user.id) === String(replyAuthor.userId))) && (
