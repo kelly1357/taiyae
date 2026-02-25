@@ -141,7 +141,8 @@ const Home: React.FC = () => {
     fetch('/api/ooc-forums')
       .then(res => res.json())
       .then(data => {
-        setOocForums(data);
+        // Hide Advertising and Affiliation forum (ID 8) for now
+        setOocForums(data.filter((f: OOCForum) => f.id !== 8));
       })
       .catch(err => console.error('Failed to fetch stats:', err));
 
