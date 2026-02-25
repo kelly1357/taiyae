@@ -371,7 +371,7 @@ const Layout: React.FC<LayoutProps> = ({
             {/* Cbox / Discord */}
             <section className="bg-white border border-gray-300 shadow">
               <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
-                Cbox | <span className="font-bold">Discord</span>
+                Cbox | <a href="https://discord.gg/HFmZ8G4dQe" target="_blank" rel="noopener noreferrer" className="font-bold text-white hover:underline">Discord</a>
               </div>
               <div className="p-0">
                 <iframe

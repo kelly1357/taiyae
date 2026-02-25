@@ -108,6 +108,20 @@ const OOCForumPage: React.FC = () => {
             <div className="w-1/2">
               <h3 className="text-base font-semibold text-gray-900 mb-1">{forum.title}</h3>
               <p className="text-xs text-gray-600 html-description" dangerouslySetInnerHTML={{ __html: forum.description }} />
+              {forumId === '1' && (
+                <div className="mt-3 text-xs text-gray-600 space-y-2">
+                  <p>Use the application template below to get started. Once a staff member has approved your account, you'll be officially accepted into the game, and you can begin creating characters right away!</p>
+                  <pre className="bg-gray-100 border border-gray-300 rounded p-3 text-xs text-gray-800 whitespace-pre-wrap font-mono">
+{`<b>Thread title: "Character's Name"</b>
+
+<b>Your name:</b>
+
+<b>Why do you want to join Horizon?</b>
+
+<b>Please provide a short sample of your writing (any genre's fine!):</b>`}
+                  </pre>
+                </div>
+              )}
             </div>
             {user && forumId !== '7' && (
               <button 

@@ -963,8 +963,8 @@ const ThreadView: React.FC = () => {
             {' › '}{thread.title}
           </h2>
           <div className="flex gap-2">
-            {/* Archive button - show if user is thread creator OR is moderator, and thread is not archived */}
-            {user && (thread.userId === user.id || user.isModerator || user.isAdmin) && !thread.isArchived && (
+            {/* Archive button - show if user is thread creator OR is moderator, and thread is not archived (roleplay threads only) */}
+            {user && !isOOCThread && (thread.userId === user.id || user.isModerator || user.isAdmin) && !thread.isArchived && (
               <button
                 onClick={() => setShowArchiveConfirm(true)}
                 className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
@@ -972,8 +972,8 @@ const ThreadView: React.FC = () => {
                 Archive
               </button>
             )}
-            {/* Unarchive button - moderator/admin only, only for archived threads */}
-            {user && (user.isModerator || user.isAdmin) && thread.isArchived && (
+            {/* Unarchive button - moderator/admin only, only for archived roleplay threads */}
+            {user && !isOOCThread && (user.isModerator || user.isAdmin) && thread.isArchived && (
               <button
                 onClick={() => setShowUnarchiveConfirm(true)}
                 className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
