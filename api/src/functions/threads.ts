@@ -40,6 +40,7 @@ export async function getThreads(request: HttpRequest, context: InvocationContex
                 t.RegionId as regionId,
                 t.OOCForumID as oocForumId,
                 t.IsPinned as isPinned,
+                t.IsClosed as isClosed,
                 t.Subheader as subheader,
                 t.Created as createdAt,
                 t.Modified as updatedAt,
@@ -264,7 +265,7 @@ export async function createReply(request: HttpRequest, context: InvocationConte
 
         const threadResult = await pool.request()
             .input('threadId', sql.Int, parseInt(threadId))
-            .query("SELECT RegionId, OOCForumID, IsArchived FROM Thread WHERE ThreadID = @threadId");
+            .query("SELECT RegionId, OOCForumID, IsArchived, IsClosed FROM Thread WHERE ThreadID = @threadId");
 
         const thread = threadResult.recordset[0];
         if (!thread) {
@@ -274,6 +275,11 @@ export async function createReply(request: HttpRequest, context: InvocationConte
         // Check if thread is archived
         if (thread.IsArchived) {
             return { status: 403, body: "This thread has been archived and is closed for new replies" };
+        }
+
+        // Check if thread is closed
+        if (thread.IsClosed) {
+            return { status: 403, body: "This thread has been closed and is not accepting new replies" };
         }
 
         // Verify auth based on thread type
@@ -803,6 +809,102 @@ app.http('unarchiveThread', {
     authLevel: 'anonymous',
     handler: unarchiveThread,
     route: 'threads/{threadId}/unarchive'
+});
+
+// POST /api/threads/:threadId/close - Close a thread (moderator/admin only)
+export async function closeThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
+    const threadId = request.params.threadId;
+    if (!threadId) {
+        return { status: 400, body: "threadId is required" };
+    }
+
+    try {
+        const pool = await getPool();
+
+        const threadResult = await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('SELECT ThreadID, IsClosed FROM Thread WHERE ThreadID = @threadId');
+
+        if (threadResult.recordset.length === 0) {
+            return { status: 404, body: "Thread not found" };
+        }
+
+        if (threadResult.recordset[0].IsClosed) {
+            return { status: 400, body: "Thread is already closed" };
+        }
+
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('UPDATE Thread SET IsClosed = 1, Modified = GETDATE() WHERE ThreadID = @threadId');
+
+        return {
+            status: 200,
+            jsonBody: { message: "Thread closed successfully" }
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('closeThread', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    handler: closeThread,
+    route: 'threads/{threadId}/close'
+});
+
+// POST /api/threads/:threadId/reopen - Reopen a closed thread (moderator/admin only)
+export async function reopenThread(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+    const auth = await verifyStaffAuth(request);
+    if (!auth.authorized) {
+        return auth.error!;
+    }
+
+    const threadId = request.params.threadId;
+    if (!threadId) {
+        return { status: 400, body: "threadId is required" };
+    }
+
+    try {
+        const pool = await getPool();
+
+        const threadResult = await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('SELECT ThreadID, IsClosed FROM Thread WHERE ThreadID = @threadId');
+
+        if (threadResult.recordset.length === 0) {
+            return { status: 404, body: "Thread not found" };
+        }
+
+        if (!threadResult.recordset[0].IsClosed) {
+            return { status: 400, body: "Thread is not closed" };
+        }
+
+        await pool.request()
+            .input('threadId', sql.Int, parseInt(threadId))
+            .query('UPDATE Thread SET IsClosed = 0, Modified = GETDATE() WHERE ThreadID = @threadId');
+
+        return {
+            status: 200,
+            jsonBody: { message: "Thread reopened successfully" }
+        };
+    } catch (error) {
+        context.error(error);
+        return { status: 500, body: "Internal Server Error" };
+    }
+}
+
+app.http('reopenThread', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
+    handler: reopenThread,
+    route: 'threads/{threadId}/reopen'
 });
 
 // Toggle pin status for OOC forum threads (moderator/admin only)

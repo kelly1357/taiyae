@@ -11,6 +11,7 @@ interface ThreadSummary extends Omit<Thread, 'replies'> {
   authorSlug?: string;
   replyCount: number;
   isPinned?: boolean;
+  isClosed?: boolean;
   subheader?: string;
   lastReplyAuthorName?: string;
   lastReplyAuthorSlug?: string;
@@ -153,6 +154,7 @@ const OOCForumPage: React.FC = () => {
                           <div className="flex-1">
                             <Link to={`/thread/${thread.id}`} state={{ forum }} className="forum-link font-medium">
                               {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
+                              {thread.isClosed && <span className="text-gray-400 uppercase text-xs mr-1">(Closed)</span>}
                               {thread.title}
                             </Link>
                             {thread.subheader && (
@@ -219,6 +221,7 @@ const OOCForumPage: React.FC = () => {
                       <div className="flex-1">
                         <Link to={`/thread/${thread.id}`} state={{ forum }} className="forum-link font-medium block">
                           {thread.isPinned && <span className="text-gray-400 uppercase text-xs mr-1">(Sticky)</span>}
+                          {thread.isClosed && <span className="text-gray-400 uppercase text-xs mr-1">(Closed)</span>}
                           {thread.title}
                         </Link>
                         {thread.subheader && (

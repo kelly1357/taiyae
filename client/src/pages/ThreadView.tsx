@@ -356,6 +356,10 @@ const ThreadView: React.FC = () => {
   const [isDeletingThread, setIsDeletingThread] = useState(false);
   const [showUnarchiveConfirm, setShowUnarchiveConfirm] = useState(false);
   const [isUnarchiving, setIsUnarchiving] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [showReopenConfirm, setShowReopenConfirm] = useState(false);
+  const [isReopening, setIsReopening] = useState(false);
   
   // Skill Points Claim Modal state
   const [showSkillPointsModal, setShowSkillPointsModal] = useState(false);
@@ -727,6 +731,64 @@ const ThreadView: React.FC = () => {
     }
   };
 
+  const handleCloseThread = async () => {
+    if (!threadId || !user) return;
+
+    setIsClosing(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/threads/${threadId}/close`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setShowCloseConfirm(false);
+        fetchThread();
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to close thread');
+      }
+    } catch (error) {
+      console.error('Error closing thread:', error);
+      alert('Failed to close thread');
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
+  const handleReopenThread = async () => {
+    if (!threadId || !user) return;
+
+    setIsReopening(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/threads/${threadId}/reopen`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setShowReopenConfirm(false);
+        fetchThread();
+      } else {
+        const error = await response.text();
+        alert(error || 'Failed to reopen thread');
+      }
+    } catch (error) {
+      console.error('Error reopening thread:', error);
+      alert('Failed to reopen thread');
+    } finally {
+      setIsReopening(false);
+    }
+  };
+
   // Skill Points Modal handlers
   const openSkillPointsModal = async () => {
     setShowSkillPointsModal(true);
@@ -979,6 +1041,24 @@ const ThreadView: React.FC = () => {
                 className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
               >
                 Unarchive
+              </button>
+            )}
+            {/* Close button - moderator/admin only, thread not already closed or archived */}
+            {user && (user.isModerator || user.isAdmin) && !thread.isClosed && !thread.isArchived && (
+              <button
+                onClick={() => setShowCloseConfirm(true)}
+                className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
+              >
+                Close Thread
+              </button>
+            )}
+            {/* Reopen button - moderator/admin only, only for closed threads */}
+            {user && (user.isModerator || user.isAdmin) && thread.isClosed && (
+              <button
+                onClick={() => setShowReopenConfirm(true)}
+                className="text-[10px] uppercase tracking-wide text-[#fff9] hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 border border-white/20"
+              >
+                Reopen Thread
               </button>
             )}
             {/* Delete Thread button - moderator only */}
@@ -1258,6 +1338,62 @@ const ThreadView: React.FC = () => {
                     disabled={isUnarchiving}
                   >
                     {isUnarchiving ? 'Unarchiving...' : 'Yes, Unarchive'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Close Thread Confirmation Modal - Moderator only */}
+          {showCloseConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg max-w-md">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900">Close Thread</h4>
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to close this thread? No one will be able to post new replies, but existing posts can still be edited.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowCloseConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    disabled={isClosing}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCloseThread}
+                    className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700"
+                    disabled={isClosing}
+                  >
+                    {isClosing ? 'Closing...' : 'Yes, Close Thread'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reopen Thread Confirmation Modal - Moderator only */}
+          {showReopenConfirm && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-white p-6 rounded shadow-lg max-w-md">
+                <h4 className="text-lg font-semibold mb-4 text-gray-900">Reopen Thread</h4>
+                <p className="text-gray-700 mb-4">
+                  Are you sure you want to reopen this thread? Users will be able to post replies again.
+                </p>
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => setShowReopenConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    disabled={isReopening}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleReopenThread}
+                    className="px-4 py-2 bg-gray-800 text-white hover:bg-gray-700"
+                    disabled={isReopening}
+                  >
+                    {isReopening ? 'Reopening...' : 'Yes, Reopen Thread'}
                   </button>
                 </div>
               </div>
@@ -1608,8 +1744,8 @@ const ThreadView: React.FC = () => {
             );
           })}
 
-          {/* Reply Form - only show if thread is not archived and user can post (OOC: logged in, IC: has character) */}
-          {!thread.isArchived && user && (isOOCThread || activeCharacter) ? (
+          {/* Reply Form - only show if thread is not archived/closed and user can post (OOC: logged in, IC: has character) */}
+          {!thread.isArchived && !thread.isClosed && user && (isOOCThread || activeCharacter) ? (
             <div className="border border-gray-300 mx-0.5">
               <div className="bg-gray-200 px-4 py-2">
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-700">Post a Reply</h4>
@@ -1636,6 +1772,10 @@ const ThreadView: React.FC = () => {
           ) : thread.isArchived ? (
             <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
               This thread has been archived and is closed for new replies.
+            </div>
+          ) : thread.isClosed ? (
+            <div className="border border-gray-300 mx-0.5 bg-gray-100 px-4 py-3 text-center text-gray-600 text-sm">
+              This thread has been closed by a moderator and is not accepting new replies.
             </div>
           ) : null}
         </div>

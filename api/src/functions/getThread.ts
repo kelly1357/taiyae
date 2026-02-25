@@ -34,6 +34,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
                     t.OOCForumID as oocForumId,
                     t.Subheader as subheader,
                     t.IsArchived as isArchived,
+                    t.IsClosed as isClosed,
                     t.OriginalRegionId as originalRegionId,
                     COALESCE(r.RegionName, origR.RegionName) as regionName,
                     LOWER(REPLACE(COALESCE(r.RegionName, origR.RegionName), ' ', '-')) as regionSlug,
@@ -140,6 +141,7 @@ export async function getThread(request: HttpRequest, context: InvocationContext
             regionName: op.regionName,
             regionImage: op.regionImage,
             isArchived: op.isArchived === true || op.isArchived === 1,
+            isClosed: op.isClosed === true || op.isClosed === 1,
             originalRegionId: op.originalRegionId,
             replies: replies
         };
