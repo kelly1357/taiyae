@@ -145,7 +145,7 @@ const App: React.FC = () => {
     // Re-fetch when characters are created/edited/deleted
     const handleCharacterListChanged = () => {
       if (user?.id) {
-        fetch(`/api/characters?userId=${user.id}`)
+        fetch(`/api/characters?userId=${user.id}&_t=${Date.now()}`, { cache: 'no-cache' })
           .then(res => res.json())
           .then(data => setUserCharacters(data))
           .catch(err => console.error('Failed to refresh user characters', err));

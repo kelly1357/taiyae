@@ -164,9 +164,11 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
             };
         });
 
+        // Only cache the public character list (no userId filter) - user-specific lists must be fresh
+        const isPublicList = !isSingleCharacter && !userId;
         return {
             jsonBody: characters,
-            headers: isSingleCharacter ? {} : { 'Cache-Control': 'public, max-age=60' }
+            headers: isPublicList ? { 'Cache-Control': 'public, max-age=60' } : { 'Cache-Control': 'no-cache' }
         };
     } catch (error) {
         context.error(error);

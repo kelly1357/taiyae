@@ -101,7 +101,9 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
   const fetchCharacters = async () => {
     try {
-      const response = await fetch(`/api/characters?userId=${user.id}`);
+      const response = await fetch(`/api/characters?userId=${user.id}&_t=${Date.now()}`, {
+        cache: 'no-cache'
+      });
       if (response.ok) {
         const data = await response.json();
         setCharacters(data);
