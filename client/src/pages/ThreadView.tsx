@@ -111,7 +111,11 @@ const OOCPlayerInfoPanel: React.FC<{
             className="w-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center"
             style={{ aspectRatio: '526/364' }}
           >
-            <span className="text-gray-400 text-sm">No Image</span>
+            <img 
+              src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+              alt="Placeholder" 
+              className="w-16 h-16 opacity-30"
+            />
           </div>
         )}
       </div>
@@ -240,12 +244,25 @@ const CharacterInfoPanel: React.FC<{ author: PostAuthor; isOriginalPost?: boolea
     <div className={`w-full md:w-72 shrink-0 bg-white p-3 flex flex-col items-center ${isOriginalPost ? 'md:order-2' : ''}`}>
       {/* Avatar - same width as table */}
       <Link to={`/character/${author.slug || author.id}`} className="mb-2 w-full">
-        <img 
-          src={author.imageUrl} 
-          alt={author.name} 
-          className="w-full object-cover border-2 border-gray-300"
-          style={{ aspectRatio: '526/364' }}
-        />
+        {author.imageUrl ? (
+          <img 
+            src={author.imageUrl} 
+            alt={author.name} 
+            className="w-full object-cover border-2 border-gray-300"
+            style={{ aspectRatio: '526/364' }}
+          />
+        ) : (
+          <div 
+            className="w-full bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-300 flex items-center justify-center"
+            style={{ aspectRatio: '526/364' }}
+          >
+            <img 
+              src="https://taiyaefiles.blob.core.windows.net/web/choochus_Wolf_Head_Howl_1.svg" 
+              alt="Placeholder" 
+              className="w-16 h-16 opacity-30"
+            />
+          </div>
+        )}
       </Link>
       
       {/* Status text if inactive or dead */}
