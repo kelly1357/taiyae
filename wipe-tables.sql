@@ -39,39 +39,41 @@ DELETE FROM dbo.Character;
 -- Pack ranks (depends on Packs)
 DELETE FROM dbo.PackRanks;
 DELETE FROM dbo.Packs;
-DELETE FROM dbo.Pack;
+DROP TABLE dbo.Pack;
 
 -- Adoptables (depends on User, Build, Height)
 DELETE FROM dbo.Adoptable;
 
 -- Staff & moderation
--- DELETE FROM dbo.StaffPing;
+ DELETE FROM dbo.StaffPing;
 
 -- Content tables
 -- DELETE FROM dbo.WikiPage;
--- DELETE FROM dbo.PlotNews;
--- DELETE FROM dbo.SitewideUpdates;
--- DELETE FROM dbo.Bulletin;
+ DELETE FROM dbo.PlotNews;
+ DELETE FROM dbo.SitewideUpdates;
+ DELETE FROM dbo.Bulletin;
 
 -- ---------- reference / lookup tables ----------
 
--- DELETE FROM dbo.Achievement;
--- DELETE FROM dbo.SkillPoints;
+ DELETE FROM dbo.Achievement;
+ DELETE FROM dbo.SkillPoints;
 -- DELETE FROM dbo.Subareas;
 -- DELETE FROM dbo.Region;
 -- DELETE FROM dbo.OOCForum;
--- DELETE FROM dbo.Build;
--- DELETE FROM dbo.Height;
--- DELETE FROM dbo.HealthStatus;
--- DELETE FROM dbo.SpiritSymbol;
+ DELETE FROM dbo.Build;
+ DELETE FROM dbo.Height;
+ DELETE FROM dbo.HealthStatus;
+ DELETE FROM dbo.SpiritSymbol;
 -- DELETE FROM dbo.GameSettings;
--- DELETE FROM dbo.GuestSession;
+ DELETE FROM dbo.GuestSession;
 
 -- ---------- core tables last ----------
 
-DELETE FROM dbo.[User] WHERE Is_Admin = 0 OR Is_Admin IS NULL;
+DELETE FROM dbo.[User] WHERE UserID NOT IN (6,11);
 -- DELETE FROM dbo.UserStatus;
 
 COMMIT TRANSACTION;
 
 PRINT 'All tables wiped successfully.';
+
+--Ran on 2024-02-24 7:04P CST by Marshall.
