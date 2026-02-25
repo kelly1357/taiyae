@@ -307,6 +307,8 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
         }
         setMessage({ type: 'success', text: 'Character saved successfully.' });
         await fetchCharacters();
+        // Notify App.tsx to refresh header dropdown
+        window.dispatchEvent(new Event('characterListChanged'));
       } else {
         const errorText = await response.text();
         console.error('Save failed:', errorText);

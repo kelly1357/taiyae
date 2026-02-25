@@ -141,6 +141,18 @@ const App: React.FC = () => {
       setUserCharacters([]);
       setCharactersLoaded(true);
     }
+
+    // Re-fetch when characters are created/edited/deleted
+    const handleCharacterListChanged = () => {
+      if (user?.id) {
+        fetch(`/api/characters?userId=${user.id}`)
+          .then(res => res.json())
+          .then(data => setUserCharacters(data))
+          .catch(err => console.error('Failed to refresh user characters', err));
+      }
+    };
+    window.addEventListener('characterListChanged', handleCharacterListChanged);
+    return () => window.removeEventListener('characterListChanged', handleCharacterListChanged);
   }, [user?.id]);
 
   // Fetch all characters and refresh periodically to update online status
