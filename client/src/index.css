@@ -81,6 +81,30 @@ a {
   margin-bottom: 0.25rem;
 }
 
+.html-description h2 {
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.html-description h3 {
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
 /* Dark table header styles */
 .dark-header {
   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
