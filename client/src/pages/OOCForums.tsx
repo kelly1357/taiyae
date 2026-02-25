@@ -11,7 +11,7 @@ const OOCForums: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         // Hide Advertising and Affiliation forum (ID 8) for now
-        setOocForums(data.filter((f: OOCForum) => f.id !== 8));
+        setOocForums(data.filter((f: OOCForum) => f.id !== '8'));
         setLoading(false);
       })
       .catch(err => {
