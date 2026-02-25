@@ -431,15 +431,13 @@ export async function moderatorUpdateCharacter(request: HttpRequest, context: In
         if (packId !== undefined) {
             updates.push('PackID = @packId');
             requestObj.input('packId', sql.Int, packId);
-            
-            // If pack is being removed (set to null/0), also clear the rank
-            if (!packId) {
-                updates.push('packRankId = NULL');
-            }
         }
         
-        // Handle pack rank assignment
-        if (packRankId !== undefined && packId) {
+        // Handle pack rank assignment (only set once)
+        if (!packId && packId !== undefined) {
+            // Pack is being removed — clear the rank
+            updates.push('packRankId = NULL');
+        } else if (packRankId !== undefined && packId) {
             updates.push('packRankId = @packRankId');
             requestObj.input('packRankId', sql.Int, packRankId);
         } else if (packRankId === null) {
