@@ -225,7 +225,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     if (value === lastEmittedValue.current) return;
     // Truly external change — update the editor
     lastEmittedValue.current = value;
-    editor.commands.setContent(normalizeContent(value), false);
+    editor.commands.setContent(normalizeContent(value));
     setCodeContent(value);
   }, [value, editor]);
 
@@ -236,7 +236,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       }
     } else if (mode === 'visual' && editMode === 'code') {
       if (editor) {
-        editor.commands.setContent(normalizeContent(codeContent), false);
+        editor.commands.setContent(normalizeContent(codeContent));
         onChangeRef.current(editor.getHTML());
       }
     }
