@@ -226,7 +226,8 @@ export async function getRogues(request: HttpRequest, context: InvocationContext
                 c.MonthsAge as monthsAge,
                 c.Status as status
             FROM Character c
-            WHERE (c.PackID IS NULL OR c.PackID = 0) AND c.Status != 'Dead'
+            WHERE (c.PackID IS NULL OR c.PackID = 0) 
+              AND COALESCE(c.Status, CASE WHEN c.Is_Active = 1 THEN 'Active' ELSE 'Inactive' END) = 'Active'
             ORDER BY c.CharacterName
         `);
 
