@@ -19,30 +19,26 @@ export async function uploadImage(request: HttpRequest, context: InvocationConte
             access: 'blob' // Allow public read access for web container
         });
 
-        // Parse multipart form data
-        const formData = await request.formData();
-        const file = formData.get('file');
-        
-        if (!file || typeof file === 'string') {
+        // Read raw file body (clients send file directly, not as FormData)
+        const arrayBuffer = await request.arrayBuffer();
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
             return { status: 400, body: "No file uploaded" };
         }
-        
-        const fileBlob = file as unknown as { name?: string; type?: string; arrayBuffer(): Promise<ArrayBuffer> };
-        const originalName = fileBlob.name || 'image.png';
+
+        const originalName = request.query.get('filename') || 'image.png';
         const extension = originalName.split('.').pop()?.toLowerCase() || 'png';
         const filename = `avatar-${Date.now()}.${extension}`;
         context.log(`Uploading file: ${filename} (original: ${originalName})`);
         
         const blockBlobClient = containerClient.getBlockBlobClient(filename);
 
-        // Get file as ArrayBuffer
-        const arrayBuffer = await fileBlob.arrayBuffer();
         context.log(`File size: ${arrayBuffer.byteLength} bytes`);
         
-        // Determine content type
-        let contentType = fileBlob.type || 'image/png';
+        // Determine content type from request header or file extension
+        const extToMime: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' };
+        let contentType = request.headers.get('content-type') || extToMime[extension] || 'image/png';
         if (!contentType.startsWith('image/')) {
-            contentType = 'image/png';
+            contentType = extToMime[extension] || 'image/png';
         }
         
         await blockBlobClient.upload(arrayBuffer, arrayBuffer.byteLength, {
