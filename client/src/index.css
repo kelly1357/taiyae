@@ -171,13 +171,15 @@ a {
 }
 
 /* Character profile relationship table links (from {CharacterName} shortcut) */
-td a[href^="/character/"] {
+.html-description a[href^="/character/"],
+.character-details a[href^="/character/"] {
   color: #000;
   font-weight: bold;
   text-decoration: none;
 }
 
-td a[href^="/character/"]:hover {
+.html-description a[href^="/character/"]:hover,
+.character-details a[href^="/character/"]:hover {
   text-decoration: underline;
 }
 

@@ -608,7 +608,7 @@ const CharacterProfile: React.FC = () => {
                 
                 {/* Right side: Family/Details Table */}
                 <div className="w-full md:w-72 flex-shrink-0">
-                  <div className="border border-gray-300">
+                  <div className="border border-gray-300 character-details">
                     <table className="w-full text-sm">
                       <tbody>
                         {/* Height & Build */}
