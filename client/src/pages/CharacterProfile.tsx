@@ -365,21 +365,32 @@ const CharacterProfile: React.FC = () => {
     console.log('CharacterProfile: Fetching achievements for userId:', userId, 'character:', character.name);
     if (!userId) return;
 
-    // Check for automated achievements first
-    fetch('/api/achievements/check', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
-    }).catch(() => {});
-
-    // Then fetch user achievements
-    fetch(`/api/achievements/user/${userId}`)
-      .then(res => res.json())
-      .then((data: UserAchievement[]) => {
+    const token = localStorage.getItem('token');
+    
+    // Check for automated achievements first, then fetch the list
+    const checkAndFetch = async () => {
+      if (token) {
+        try {
+          await fetch('/api/achievements/check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ userId })
+          });
+        } catch {}
+      }
+      
+      // Then fetch user achievements
+      try {
+        const res = await fetch(`/api/achievements/user/${userId}`);
+        const data = await res.json();
         console.log('CharacterProfile: Got achievements:', data);
         setUserAchievements(Array.isArray(data) ? data : []);
-      })
-      .catch((err) => console.error('CharacterProfile: Failed to fetch achievements:', err));
+      } catch (err) {
+        console.error('CharacterProfile: Failed to fetch achievements:', err);
+      }
+    };
+    
+    checkAndFetch();
   }, [character]);
 
   if (loading) return <div className="text-center p-8">Loading...</div>;
