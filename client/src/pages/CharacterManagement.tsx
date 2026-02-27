@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import type { Character, User } from '../types';
+import RichTextEditor from '../components/RichTextEditor';
 
 type SortField = 'name' | 'sex' | 'packName' | 'age' | 'totalSkill';
 type SortDirection = 'asc' | 'desc';
@@ -727,10 +728,9 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
 
                     <div>
                       <label className="block text-sm font-medium mb-1 text-gray-700">Character Information</label>
-                      <textarea 
-                        value={currentCharacter.bio || ''} 
-                        onChange={e => setCurrentCharacter({...currentCharacter, bio: e.target.value})}
-                        className="w-full bg-white border border-gray-300 px-3 py-2 text-gray-900 h-32 focus:outline-none focus:border-[#2f3a2f]"
+                      <RichTextEditor
+                        value={currentCharacter.bio || ''}
+                        onChange={(value) => setCurrentCharacter({...currentCharacter, bio: value})}
                         placeholder="Not sure where to start? Consider including sections for Appearance, Personality, and History."
                       />
                     </div>

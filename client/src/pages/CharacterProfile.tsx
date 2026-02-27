@@ -592,7 +592,7 @@ const CharacterProfile: React.FC = () => {
             <div className="bg-white p-4">
               <div className="flex flex-col md:flex-row gap-4">
                 {/* Left side: Character Information text */}
-                <div className="flex-grow">
+                <div className="flex-grow min-w-0 overflow-hidden">
                   <h3 className="text-base font-bold text-gray-800 mb-3">Character Information</h3>
                   {character.bio ? (
                     <div 
