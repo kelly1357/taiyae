@@ -113,13 +113,13 @@ const OOCForumPage: React.FC = () => {
                 <div className="mt-3 text-xs text-gray-600 space-y-2">
                   <p>Use the application template below to get started. Once a staff member has approved your account, you'll be officially accepted into the game, and you can begin creating characters right away!</p>
                   <pre className="bg-gray-100 border border-gray-300 rounded p-3 text-xs text-gray-800 whitespace-pre-wrap font-mono">
-{`<b>Thread title: "Character's Name"</b>
+{`Thread title: "Character's Name"
 
-<b>Your name:</b>
+Your name:
 
-<b>Why do you want to join Horizon?</b>
+Why do you want to join Horizon?
 
-<b>Please provide a short sample of your writing (any genre's fine!):</b>`}
+Please provide a short sample of your writing (any genre's fine!):`}
                   </pre>
                 </div>
               )}
