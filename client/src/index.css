@@ -107,7 +107,7 @@ a {
 
 .html-description {
   overflow-wrap: break-word;
-  word-break: break-word;
+  word-break: normal;
 }
 
 .html-description table {
@@ -149,7 +149,7 @@ a {
   background: #f3f4f6;
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
-  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .html-description blockquote {
@@ -160,9 +160,14 @@ a {
 }
 
 .html-description a {
-  color: #2563eb;
+  color: #617eb3;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.html-description a:hover {
+  color: #4b6596;
   text-decoration: underline;
-  word-break: break-all;
 }
 
 /* Character profile relationship table links (from {CharacterName} shortcut) */
