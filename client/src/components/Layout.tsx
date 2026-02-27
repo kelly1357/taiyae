@@ -167,8 +167,8 @@ const Layout: React.FC<LayoutProps> = ({
         onCharacterSelect={onCharacterSelect}
       />
       <main className="flex-grow py-8 relative z-10 mt-5">
-        <div className="max-w-[1325px] mx-auto px-4">
-          <div className="bg-white/35 p-4">
+        <div className="max-w-[1325px] mx-auto px-0 md:px-4">
+          <div className="md:bg-white/35 p-0 md:p-4">
           <div className="flex flex-col lg:flex-row gap-6">
           <aside className="lg:w-64 flex-shrink-0 space-y-6">
 

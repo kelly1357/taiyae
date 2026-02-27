@@ -1102,7 +1102,7 @@ const ThreadView: React.FC = () => {
           </div>
         </div>
 
-        <div className="px-4 py-4">
+        <div className="px-2 py-2 md:px-4 md:py-4">
           <div className="flex justify-between items-start mb-4">
             <div className="flex-1">
               {isEditingThread ? (
@@ -1615,10 +1615,10 @@ const ThreadView: React.FC = () => {
           )}
 
           {/* Original Post - avatar on RIGHT */}
-          <div className="p-4 mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
-            <div className="flex flex-col-reverse md:flex-row gap-4">
+          <div className="p-2 md:p-4 mx-0 md:mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
+            <div className="flex flex-col-reverse md:flex-row gap-2 md:gap-4">
               {/* Content on LEFT */}
-              <div className="flex-grow min-w-0 p-4 relative bg-white md:order-1">
+              <div className="flex-grow min-w-0 p-3 md:p-4 relative bg-white md:order-1">
                 {/* Edit button - only for post owner (character match OR user match for OOC) */}
                 {((activeCharacter && String(activeCharacter.id) === String(mainAuthor.id)) || (user && String(user.id) === String(mainAuthor.userId))) && (
                   <div className="absolute top-2 right-2">
@@ -1697,8 +1697,8 @@ const ThreadView: React.FC = () => {
             };
     
             return (
-              <div key={reply.id} className="p-4 mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
-                <div className="flex flex-col md:flex-row gap-4">
+              <div key={reply.id} className="p-2 md:p-4 mx-0 md:mx-2 mb-12 md:mb-4" style={{ backgroundColor: '#f2f2f2' }}>
+                <div className="flex flex-col md:flex-row gap-2 md:gap-4">
                   {/* Character/Player info on LEFT */}
                   {isOOCThread ? (
                     <OOCPlayerInfoPanel 
@@ -1710,7 +1710,7 @@ const ThreadView: React.FC = () => {
                     <CharacterInfoPanel author={replyAuthor} isOriginalPost={false} />
                   )}
                   {/* Content on RIGHT */}
-                  <div className="flex-grow min-w-0 p-4 relative bg-white">
+                  <div className="flex-grow min-w-0 p-3 md:p-4 relative bg-white">
                     <div className="absolute top-2 right-2 flex gap-1">
                       {/* Edit button - only for post owner (character match OR user match for OOC) */}
                       {((activeCharacter && String(activeCharacter.id) === String(replyAuthor.id)) || (user && String(user.id) === String(replyAuthor.userId))) && (

@@ -397,9 +397,9 @@ const Home: React.FC = () => {
           )}
 
           {/* Sitewide Updates and Plot News - side by side */}
-          <div className="grid grid-cols-2 px-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 px-4 py-4 gap-4 md:gap-0">
             {/* Sitewide Updates */}
-            <div className="pr-4">
+            <div className="md:pr-4">
               <h3 className="text-base font-semibold text-gray-900 mb-2">Sitewide Updates</h3>
               {sitewideUpdates.length === 0 ? (
                 <p className="text-sm text-gray-600 italic">No updates.</p>
@@ -431,7 +431,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Plot News */}
-            <div className="pl-4 border-l border-gray-300">
+            <div className="pt-4 border-t border-gray-300 md:pt-0 md:border-t-0 md:pl-4 md:border-l">
               <h3 className="text-base font-semibold text-gray-900 mb-2">Plot News</h3>
               {plotNews.length === 0 ? (
                 <p className="text-sm text-gray-600 italic">None.</p>
