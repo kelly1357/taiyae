@@ -5,6 +5,65 @@ import { checkAndRevokeFullProfile } from './achievements';
 import { formatHorizonDateString } from '../horizonCalendar';
 import { generateUniqueSlug } from '../slugify';
 
+/**
+ * Resolve {CharacterName} patterns in text fields to HTML links.
+ * Scans the given fields for {Name} tokens, looks up matching characters
+ * by name, and replaces with <a href="/character/slug">Name</a>.
+ */
+async function resolveCharacterLinks(character: any, pool: any): Promise<any> {
+    const linkFields = ['father', 'mother', 'siblings', 'pups', 'birthplace', 'bio'];
+    
+    // Collect all {Name} references across all fields
+    const namePattern = /\{([^}]+)\}/g;
+    const allNames = new Set<string>();
+    
+    for (const field of linkFields) {
+        const text = character[field];
+        if (!text) continue;
+        let match;
+        while ((match = namePattern.exec(text)) !== null) {
+            allNames.add(match[1].trim());
+        }
+    }
+    
+    if (allNames.size === 0) return character;
+    
+    // Query all matching characters by name in one go
+    const nameList = Array.from(allNames);
+    const request = pool.request();
+    const conditions = nameList.map((name: string, i: number) => {
+        request.input(`linkName${i}`, sql.NVarChar, name);
+        return `CharacterName = @linkName${i}`;
+    });
+    
+    const result = await request.query(
+        `SELECT CharacterName, Slug FROM Character WHERE ${conditions.join(' OR ')}`
+    );
+    
+    // Build a lookup map: name -> slug
+    const slugMap = new Map<string, string>();
+    for (const row of result.recordset) {
+        slugMap.set(row.CharacterName.toLowerCase(), row.Slug);
+    }
+    
+    // Replace {Name} with links in each field
+    const updated = { ...character };
+    for (const field of linkFields) {
+        if (!updated[field]) continue;
+        updated[field] = updated[field].replace(namePattern, (_match: string, name: string) => {
+            const trimmed = name.trim();
+            const slug = slugMap.get(trimmed.toLowerCase());
+            if (slug) {
+                return `<a href="/character/${slug}">${trimmed}</a>`;
+            }
+            // No matching character found — leave the original text (without braces)
+            return trimmed;
+        });
+    }
+    
+    return updated;
+}
+
 export async function getHealthStatuses(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     try {
         const pool = await getPool();
@@ -151,7 +210,7 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
         // Map monthsAge to age string if needed, or handle in client
         
         // Map monthsAge to age string if needed, or handle in client
-        const characters = result.recordset.map(c => {
+        let characters = result.recordset.map(c => {
             const years = Math.floor(c.monthsAge / 12);
             const months = c.monthsAge % 12;
             const yearStr = years === 1 ? 'year' : 'years';
@@ -163,6 +222,13 @@ export async function getCharacters(request: HttpRequest, context: InvocationCon
                 profileImages
             };
         });
+
+        // For single character lookups (profile view), resolve {CharacterName} links
+        if (isSingleCharacter && characters.length > 0) {
+            characters = await Promise.all(
+                characters.map(c => resolveCharacterLinks(c, pool))
+            );
+        }
 
         // Only cache the public character list (no userId filter) - user-specific lists must be fresh
         const isPublicList = !isSingleCharacter && !userId;

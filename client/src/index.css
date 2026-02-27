@@ -165,6 +165,16 @@ a {
   word-break: break-all;
 }
 
+/* Character profile relationship table links (from {CharacterName} shortcut) */
+td a[href^="/character/"] {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+td a[href^="/character/"]:hover {
+  text-decoration: underline;
+}
+
 /* Dark table header styles */
 .dark-header {
   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
