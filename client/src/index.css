@@ -167,7 +167,8 @@ a {
 
 /* Character profile relationship table links (from {CharacterName} shortcut) */
 td a[href^="/character/"] {
-  color: #2563eb;
+  color: #000;
+  font-weight: bold;
   text-decoration: none;
 }
 
