@@ -1394,12 +1394,6 @@ const CharacterProfile: React.FC = () => {
             </div>
           </div>
         )}
-        
-        <div className="mt-4">
-          <Link to="/characters" className="text-sm text-gray-600 hover:text-gray-900 hover:underline">
-            ← Back to Character List
-          </Link>
-        </div>
       </div>
 
       {/* Undo Approval Confirmation Modal */}
