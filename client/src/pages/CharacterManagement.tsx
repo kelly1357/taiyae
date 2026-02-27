@@ -64,6 +64,18 @@ const CharacterManagement: React.FC<CharacterManagementProps> = ({ user }) => {
     }
   }, [searchParams, user.userStatus]);
 
+  // Check for ?edit=characterId query param to open edit form
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && characters.length > 0) {
+      const charToEdit = characters.find(c => String(c.id) === editId);
+      if (charToEdit) {
+        handleEdit(charToEdit);
+      }
+      setSearchParams({});
+    }
+  }, [searchParams, characters]);
+
   const fetchHealthStatuses = async () => {
     try {
       const response = await fetch('/api/health-statuses');

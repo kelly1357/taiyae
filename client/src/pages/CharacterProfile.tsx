@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useOutletContext } from 'react-router-dom';
+import { useParams, Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import AbsenceIndicator from '../components/AbsenceIndicator';
 import { useCustomPageTitle } from '../hooks/usePageTitle';
 import type { Character, ThreadlogEntry, User } from '../types';
@@ -42,11 +42,13 @@ interface PackOption {
 const CharacterProfile: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const { user } = useOutletContext<LayoutContext>();
+  const [searchParams] = useSearchParams();
   const [character, setCharacter] = useState<Character | null>(null);
   const [userCharacters, setUserCharacters] = useState<Character[]>([]);
   const [threadlog, setThreadlog] = useState<ThreadlogEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'character' | 'player' | 'threadlog'>('character');
+  const initialTab = searchParams.get('tab') as 'character' | 'player' | 'threadlog' | null;
+  const [activeTab, setActiveTab] = useState<'character' | 'player' | 'threadlog'>(initialTab || 'character');
   const [imageError, setImageError] = useState(false);
   const [activeProfileImage, setActiveProfileImage] = useState(0);
   const [expandedThreads, setExpandedThreads] = useState<Set<string | number>>(new Set());

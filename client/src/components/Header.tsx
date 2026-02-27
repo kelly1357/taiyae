@@ -404,13 +404,13 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                       {userCharacters
                         .filter(char => char.status === 'Active' || char.showInDropdown)
                         .map(char => (
+                        <React.Fragment key={char.id}>
                         <button
-                          key={char.id}
                           onClick={() => {
                             onCharacterSelect?.(char.id);
                             setIsDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-100 transition-colors border-b border-gray-200 ${
+                          className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-100 transition-colors ${
                             activeCharacter.id === char.id ? 'bg-gray-100' : ''
                           }`}
                         >
@@ -439,6 +439,21 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                             </svg>
                           )}
                         </button>
+                        <Link
+                          to={`/my-characters?edit=${char.id}`}
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="block px-4 py-1 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 pl-16 italic"
+                        >
+                          ↳ Edit Profile
+                        </Link>
+                        <Link
+                          to={`/character/${char.slug || char.id}?tab=threadlog`}
+                          onClick={() => setIsDropdownOpen(false)}
+                          className="block px-4 py-1 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 mb-0 pl-16 italic border-b border-gray-200"
+                        >
+                          ↳ View Threadlog
+                        </Link>
+                        </React.Fragment>
                       ))}
                       <div className="py-1">
                         {user?.userStatus !== 'Joining' && (
@@ -610,6 +625,20 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                     )}
                     <span className="text-sm font-semibold text-gray-900">{activeCharacter.name}</span>
                   </div>
+                  <Link
+                    to={`/my-characters?edit=${activeCharacter.id}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-1 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 pl-16 italic"
+                  >
+                    ↳ Edit Profile
+                  </Link>
+                  <Link
+                    to={`/character/${activeCharacter.slug || activeCharacter.id}?tab=threadlog`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-1 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 pl-16 italic"
+                  >
+                    ↳ View Threadlog
+                  </Link>
                 </div>
               ) : (
                 <div className="px-4 py-3 border-b border-gray-200">
@@ -627,8 +656,8 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                 <div className="py-2">
                   <div className="px-4 py-1 text-xs uppercase tracking-wide text-gray-500">Switch Character</div>
                   {userCharacters.filter(c => c.id !== activeCharacter?.id && (c.status === 'Active' || c.showInDropdown)).map(char => (
+                    <React.Fragment key={char.id}>
                     <button
-                      key={char.id}
                       onClick={() => {
                         onCharacterSelect?.(char.id);
                         setIsMobileMenuOpen(false);
@@ -655,6 +684,21 @@ const Header: React.FC<HeaderProps> = ({ user, activeCharacter, userCharacters =
                         <span className="px-1.5 py-0.5 text-[10px] font-bold bg-red-600 text-white rounded-full leading-none">{unreadByCharacter[Number(char.id)]}</span>
                       )}
                     </button>
+                    <Link
+                      to={`/my-characters?edit=${char.id}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-4 py-1 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 pl-16 italic"
+                    >
+                      ↳ Edit Profile
+                    </Link>
+                    <Link
+                      to={`/character/${char.slug || char.id}?tab=threadlog`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="block px-4 py-1 text-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 pl-16 italic"
+                    >
+                      ↳ View Threadlog
+                    </Link>
+                    </React.Fragment>
                   ))}
                 </div>
               )}
