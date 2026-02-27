@@ -181,9 +181,9 @@ td a[href^="/character/"]:hover {
   font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
 }
 
-/* Show Photo button - always on top */
+/* Show Photo button - stays at top of page */
 .show-photo-btn {
-  position: fixed !important;
+  position: absolute !important;
   top: 16px !important;
   right: 16px !important;
   z-index: 99999 !important;

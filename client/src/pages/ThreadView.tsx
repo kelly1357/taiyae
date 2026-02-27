@@ -1016,11 +1016,11 @@ const ThreadView: React.FC = () => {
         `}</style>
       )}
 
-      {/* Show Photo Button - rendered via portal to body (only for IC/roleplay threads) */}
+      {/* Show Photo Button - rendered via portal to body (only for IC/roleplay threads, hidden on mobile) */}
       {!isOOCThread && createPortal(
         <button
           onClick={() => setShowPhotoMode(!showPhotoMode)}
-          className="show-photo-btn"
+          className="show-photo-btn hidden md:block"
         >
           {showPhotoMode ? 'Hide Photo' : 'Show Photo'}
         </button>,
