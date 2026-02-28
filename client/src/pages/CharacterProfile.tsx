@@ -977,8 +977,8 @@ const CharacterProfile: React.FC = () => {
         
         {/* Threadlog & Skill Points Section */}
         {activeTab === 'threadlog' && (
-          <div className="mt-4 bg-gray-100 p-4">
-            <div className="bg-white p-4">
+          <div className="mt-4 bg-gray-100 p-2 md:p-4">
+            <div className="bg-white p-2 md:p-4 min-w-0 overflow-hidden">
               <h3 className="text-base font-bold text-gray-800 mb-3">Current Skill Points</h3>
               <div className="flex flex-col sm:flex-row items-start gap-4">
                 <div className="w-full sm:w-auto">
@@ -1011,7 +1011,7 @@ const CharacterProfile: React.FC = () => {
               </div>
               
               {/* Threadlog Table */}
-              <div className="mt-6">
+              <div className="mt-6 min-w-0 overflow-x-auto">
                 {/* Desktop table */}
                 <table className="hidden md:table w-full text-sm">
                   <thead>
