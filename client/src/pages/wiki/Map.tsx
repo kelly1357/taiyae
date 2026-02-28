@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useOutletContext } from 'react-router-dom';
 import WikiInlineEditor from '../../components/WikiInlineEditor';
 import WikiSearchBox from '../../components/WikiSearchBox';
+import MapGrid from '../../components/MapGrid';
 import type { WikiInlineEditorRef } from '../../components/WikiInlineEditor';
 import type { User } from '../../types';
 
@@ -39,6 +41,16 @@ const Map: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="flex-1">
+            {/* Horizon Map — outside WikiInlineEditor so it always renders */}
+            <div className="text-xs text-gray-800 mb-6">
+              <p className="mb-4">The map represents the relative location of each territory. Use the grid overlay to reference specific locations.</p>
+              
+              <MapGrid onOpenFullSize={() => setShowMapModal(true)} />
+              
+              <p className="mt-4 italic text-gray-500">Gigantic thank-you to Lea for making this map!</p>
+            </div>
+
+            {/* Wiki-editable content below the map */}
             <WikiInlineEditor
               ref={editorRef}
               slug="map"
@@ -46,27 +58,6 @@ const Map: React.FC = () => {
               userId={user?.id}
               isModerator={isModerator}
             >
-            {/* Horizon Map */}
-            <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Horizon Map</h3>
-            
-            <div className="text-xs text-gray-800 mb-6">
-              <p className="mb-4">The map represents the relative location of each territory (click for a larger view!).</p>
-              
-              <button
-                type="button"
-                onClick={() => setShowMapModal(true)}
-                className="block"
-              >
-                <img 
-                  src="https://taiyaefiles.blob.core.windows.net/web/map.jpg" 
-                  alt="Horizon Valley Map - Click to enlarge" 
-                  className="max-w-full cursor-pointer hover:opacity-90 transition-opacity"
-                />
-              </button>
-              
-              <p className="mt-4 italic">Gigantic thank-you to Lea for making this map!</p>
-            </div>
-
             {/* Travelling */}
             <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500 border-b border-gray-300 pb-1 mb-4">Travelling</h3>
             
@@ -109,18 +100,18 @@ const Map: React.FC = () => {
         </div>
       </div>
 
-      {/* Map Modal */}
-      {showMapModal && (
+      {/* Map Modal — portaled to body to escape z-10 stacking context */}
+      {showMapModal && createPortal(
         <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4"
           onClick={() => setShowMapModal(false)}
         >
           <div className="relative max-w-4xl max-h-[90vh]">
             <button
-              onClick={() => setShowMapModal(false)}
-              className="absolute -top-10 right-0 text-white text-xl hover:text-gray-300"
+              onClick={(e) => { e.stopPropagation(); setShowMapModal(false); }}
+              className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white w-8 h-8 flex items-center justify-center text-lg z-10"
             >
-              ✕ Close
+              ✕
             </button>
             <img 
               src="https://taiyaefiles.blob.core.windows.net/web/map.jpg" 
@@ -128,7 +119,8 @@ const Map: React.FC = () => {
               className="max-w-full max-h-[85vh] object-contain"
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

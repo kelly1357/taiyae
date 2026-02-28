@@ -137,9 +137,11 @@ export async function getRegions(request: HttpRequest, context: InvocationContex
     }
 }
 
+
 app.http('getRegions', {
     methods: ['GET'],
     authLevel: 'anonymous',
     handler: getRegions,
     route: 'region'
 });
+
