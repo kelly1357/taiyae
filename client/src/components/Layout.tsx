@@ -384,12 +384,44 @@ const Layout: React.FC<LayoutProps> = ({
                 ></iframe>
               </div>
             </section>
+
+            {/* Affiliates — homepage only, non-members or joining users (desktop sidebar) */}
+            {location.pathname === '/' && (!user || user.userStatus === 'Joining') && (
+              <section className="hidden lg:block bg-white border border-gray-300 shadow">
+                <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                  Affiliates
+                </div>
+                <div className="px-4 py-4">
+                  <div className="grid grid-cols-2 gap-2 justify-items-center">
+                    <a href="http://rpg-directory.com/index.php" target="_blank" rel="noopener noreferrer">
+                      <img src="https://files.jcink.net/uploads/rpgdirectory/RPGD_Buttons/rpgdbutton4.png" title="RPG-Directory" alt="RPG-D" width="88" height="31" />
+                    </a>
+                  </div>
+                </div>
+              </section>
+            )}
           </aside>
 
           <section className="flex-1">
             <Outlet context={{ user, activeCharacter }} />
           </section>
           </div>
+
+          {/* Affiliates — mobile only, at the very bottom */}
+          {location.pathname === '/' && (!user || user.userStatus === 'Joining') && (
+            <section className="lg:hidden bg-white border border-gray-300 shadow mt-6">
+              <div className="bg-[#2f3a2f] px-4 py-2 uppercase text-xs font-normal tracking-wider text-[#fff9] dark-header">
+                Affiliates
+              </div>
+              <div className="px-4 py-4">
+                <div className="grid grid-cols-2 gap-2 justify-items-center">
+                  <a href="http://rpg-directory.com/index.php" target="_blank" rel="noopener noreferrer">
+                    <img src="https://files.jcink.net/uploads/rpgdirectory/RPGD_Buttons/rpgdbutton4.png" title="RPG-Directory" alt="RPG-D" width="88" height="31" />
+                  </a>
+                </div>
+              </div>
+            </section>
+          )}
           </div>
         </div>
 
