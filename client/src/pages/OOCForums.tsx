@@ -10,8 +10,7 @@ const OOCForums: React.FC = () => {
     fetch('/api/ooc-forums')
       .then(res => res.json())
       .then(data => {
-        // Hide Advertising and Affiliation forum (ID 8) for now
-        setOocForums(data.filter((f: OOCForum) => String(f.id) !== '8'));
+        setOocForums(data);
         setLoading(false);
       })
       .catch(err => {

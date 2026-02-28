@@ -123,6 +123,14 @@ Please provide a short sample of your writing (any genre's fine!):`}
                   </pre>
                 </div>
               )}
+              {forumId === '8' && (
+                <div className="mt-3 text-xs text-gray-600 space-y-2">
+                  <p>Please include your site's name and genre in the title of your post. We'll keep your ad up for as long as your site is active, so you can log in and bump it if you want to.</p>
+                  <p>Link-backs and first-time ads can both be new threads here.</p>
+                  <p className="font-semibold text-gray-700 mt-2">Code for our banner:</p>
+                  <pre className="bg-gray-100 border border-gray-300 rounded p-3 text-xs text-gray-800 whitespace-pre-wrap break-all font-mono select-all overflow-x-auto">{`<a href="http://horizonwolves.com/" target="_blank"><img src="https://taiyaefiles.blob.core.windows.net/web/horizon_banner.png" title="Horizon Wolves" width="88px" height="31px"></a>`}</pre>
+                </div>
+              )}
             </div>
             {user && forumId !== '7' && (
               <button 

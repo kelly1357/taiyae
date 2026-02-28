@@ -39,7 +39,7 @@ export async function getAdminCounts(request: HttpRequest, context: InvocationCo
                 SELECT COUNT(*) AS cnt FROM StaffPing WHERE IsResolved = 0
             `),
             pool.request().query(`
-                SELECT COUNT(*) AS cnt FROM [User] WHERE UserStatusID = 1
+                SELECT COUNT(*) AS cnt FROM [User] WHERE UserStatusID = 1 AND UserID != 20
             `),
         ]);
 

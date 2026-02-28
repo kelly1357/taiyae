@@ -10,13 +10,13 @@ const signalROutput = output.generic({
     hubName: 'messaging',
 });
 
-// Helper to get current pending count (users with status = Joining)
+// Helper to get current pending count (users with status = Joining, excluding Visitor account)
 async function getCurrentPendingCount(): Promise<number> {
     const pool = await getPool();
     const result = await pool.request().query(`
         SELECT COUNT(*) AS count
         FROM [User]
-        WHERE UserStatusID = 1
+        WHERE UserStatusID = 1 AND UserID != 20
     `);
     return result.recordset[0].count;
 }
@@ -44,7 +44,7 @@ async function getPendingUserApprovals(request: HttpRequest, context: Invocation
                 us.StatusID as UserStatusID
             FROM [User] u
             INNER JOIN UserStatus us ON u.UserStatusID = us.StatusID
-            WHERE u.UserStatusID = 1
+            WHERE u.UserStatusID = 1 AND u.UserID != 20
             ORDER BY u.Created DESC
         `);
 
