@@ -372,11 +372,18 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
 
         const pool = await getPool();
         
-        // Get the userId for this character before updating (for achievement check)
+        // Get the userId and current name for this character before updating
         const characterResult = await pool.request()
             .input('id', sql.Int, parseInt(id))
-            .query('SELECT UserID FROM Character WHERE CharacterID = @id');
+            .query('SELECT UserID, CharacterName FROM Character WHERE CharacterID = @id');
         const userId = characterResult.recordset[0]?.UserID;
+        const currentName = characterResult.recordset[0]?.CharacterName;
+        
+        // Regenerate slug if name changed
+        let newSlug: string | null = null;
+        if (name && name !== currentName) {
+            newSlug = await generateUniqueSlug(pool, name, parseInt(id));
+        }
         
         const updateRequest = pool.request()
             .input('id', sql.Int, parseInt(id))
@@ -409,9 +416,14 @@ export async function updateCharacter(request: HttpRequest, context: InvocationC
         updateRequest.input('isActive', sql.Bit, isActive);
         updateRequest.input('showInDropdown', sql.Bit, showInDropdown);
         
+        // Include slug update if name changed
+        if (newSlug) {
+            updateRequest.input('slug', sql.NVarChar, newSlug);
+        }
+        
         await updateRequest.query(`
             UPDATE Character 
-            SET CharacterName = @name, Surname = @surname, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4, Status = @status, DeathDate = @deathDate, Is_Active = @isActive, ShowInDropdown = @showInDropdown
+            SET CharacterName = @name, Surname = @surname, Sex = @sex, MonthsAge = @monthsAge, AvatarImage = @imageUrl, CI_General_HTML = @bio, HealthStatus_Id = @healthStatusId, Father = @father, Mother = @mother, HeightID = @heightId, BuildID = @buildId, Birthplace = @birthplace, Siblings = @siblings, Pups = @pups, SpiritSymbol = @spiritSymbol, ProfileImage1 = @profileImage1, ProfileImage2 = @profileImage2, ProfileImage3 = @profileImage3, ProfileImage4 = @profileImage4, Status = @status, DeathDate = @deathDate, Is_Active = @isActive, ShowInDropdown = @showInDropdown${newSlug ? ', Slug = @slug' : ''}
             WHERE CharacterID = @id
         `);
         
@@ -465,6 +477,10 @@ export async function moderatorUpdateCharacter(request: HttpRequest, context: In
         if (name !== undefined) {
             updates.push('CharacterName = @name');
             requestObj.input('name', sql.NVarChar, name);
+            // Regenerate slug when name changes
+            const newSlug = await generateUniqueSlug(pool, name, parseInt(characterId));
+            updates.push('Slug = @slug');
+            requestObj.input('slug', sql.NVarChar, newSlug);
         }
         if (sex !== undefined) {
             updates.push('Sex = @sex');
