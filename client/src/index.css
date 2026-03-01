@@ -391,6 +391,8 @@ a {
 .prose pre {
   overflow-x: auto;
   max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 /* Post content heading/list styles - match editor WYSIWYG */
