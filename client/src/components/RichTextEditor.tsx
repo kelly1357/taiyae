@@ -209,6 +209,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
       Image,
     ],
     content: normalizeContent(value),
+    editorProps: {
+      // Strip <pre>/<code> formatting from pasted content so code blocks
+      // don't accidentally end up in posts (e.g. copying from the banner code box)
+      transformPastedHTML(html: string) {
+        return html
+          .replace(/<pre[^>]*>/gi, '<p>')
+          .replace(/<\/pre>/gi, '</p>')
+          .replace(/<code[^>]*>/gi, '')
+          .replace(/<\/code>/gi, '');
+      },
+    },
     onUpdate: ({ editor }: { editor: any }) => {
       const html = editor.getHTML();
       lastEmittedValue.current = html;
