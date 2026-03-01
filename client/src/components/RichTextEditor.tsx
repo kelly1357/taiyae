@@ -212,12 +212,18 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, placeh
     editorProps: {
       // Strip <pre>/<code> formatting from pasted content so code blocks
       // don't accidentally end up in posts (e.g. copying from the banner code box)
+      // Preserves line breaks as separate paragraphs
       transformPastedHTML(html: string) {
-        return html
-          .replace(/<pre[^>]*>/gi, '<p>')
-          .replace(/<\/pre>/gi, '</p>')
-          .replace(/<code[^>]*>/gi, '')
-          .replace(/<\/code>/gi, '');
+        // First strip <code> tags (keep inner content)
+        html = html.replace(/<code[^>]*>/gi, '').replace(/<\/code>/gi, '');
+        // Convert <pre> blocks: split inner content on newlines into separate <p> tags
+        html = html.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_match, inner) => {
+          const lines = inner.split(/\n/);
+          return lines
+            .map((line: string) => `<p>${line || '<br>'}</p>`)
+            .join('');
+        });
+        return html;
       },
     },
     onUpdate: ({ editor }: { editor: any }) => {
